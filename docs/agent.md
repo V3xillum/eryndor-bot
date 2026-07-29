@@ -1,7 +1,7 @@
 # Discord Weather Bot — West Marches
 
 ## Project Goal
-Build a Discord bot for a West Marches D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), and gives authorized users full manual control during sessions through slash commands.
+Build a Discord bot for a West Marches D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), gives authorized users full manual control during sessions through slash commands, and exposes Eryndor calendar info (`/world today`, `/world fullmoon`) from the static Calendar of Eryndor JSON API.
 
 ## Tech Stack
 - Node.js
@@ -39,6 +39,11 @@ WEATHER_ACTIVE_WINDOW_ENABLED=true
 WEATHER_ACTIVE_START=06:00
 WEATHER_ACTIVE_END=23:00
 WEATHER_TIMEZONE=Europe/Amsterdam
+
+# Calendar of Eryndor static JSON (public). Used by /world today and /world fullmoon.
+# DOY for “today” uses WEATHER_TIMEZONE (default Europe/Amsterdam).
+ERYNDOR_CALENDAR_BASE_URL=https://v3xillum.github.io/eryndor
+ERYNDOR_CALENDAR_FALLBACK_URL=https://raw.githubusercontent.com/V3xillum/eryndor/main
 ```
 
 **Active window behaviour:** the scheduler never auto-posts outside the window. If `next_update_at` falls overnight, it waits until the next `WEATHER_ACTIVE_START`. When scheduling the next update, candidates outside the window are clamped to the next window start. Half-open interval: `[start, end)` in `WEATHER_TIMEZONE`.
@@ -52,16 +57,19 @@ WEATHER_TIMEZONE=Europe/Amsterdam
 - Prefer readable code over clever code.
 - Separate weather logic from Discord entirely — the weather system must work if you swapped discord.js for something else tomorrow.
 - No hardcoded weather tables, message text, or image paths. All of that lives in `content/`.
+- Calendar data comes from the public Eryndor static JSON API — do **not** scrape HTML or invent Harptos/moon values.
 - Design for extension, but don't pre-build the extensions (see Future Extensions).
 
 ## Project Structure
 ```text
 src/
-  commands/       # thin slash command handlers, no business logic
+  commands/       # thin slash command handlers (weather.ts, world.ts)
   events/         # discord.js event listeners (ready, interactionCreate, etc.)
-  services/       # WeatherService, SchedulerService — Discord-agnostic where possible
+  services/       # WeatherService, SchedulerService, EryndorCalendarService
+  utils/          # helpers, activeWindow, harptos DOY helpers
   db/             # SQLite connection + queries
   content/        # loaders for JSON content and images
+  register-commands.ts
   index.ts
 
 storage/
@@ -69,7 +77,8 @@ storage/
 
 content/
   weather-table.json
-  messages.json
+  weather-rules.json
+  messages.json   # NL bot/UI strings (weather + calendar)
   images/
     clear.png
     cloudy.png
@@ -77,6 +86,8 @@ content/
     storm.png
     # one file per weather type — filename matches the `image` field in weather-table.json
 ```
+
+Feature specs (implementation guides for agents): `docs/feature-*.md` (e.g. `feature-eryndor-calendar.md`).
 
 ## Data Storage (SQLite via better-sqlite3)
 
@@ -112,7 +123,7 @@ Automated posts go to `thread_id` when set, otherwise to `channel_id`. If neithe
 
 `content/weather-table.json` — a d100 table as **ranges**. There are not 100 weather types; there are ~5–15 types mapped onto rolls 1–100. Common weather gets wide ranges; rare magical effects get narrow ones.
 
-Each entry points to a weather type and **exactly one** image file under `content/images/`. Flavor text, stats, and atmosphere live **in the image itself** (DM weather cards) — not in JSON and not in Discord message text.
+Each entry has a numeric **`severity`** (1 = mild … 5 = catastrophic) and points to **exactly one** image under `content/images/`. Optional **`durationMinHours` / `durationMaxHours`** override the global `.env` interval while that type is current. Flavor text lives **in the image** — not in JSON.
 
 ```json
 [
@@ -120,22 +131,31 @@ Each entry points to a weather type and **exactly one** image file under `conten
     "min": 1,
     "max": 20,
     "type": "clear",
-    "image": "clear.png"
+    "image": "clear.png",
+    "severity": 1
   },
   {
-    "min": 21,
-    "max": 30,
-    "type": "rain",
-    "image": "rain.png"
-  },
-  {
-    "min": 95,
-    "max": 100,
-    "type": "arcane_storm",
-    "image": "arcane_storm.png"
+    "min": 87,
+    "max": 94,
+    "type": "storm",
+    "image": "storm.png",
+    "severity": 4,
+    "durationMinHours": 2,
+    "durationMaxHours": 6
   }
 ]
 ```
+
+`content/weather-rules.json` — severity cooldown thresholds (data-driven, no type-name special cases):
+
+```json
+{
+  "cooldownAfterSeverity": 4,
+  "cooldownMaxNextSeverity": 2
+}
+```
+
+After current weather with `severity >= cooldownAfterSeverity`, the next scheduler/`/weather roll` filters to `severity <= cooldownMaxNextSeverity`. If that pool is empty (e.g. an all-evil table), the ceiling rises (3, 4, …) until at least one entry matches. `/weather set` bypasses the filter. See [`feature-weather-severity-duration.md`](./feature-weather-severity-duration.md).
 
 A DM (or content editor) should be able to add a new weather type or new artwork by editing this file and placing a single image at `content/images/<filename>` — never by touching source code.
 
@@ -146,19 +166,34 @@ Ship a sensible starter table with placeholder images; real art can be swapped l
 Expose a small service interface that commands and the scheduler both call into:
 
 - `getCurrentWeather(guildId)`
-- `rollWeather(guildId)` — rolls d100, updates state, returns the result
-- `setWeather(guildId, type)` — forces a type, marks `forced = true`
-- `scheduleNextUpdate(guildId)` — picks a random interval from `WEATHER_UPDATE_*_MINUTES` (default 360–1080) and stores `next_update_at`
+- `getAdminStatus(guildId)` — severity, schedule, cooldown, duration source (for `/weather status`)
+- `rollWeather(guildId)` — weighted pick (with severity cooldown when applicable), updates state, returns the result
+- `setWeather(guildId, type)` / `setFromInput` — forces a type or physical d100; marks `forced` for type sets; **bypasses** cooldown
+- `scheduleNextUpdate(guildId)` — per-type duration range if present, else `WEATHER_UPDATE_*_MINUTES`; stores `next_update_at`
 - `pause(guildId, until)`
 - `resume(guildId)` — clears the pause and recalculates `next_update_at`
 - `setup(guildId, channelId, threadId | null)` — stores where to post
 
 Discord commands should only parse input, call the service, and format the reply — no scheduling or weather logic inside a command handler.
 
+## Eryndor Calendar Service
+
+`EryndorCalendarService` fetches public static JSON (no secrets). The calendar site is GitHub Pages; there is no live “today” API — the bot computes Harptos day-of-year (DOY) in `WEATHER_TIMEZONE`, capped at **365** (no leap day), then fetches:
+
+- `/world today` → `{BASE}/data/days/{doy}.json` (3-digit zero-padded DOY)
+- `/world fullmoon` → `{BASE}/data/full-moons.json` → `nextByFromDoy[String(doy)]` (exact Full Moon only)
+
+Fetch order: Pages base URL first; on persistent 404, optional raw.githubusercontent.com fallback. Do not scrape HTML.
+
+Replies are Dutch Discord embeds (`content/messages.json` for labels/errors). Today embed: Harptos title, moon phase, NL-formatted Gregorian date under the moon, events list — **no** next-full-moon footer on today (full moon is only via `/world fullmoon`).
+
+UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec detail: [`docs/feature-eryndor-calendar.md`](./feature-eryndor-calendar.md).
+
 ## Permissions
 
 - `/weather current` — available to everyone in the guild.
-- All other `/weather` subcommands (including `next`) — only users whose Discord user ID appears in `ALLOWED_USER_IDS`.
+- All other `/weather` subcommands (including `status`, `next`) — only users whose Discord user ID appears in `ALLOWED_USER_IDS`.
+- `/world today` and `/world fullmoon` — available to everyone in the guild (world info; no weather-timer spoilers).
 
 Do **not** require Discord “Manage Server” or a DM role. The operator may not have those permissions; user-ID allowlist is the intended gate. Later this can be extended with role IDs; do not build role support now unless trivial.
 
@@ -168,14 +203,22 @@ Unauthorized users get a short ephemeral denial.
 
 There is **no** `/weather post`. Anything that changes weather also broadcasts to the configured channel/thread. A separate “post current again” command is redundant with `current` and with the channel history.
 
+### Weather
 - `/weather setup <channel> [thread]` — configure where weather updates are sent (scheduler, `roll`, and `set`). `thread` is optional. Uses the current guild’s `guildId` from the interaction.
 - `/weather current` — show the current weather **to the invoking user** (ephemeral or command reply). Does **not** post to the weather channel — if the bot is working, the latest update is already visible there; this is a quiet status check (e.g. DM mid-session without spamming the channel).
+- `/weather status` — allowlist-only admin view: type, severity, forced flag, since-when, remaining/next update, duration source (per-type vs env), and whether severity cooldown applies to the next roll. Ephemeral; does not post to the channel.
 - `/weather next` — show when the next **automatic** update is scheduled (ephemeral). Also reports pause state and when an update is due but waiting for the active posting window. **Allowlist only** (players should not see when weather will change). Does not post to the weather channel.
-- `/weather roll` — roll d100 against the table, set that as current weather, **and** post the update to the configured channel/thread. Also reply to the invoker with the result (roll value + type).
+- `/weather roll` — roll against the table (with severity cooldown when applicable), set that as current weather, **and** post the update to the configured channel/thread. Also reply to the invoker with the result (roll value + type).
 - `/weather set <value> [duration]` — set weather by **type** (`storm`) or **physical d100** (`81`), then post. Type → `forced = true`; numeric 1–100 → table lookup, `forced = false` (external die). Optional `duration` as before.
 - `/weather schedule <duration>` — keep the **current** weather; only change when the next automatic roll happens. Same duration format. Clears pause. Allowlist only. Does not post to the channel.
 - `/weather pause <duration>` — pause automatic updates. Duration format: `30m`, `2h`, or `1d` (minutes / hours / days). Reject invalid input with a clear ephemeral error.
 - `/weather resume` — resume automatic updates.
+
+### World / calendar
+- `/world today` — current Harptos day, moon phase, events (embed). Everyone.
+- `/world fullmoon` — next exact Full Moon from `full-moons.json` (embed). Everyone.
+
+Slash commands are registered globally via `npm run register-commands` (`Routes.applicationCommands`). Global commands can take up to ~1 hour to appear in Discord clients; guild-scoped registration is faster for single-server testing if needed later.
 
 ## Post format
 When posting weather (scheduler, `/weather roll`, or `/weather set`):
@@ -183,13 +226,13 @@ When posting weather (scheduler, `/weather roll`, or `/weather set`):
 - All flavor, stats, and atmosphere are in the image (like DM weather cards)
 - No Discord embed body / description pools / flavor text from JSON
 - Optionally include the weather `type` as a short title; nothing more
-- Bot/UI strings that are not weather flavor (errors, confirmations) can live in `messages.json`
+- Bot/UI strings that are not weather flavor (errors, confirmations, calendar copy) live in `messages.json`
 
 ## Scheduler
 Responsible for:
 - checking, on an interval (**30 seconds** — close enough for weather without a precise timer), whether `next_update_at` has passed and the guild isn't paused
 - rolling new weather and posting it to the configured channel/thread when it's time
-- recalculating and storing the next `next_update_at` using the configured minute range from `.env`
+- recalculating and storing the next `next_update_at` from the current type’s duration range when set, otherwise the configured minute range from `.env`
 
 Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/weather roll`, `/weather set`); the scheduler owns the recurring automatic updates.
 
@@ -220,19 +263,14 @@ Architecture should allow these without major refactoring, but **none should be 
 - Role-based allowlists (in addition to user IDs)
 - Multiple Discord servers (the `guild_id` keying already supports this)
 - Structured `descriptions` (or similar) in `weather-table.json` — only if text outside the card image becomes useful later; v1 keeps posts image-only
+- Daily automatic channel post of calendar “today” (via existing scheduler) — optional; `/world` commands already cover on-demand use
+- Guild-scoped slash command registration for faster iteration on a single server
 
-### Weather duration (per type)
-Today the scheduler uses one global random interval from `.env` (`WEATHER_UPDATE_MIN_MINUTES` / `MAX`, default 360–1080) for every update. Later:
-- Each weather type may define its own duration range (e.g. `durationMinHours` / `durationMaxHours`) so common weather can last longer and dangerous effects shorter.
-- Optional hard **max duration** per type — especially for severe/magical weather — so a dangerous effect cannot linger for a full long interval.
-- Intended direction: per-type duration eventually **replaces** (or overrides) the global env interval when rolling/scheduling the next update. Do not implement duration fields or logic in v1 unless they are unused placeholders; prefer documenting only until this feature is scheduled.
-- Optional: per-guild override via slash command + DB if operators need live tuning without restarting the host.
+### Weather duration (per type) — implemented
+Each weather type may define `durationMinHours` / `durationMaxHours`. When present, that range schedules the next auto-update after the type becomes current; otherwise the global `.env` interval applies. Explicit DM duration (`/weather set … duration`, `/weather schedule`) always wins. Optional later: per-guild override via slash command + DB.
 
-### Severity & transition rules
-Problem to solve later: with an unweighted d100, bad luck can chain rare dangerous weather.
-- Each weather entry gets a numeric **severity** (e.g. 1 = mild … 5 = catastrophic).
-- **Transition rule**: after weather at or above severity X, the next roll must resolve to severity Y or lower (reroll / filter / dedicated aftermath pool — pick the simplest approach when building).
-- Content stays data-driven: severity and transition thresholds live in `content/` (or a small rules section), not hardcoded special cases per type name.
+### Severity & transition rules — implemented
+Each entry has numeric **severity**. After weather at or above `cooldownAfterSeverity`, the next auto-roll / `/weather roll` must resolve to `severity <= cooldownMaxNextSeverity` (filter + one weighted pick; empty pools escalate the ceiling). Thresholds live in `content/weather-rules.json`. `/weather set` bypasses the filter.
 
 ### DM world danger / severity modifier
 The DM (allowlisted user) should be able to bias how dangerous the weather is without editing JSON mid-campaign, e.g.:
@@ -240,7 +278,7 @@ The DM (allowlisted user) should be able to bias how dangerous the weather is wi
 - Stored per guild on `world_state` (e.g. a bias or ceiling), applied when rolling
 - Use cases: curse active, calm after a major event, arc downtime, etc.
 
-Suggested later combination: **per-type duration + severity transitions + DM danger dial**. Do not add columns, content fields, or commands for these until explicitly implementing this feature.
+Suggested later combination: **per-type duration + severity transitions + DM danger dial**. Do not add the danger dial until explicitly implementing it.
 
 ## Non-Goals
 Do not introduce:
@@ -248,5 +286,6 @@ Do not introduce:
 - Microservices or worker processes
 - Complex abstractions or premature generalization
 - Running the bot solely via GitHub Actions
+- Scraping the Eryndor calendar HTML / inventing Harptos or moon data client-side
 
 If a simpler solution satisfies today's requirement, use it over one that anticipates tomorrow's.

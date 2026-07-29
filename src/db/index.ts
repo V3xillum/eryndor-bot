@@ -121,3 +121,21 @@ export function setPausedUntil(
     `UPDATE world_state SET paused_until = ?, updated_at = ? WHERE guild_id = ?`,
   ).run(pausedUntil, nowIso(), guildId);
 }
+
+export function getLatestWeatherLog(
+  db: Database.Database,
+  guildId: string,
+): { weather_type: string; posted_at: string; forced: number } | null {
+  return (
+    (db
+      .prepare(
+        `SELECT weather_type, posted_at, forced
+         FROM weather_log
+         WHERE guild_id = ?
+         ORDER BY id DESC
+         LIMIT 1`,
+      )
+      .get(guildId) as { weather_type: string; posted_at: string; forced: number } | undefined) ??
+    null
+  );
+}

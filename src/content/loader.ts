@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { Messages, WeatherTableEntry } from '../types.js';
+import type { Messages, WeatherRules, WeatherTableEntry } from '../types.js';
 
 const CONTENT_ROOT = path.resolve(process.cwd(), 'content');
 
@@ -11,6 +11,13 @@ export function loadWeatherTable(): WeatherTableEntry[] {
   return table;
 }
 
+export function loadWeatherRules(): WeatherRules {
+  const raw = fs.readFileSync(path.join(CONTENT_ROOT, 'weather-rules.json'), 'utf8');
+  const rules = JSON.parse(raw) as WeatherRules;
+  validateWeatherRules(rules);
+  return rules;
+}
+
 export function loadMessages(): Messages {
   const raw = fs.readFileSync(path.join(CONTENT_ROOT, 'messages.json'), 'utf8');
   return JSON.parse(raw) as Messages;
@@ -18,6 +25,19 @@ export function loadMessages(): Messages {
 
 export function resolveImagePath(filename: string): string {
   return path.join(CONTENT_ROOT, 'images', filename);
+}
+
+function validateWeatherRules(rules: WeatherRules): void {
+  if (
+    !Number.isInteger(rules.cooldownAfterSeverity) ||
+    rules.cooldownAfterSeverity < 1 ||
+    !Number.isInteger(rules.cooldownMaxNextSeverity) ||
+    rules.cooldownMaxNextSeverity < 1
+  ) {
+    throw new Error(
+      'weather-rules.json: cooldownAfterSeverity and cooldownMaxNextSeverity must be integers >= 1',
+    );
+  }
 }
 
 function validateWeatherTable(table: WeatherTableEntry[]): void {
@@ -32,6 +52,27 @@ function validateWeatherTable(table: WeatherTableEntry[]): void {
     if (!entry.type || !entry.image) {
       throw new Error(`Incomplete weather entry: ${JSON.stringify(entry)}`);
     }
+    if (!Number.isInteger(entry.severity) || entry.severity < 1) {
+      throw new Error(`Invalid severity for type ${entry.type}: ${entry.severity}`);
+    }
+
+    const hasMin = entry.durationMinHours !== undefined;
+    const hasMax = entry.durationMaxHours !== undefined;
+    if (hasMin !== hasMax) {
+      throw new Error(
+        `Type ${entry.type}: durationMinHours and durationMaxHours must both be set or both omitted`,
+      );
+    }
+    if (hasMin && hasMax) {
+      const minH = entry.durationMinHours!;
+      const maxH = entry.durationMaxHours!;
+      if (!(minH > 0) || maxH < minH || !Number.isFinite(minH) || !Number.isFinite(maxH)) {
+        throw new Error(
+          `Type ${entry.type}: invalid duration range ${minH}–${maxH} hours`,
+        );
+      }
+    }
+
     const imagePath = resolveImagePath(entry.image);
     if (!fs.existsSync(imagePath)) {
       throw new Error(`Missing image for ${entry.type}: ${imagePath}`);
@@ -55,4 +96,62 @@ export function findEntryByRoll(
 
 export function listWeatherTypes(table: WeatherTableEntry[]): string[] {
   return table.map((entry) => entry.type);
+}
+
+/**
+ * Pool for the next auto-roll /weather roll.
+ * After high severity, only milder entries; if that pool is empty, raise the
+ * ceiling (2 → 3 → 4 …) until at least one entry matches.
+ */
+export function resolveRollPool(
+  table: WeatherTableEntry[],
+  currentSeverity: number | null,
+  rules: WeatherRules,
+): { pool: WeatherTableEntry[]; cooldownActive: boolean; effectiveMaxSeverity: number | null } {
+  if (currentSeverity === null || currentSeverity < rules.cooldownAfterSeverity) {
+    return { pool: table, cooldownActive: false, effectiveMaxSeverity: null };
+  }
+
+  const tableMax = Math.max(...table.map((e) => e.severity));
+  let maxNext = rules.cooldownMaxNextSeverity;
+
+  while (maxNext <= tableMax) {
+    const pool = table.filter((e) => e.severity <= maxNext);
+    if (pool.length > 0) {
+      return { pool, cooldownActive: true, effectiveMaxSeverity: maxNext };
+    }
+    maxNext += 1;
+  }
+
+  return { pool: table, cooldownActive: true, effectiveMaxSeverity: tableMax };
+}
+
+/**
+ * Weighted pick by original d100 range width; returns a roll inside that entry's min–max.
+ */
+export function pickWeightedFromPool(pool: WeatherTableEntry[]): {
+  entry: WeatherTableEntry;
+  roll: number;
+} {
+  if (pool.length === 0) {
+    throw new Error('Cannot pick from an empty weather pool');
+  }
+
+  const totalWeight = pool.reduce((sum, e) => sum + (e.max - e.min + 1), 0);
+  let ticket = Math.floor(Math.random() * totalWeight) + 1;
+
+  for (const entry of pool) {
+    const width = entry.max - entry.min + 1;
+    if (ticket <= width) {
+      return { entry, roll: entry.min + ticket - 1 };
+    }
+    ticket -= width;
+  }
+
+  const last = pool[pool.length - 1]!;
+  return { entry: last, roll: last.max };
+}
+
+export function entryHasDurationRange(entry: WeatherTableEntry): boolean {
+  return entry.durationMinHours !== undefined && entry.durationMaxHours !== undefined;
 }

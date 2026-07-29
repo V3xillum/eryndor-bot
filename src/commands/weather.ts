@@ -41,6 +41,11 @@ export function buildWeatherCommand(_weatherTypes: string[]) {
     )
     .addSubcommand((sub) =>
       sub
+        .setName('status')
+        .setDescription('Admin: current weather details (severity, schedule, cooldown)'),
+    )
+    .addSubcommand((sub) =>
+      sub
         .setName('next')
         .setDescription('Show when the next automatic weather update is scheduled'),
     )
@@ -91,7 +96,16 @@ export function buildWeatherCommand(_weatherTypes: string[]) {
     );
 }
 
-const ADMIN_SUBCOMMANDS = new Set(['setup', 'next', 'roll', 'set', 'schedule', 'pause', 'resume']);
+const ADMIN_SUBCOMMANDS = new Set([
+  'setup',
+  'status',
+  'next',
+  'roll',
+  'set',
+  'schedule',
+  'pause',
+  'resume',
+]);
 
 export async function handleWeatherCommand(
   interaction: ChatInputCommandInteraction,
@@ -126,6 +140,9 @@ export async function handleWeatherCommand(
       return;
     case 'current':
       await handleCurrent(interaction, weather);
+      return;
+    case 'status':
+      await handleStatus(interaction, weather);
       return;
     case 'next':
       await handleNext(interaction, weather);
@@ -188,6 +205,85 @@ async function handleCurrent(
 
   await interaction.reply({
     ...buildWeatherCard(result),
+    ephemeral: true,
+  });
+}
+
+async function handleStatus(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const status = weather.getAdminStatus(interaction.guildId!);
+  if (!status) {
+    await interaction.reply({
+      content: weather.messages.noWeatherYet,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const lines: string[] = [
+    formatTemplate(weather.messages.statusTitle, { type: status.type }),
+    formatTemplate(weather.messages.statusSeverity, { severity: status.severity }),
+    formatTemplate(weather.messages.statusForced, {
+      forced: status.forced ? 'ja' : 'nee',
+    }),
+  ];
+
+  if (status.rolledAt) {
+    lines.push(
+      formatTemplate(weather.messages.statusRolledAt, {
+        unix: Math.floor(status.rolledAt.getTime() / 1000),
+      }),
+    );
+  }
+
+  if (status.usesEnvDuration) {
+    lines.push(weather.messages.statusDurationEnv);
+  } else {
+    lines.push(
+      formatTemplate(weather.messages.statusDurationType, {
+        min: status.durationMinHours ?? '?',
+        max: status.durationMaxHours ?? '?',
+      }),
+    );
+  }
+
+  if (status.pausedUntil) {
+    lines.push(
+      formatTemplate(weather.messages.statusPaused, {
+        unix: Math.floor(status.pausedUntil.getTime() / 1000),
+      }),
+    );
+  }
+
+  if (status.dueButWaitingForWindow) {
+    lines.push(weather.messages.statusWaitingWindow);
+  }
+
+  if (status.nextUpdateAt) {
+    lines.push(
+      formatTemplate(weather.messages.statusNext, {
+        unix: Math.floor(status.nextUpdateAt.getTime() / 1000),
+      }),
+    );
+  } else {
+    lines.push(weather.messages.statusNextNone);
+  }
+
+  if (status.cooldownActive && status.effectiveMaxNextSeverity !== null) {
+    lines.push(
+      formatTemplate(weather.messages.statusCooldownOn, {
+        maxSeverity: status.effectiveMaxNextSeverity,
+        defaultMax: status.cooldownMaxNextSeverity,
+      }),
+    );
+  } else {
+    lines.push(weather.messages.statusCooldownOff);
+  }
+
+  await interaction.reply({
+    content: lines.join('\n'),
     ephemeral: true,
   });
 }

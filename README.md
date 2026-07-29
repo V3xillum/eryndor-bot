@@ -54,6 +54,7 @@ Global slash commands can take up to about an hour to appear after registration.
 | Command | Who | Effect |
 |---|---|---|
 | `/weather current` | everyone | Private status check (does not post to the weather channel) |
+| `/weather status` | allowlist | Admin detail: severity, remaining time, duration source, cooldown |
 | `/weather next` | allowlist | When the next automatic update is due (ephemeral) |
 | `/weather setup <channel> [thread]` | allowlist | Where automated/`roll`/`set` posts go |
 | `/weather roll` | allowlist | d100 roll, update state, post to channel/thread |
@@ -79,9 +80,12 @@ Optional env: `ERYNDOR_CALENDAR_BASE_URL` / `ERYNDOR_CALENDAR_FALLBACK_URL` (see
 
 Edit without touching TypeScript:
 
-- `content/weather-table.json` — d100 ranges, types, image filenames (no description pools; flavor lives in the images)
+- `content/weather-table.json` — d100 ranges, types, images, required `severity`, optional `durationMinHours` / `durationMaxHours`
+- `content/weather-rules.json` — cooldown thresholds after high-severity weather
 - `content/messages.json` — bot reply strings (errors / confirmations only)
 - `content/images/` — one image per `image` field (DM weather cards)
+
+After severity ≥ `cooldownAfterSeverity`, the next auto-roll / `/weather roll` only picks milder types (up to `cooldownMaxNextSeverity`, escalating if that pool is empty). `/weather set` bypasses the cooldown. Channel posts stay image-only.
 
 ## Data
 

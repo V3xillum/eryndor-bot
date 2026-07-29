@@ -3,48 +3,60 @@
     "min": 1,
     "max": 22,
     "type": "clear",
-    "image": "clear.png"
+    "image": "clear.png",
+    "severity": 1
   },
   {
     "min": 23,
     "max": 42,
     "type": "cloudy",
-    "image": "cloudy.png"
+    "image": "cloudy.png",
+    "severity": 1
   },
   {
     "min": 43,
     "max": 58,
     "type": "fog",
-    "image": "fog.png"
+    "image": "fog.png",
+    "severity": 1
   },
   {
     "min": 59,
     "max": 68,
     "type": "Clockwork clouds",
-    "image": "clockwork.png"
+    "image": "clockwork.png",
+    "severity": 2
   },
   {
     "min": 69,
     "max": 74,
     "type": "rain",
-    "image": "rain.png"
+    "image": "rain.png",
+    "severity": 2
   },
   {
     "min": 75,
     "max": 86,
     "type": "wind",
-    "image": "wind.png"
+    "image": "wind.png",
+    "severity": 2
   },
   {
     "min": 87,
     "max": 94,
     "type": "storm",
-    "image": "storm.png"
+    "image": "storm.png",
+    "severity": 4,
+    "durationMinHours": 2,
+    "durationMaxHours": 6
   },
   {
     "min": 95,
     "max": 100,
     "type": "arcane_storm",
-    "image": "arcane_storm.png"
+    "image": "arcane_storm.png",
+    "severity": 5,
+    "durationMinHours": 1,
+    "durationMaxHours": 3
   }
 ]

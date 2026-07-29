@@ -25,6 +25,13 @@ export function randomIntervalMs(minMinutes: number, maxMinutes: number): number
   return minMs + Math.floor(Math.random() * (maxMs - minMs + 1));
 }
 
+/** Continuous random delay between min/max hours (inclusive bounds in ms space). */
+export function randomIntervalFromHours(minHours: number, maxHours: number): number {
+  const minMs = minHours * 3_600_000;
+  const maxMs = maxHours * 3_600_000;
+  return minMs + Math.floor(Math.random() * (maxMs - minMs + 1));
+}
+
 export function rollD100(): number {
   return Math.floor(Math.random() * 100) + 1;
 }

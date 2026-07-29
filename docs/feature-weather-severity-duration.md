@@ -2,7 +2,7 @@
 
 Ontwerpdoc voor een latere implementatie. Bouwt voort op de future extensions in [`agent.md`](./agent.md) (Weather duration, Severity & transition rules, DM danger dial).
 
-**Status:** design only — nog niet implementeren tot dit bewust wordt opgepakt.
+**Status:** implemented — severity, per-type duration, cooldown filter (+ empty-pool escalate), `/weather status`.
 
 **Doel:** gevaarlijk weer mag niet te lang blijven hangen én mag niet eindeloos chainen via pure d100-pech, zonder type-namen hard te coderen.
 
@@ -96,7 +96,9 @@ Drempels zelf horen in content of een klein rules-blok (niet hardcoded):
 }
 ```
 
-Exact bestand (`content/weather-rules.json` vs. sectie naast de table) mag bij implementatie worden gekozen; belangrijk is: één plek, data-driven.
+Bestand: `content/weather-rules.json`.
+
+Als de gefilterde pool leeg is (bijv. alleen high-severity types in de table), escaleert de ceiling: probeer ≤2, dan ≤3, dan ≤4, … tot er ≥1 entry is.
 
 ### Roll-algoritme — filter, geen reroll-loop
 

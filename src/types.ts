@@ -3,6 +3,16 @@ export interface WeatherTableEntry {
   max: number;
   type: string;
   image: string;
+  severity: number;
+  /** Optional; both must be set together. Hours until next auto-update while this type is current. */
+  durationMinHours?: number;
+  durationMaxHours?: number;
+}
+
+/** Transition / cooldown thresholds — loaded from content/weather-rules.json */
+export interface WeatherRules {
+  cooldownAfterSeverity: number;
+  cooldownMaxNextSeverity: number;
 }
 
 export interface WorldState {
@@ -38,6 +48,18 @@ export interface Messages {
   nextScheduled: string;
   nextPaused: string;
   nextWaitingWindow: string;
+  statusTitle: string;
+  statusSeverity: string;
+  statusForced: string;
+  statusRolledAt: string;
+  statusNext: string;
+  statusNextNone: string;
+  statusPaused: string;
+  statusWaitingWindow: string;
+  statusDurationType: string;
+  statusDurationEnv: string;
+  statusCooldownOn: string;
+  statusCooldownOff: string;
   noWeatherYet: string;
   notConfigured: string;
   unauthorized: string;

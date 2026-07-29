@@ -1,13 +1,23 @@
 import type Database from 'better-sqlite3';
 import {
+  entryHasDurationRange,
   findEntryByRoll,
   findEntryByType,
   listWeatherTypes,
   loadMessages,
+  loadWeatherRules,
   loadWeatherTable,
+  pickWeightedFromPool,
+  resolveRollPool,
 } from '../content/loader.js';
 import * as dbQueries from '../db/index.js';
-import type { Messages, WeatherResult, WeatherTableEntry, WorldState } from '../types.js';
+import type {
+  Messages,
+  WeatherResult,
+  WeatherRules,
+  WeatherTableEntry,
+  WorldState,
+} from '../types.js';
 import {
   clampToActiveWindow,
   isWithinActiveWindow,
@@ -15,12 +25,30 @@ import {
 } from '../utils/activeWindow.js';
 import {
   isPaused,
+  randomIntervalFromHours,
   randomIntervalMs,
-  rollD100,
 } from '../utils/helpers.js';
+
+export interface WeatherAdminStatus {
+  type: string;
+  severity: number;
+  forced: boolean;
+  rolledAt: Date | null;
+  nextUpdateAt: Date | null;
+  pausedUntil: Date | null;
+  dueButWaitingForWindow: boolean;
+  durationMinHours: number | null;
+  durationMaxHours: number | null;
+  usesEnvDuration: boolean;
+  cooldownActive: boolean;
+  effectiveMaxNextSeverity: number | null;
+  cooldownAfterSeverity: number;
+  cooldownMaxNextSeverity: number;
+}
 
 export class WeatherService {
   private readonly table: WeatherTableEntry[];
+  private readonly rules: WeatherRules;
   readonly messages: Messages;
   private readonly updateMinMinutes: number;
   private readonly updateMaxMinutes: number;
@@ -35,6 +63,7 @@ export class WeatherService {
     },
   ) {
     this.table = loadWeatherTable();
+    this.rules = loadWeatherRules();
     this.messages = loadMessages();
     this.updateMinMinutes = options.updateMinMinutes;
     this.updateMaxMinutes = options.updateMaxMinutes;
@@ -67,12 +96,47 @@ export class WeatherService {
     };
   }
 
+  getAdminStatus(guildId: string, now = new Date()): WeatherAdminStatus | null {
+    const state = dbQueries.getWorldState(this.db, guildId);
+    if (!state?.current_weather_type) return null;
+
+    const entry = findEntryByType(this.table, state.current_weather_type);
+    if (!entry) return null;
+
+    const schedule = this.getScheduleStatus(guildId, now);
+    const log = dbQueries.getLatestWeatherLog(this.db, guildId);
+    const poolInfo = resolveRollPool(this.table, entry.severity, this.rules);
+    const hasDuration = entryHasDurationRange(entry);
+
+    return {
+      type: entry.type,
+      severity: entry.severity,
+      forced: log?.forced === 1 && log.weather_type === entry.type,
+      rolledAt: state.current_weather_rolled_at
+        ? new Date(state.current_weather_rolled_at)
+        : null,
+      nextUpdateAt: schedule.nextUpdateAt,
+      pausedUntil: schedule.pausedUntil,
+      dueButWaitingForWindow: schedule.dueButWaitingForWindow,
+      durationMinHours: hasDuration ? entry.durationMinHours! : null,
+      durationMaxHours: hasDuration ? entry.durationMaxHours! : null,
+      usesEnvDuration: !hasDuration,
+      cooldownActive: poolInfo.cooldownActive,
+      effectiveMaxNextSeverity: poolInfo.effectiveMaxSeverity,
+      cooldownAfterSeverity: this.rules.cooldownAfterSeverity,
+      cooldownMaxNextSeverity: this.rules.cooldownMaxNextSeverity,
+    };
+  }
+
   rollWeather(guildId: string): WeatherResult {
-    const roll = rollD100();
-    const entry = findEntryByRoll(this.table, roll);
-    if (!entry) {
-      throw new Error(`No weather table entry covers roll ${roll}`);
-    }
+    const state = dbQueries.getWorldState(this.db, guildId);
+    const currentEntry = state?.current_weather_type
+      ? findEntryByType(this.table, state.current_weather_type)
+      : undefined;
+    const currentSeverity = currentEntry?.severity ?? null;
+
+    const { pool } = resolveRollPool(this.table, currentSeverity, this.rules);
+    const { entry, roll } = pickWeightedFromPool(pool);
 
     dbQueries.updateWeather(this.db, guildId, entry.type, false);
     this.scheduleNextUpdate(guildId);
@@ -88,6 +152,7 @@ export class WeatherService {
   /**
    * Apply weather from a type name (`storm`) or a physical d100 result (`81`).
    * Type → forced=true; numeric roll → forced=false (external die).
+   * Bypasses severity cooldown (DM may escalate deliberately).
    */
   setFromInput(guildId: string, input: string, durationMs?: number): WeatherResult {
     const trimmed = input.trim();
@@ -139,10 +204,22 @@ export class WeatherService {
     }
   }
 
+  /**
+   * Schedule next auto-update from the **current** weather type's duration range,
+   * or the global env interval when the entry has no duration fields.
+   */
   scheduleNextUpdate(guildId: string): Date {
-    let next = new Date(
-      Date.now() + randomIntervalMs(this.updateMinMinutes, this.updateMaxMinutes),
-    );
+    const state = dbQueries.getWorldState(this.db, guildId);
+    const entry = state?.current_weather_type
+      ? findEntryByType(this.table, state.current_weather_type)
+      : undefined;
+
+    const intervalMs =
+      entry && entryHasDurationRange(entry)
+        ? randomIntervalFromHours(entry.durationMinHours!, entry.durationMaxHours!)
+        : randomIntervalMs(this.updateMinMinutes, this.updateMaxMinutes);
+
+    let next = new Date(Date.now() + intervalMs);
     if (this.activeWindow) {
       next = clampToActiveWindow(next, this.activeWindow);
     }
