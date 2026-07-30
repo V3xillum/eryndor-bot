@@ -526,7 +526,7 @@
 
     <section id="overzicht" class="panel active" role="tabpanel">
       <h2>Wat doet de bot?</h2>
-      <p class="lead">Eryndor bot houdt de wereld levend: automatische weerkaarten in jullie weerkanaal, én op verzoek de Eryndor-datum, maanfase en volgende volle maan. Tussen weer-updates door dobbelt hij zelf — jij grijpt in wanneer de sessie dat vraagt.</p>
+      <p class="lead">Eryndor bot houdt de wereld levend: automatische weerkaarten in jullie weerkanaal, Eryndor-datum en maan op verzoek, én geplande tekstberichten in een ander kanaal. Tussen weer-updates door dobbelt hij zelf — jij grijpt in wanneer de sessie dat vraagt.</p>
 
       <div class="grid-2">
         <article class="tile">
@@ -535,7 +535,7 @@
         </article>
         <article class="tile">
           <h3>Jij als DM</h3>
-          <p>Dobbel handmatig, kies een type, pauzeer updates, draai aan zwaarte- of magie-knoppen, of pas ritme en berichtenvenster aan voor deze server.</p>
+          <p>Dobbel handmatig, kies een type, pauzeer updates, draai aan zwaarte- of magie-knoppen, pas ritme en berichtenvenster aan, of zet een tekstbericht klaar voor later.</p>
         </article>
         <article class="tile">
           <h3>Spelers</h3>
@@ -544,6 +544,10 @@
         <article class="tile">
           <h3>Kalender</h3>
           <p><code>/world today</code> en <code>/world fullmoon</code> geven Eryndor-datum, maan en events — zonder te verklappen wanneer het weer wisselt.</p>
+        </article>
+        <article class="tile">
+          <h3>Geplande berichten</h3>
+          <p>Zet sfeer- of wereldtekst klaar; de bot post die op het gekozen moment in een <strong>ander kanaal</strong> dan het weer. Aanpassen: <code>/announce schedule</code>.</p>
         </article>
       </div>
 
@@ -585,7 +589,7 @@
       <h2>Commando’s</h2>
       <p class="lead">Gegroepeerd op wie mag gebruiken, daarna op soort. Zoek of filter om in te zoomen.</p>
       <div class="toolbar">
-        <input type="search" id="cmdSearch" placeholder="Zoek (bijv. pauze, zwaarte, settings…)" aria-label="Zoek commando" />
+        <input type="search" id="cmdSearch" placeholder="Zoek (bijv. pauze, zwaarte, announce…)" aria-label="Zoek commando" />
         <select id="cmdWho" aria-label="Filter op wie">
           <option value="all">Iedereen + DM</option>
           <option value="everyone">Alleen iedereen</option>
@@ -598,6 +602,7 @@
           <option value="instellingen">Instellingen</option>
           <option value="acties">Acties</option>
           <option value="draaiknoppen">Draaiknoppen</option>
+          <option value="berichten">Berichten</option>
           <option value="info">Info</option>
         </select>
       </div>
@@ -637,11 +642,15 @@
           <p><code>/weather settings interval</code>, <code>window</code> of <code>cooldown</code>. Terugzetten: <code>/weather settings clear</code> (scope kiezen).</p>
         </article>
         <article class="tile">
+          <h3>Bericht voor later</h3>
+          <p><code>/announce schedule</code> — kies kanaal en wanneer, vul de tekst in. Handig voor een wereldgebeurtenis ’s ochtends terwijl jij slaapt. <code>/announce list</code> / <code>cancel</code> om te checken of te schrappen.</p>
+        </article>
+        <article class="tile">
           <h3>Even checken</h3>
           <p><code>/weather status</code> — zwaarte, planning, ritme, venster, afkoeling, draaiknoppen. <code>/weather next</code> — wanneer de volgende automatische update is.</p>
         </article>
       </div>
-      <p class="note">Er is geen apart “post”-commando: alles wat het weer verandert, post ook naar het kanaal. <code>/weather current</code> is privé en post niets.</p>
+      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is privé en post niets. Geplande tekstberichten gaan via <code>/announce</code> naar het kanaal dat jij kiest.</p>
     </section>
 
     <section id="aanleveren" class="panel" role="tabpanel" hidden>
@@ -721,6 +730,7 @@
       { id: "instellingen", label: "Instellingen" },
       { id: "acties", label: "Acties" },
       { id: "draaiknoppen", label: "Draaiknoppen" },
+      { id: "berichten", label: "Berichten" },
       { id: "info", label: "Info" },
     ];
 
@@ -829,6 +839,27 @@
         cat: "acties",
         what: "Hef de pauze op en plan de volgende update.",
         when: "Na de sessie of als je automatisch weer wilt.",
+      },
+      {
+        cmd: "/announce schedule",
+        who: "dm",
+        cat: "berichten",
+        what: "Plan een tekstbericht: kies kanaal en wanneer (30m, 2h, 1d, of bijv. 2026-07-31 08:00). Daarna vul je de tekst in een venster (max 2000 tekens). Post naar dat kanaal — los van het weerkanaal. Volgt niet het berichtenvenster of een pauze van automatische weer-updates.",
+        when: "Wereldgebeurtenis of sfeertekst klaarzetten voor later.",
+      },
+      {
+        cmd: "/announce list",
+        who: "dm",
+        cat: "berichten",
+        what: "Toont openstaande geplande berichten (nummer, kanaal, tijd, korte preview).",
+        when: "Even checken wat er nog in de wachtrij staat.",
+      },
+      {
+        cmd: "/announce cancel",
+        who: "dm",
+        cat: "berichten",
+        what: "Annuleer een openstaand gepland bericht op nummer (id uit list).",
+        when: "Scene gewijzigd of bericht niet meer nodig.",
       },
       {
         cmd: "/weather severity set",

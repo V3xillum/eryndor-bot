@@ -73,7 +73,7 @@ Eerst op **wie**, daarna op **categorie**:
 | Wie | Categorieën |
 |---|---|
 | Iedereen | Bekijken |
-| DM | Inrichten · Instellingen · Acties · Draaiknoppen · Info |
+| DM | Inrichten · Instellingen · Acties · Draaiknoppen · Berichten · Info |
 
 | Categorie | Voorbeelden |
 |---|---|
@@ -82,6 +82,7 @@ Eerst op **wie**, daarna op **categorie**:
 | Instellingen | `/weather settings …` |
 | Acties | `roll`, `set`, `schedule`, `pause`, `resume` |
 | Draaiknoppen | `severity`, `magical` |
+| Berichten | `/announce schedule`, `/announce list`, `/announce cancel` |
 | Info | `status`, `next` |
 
 Nieuwe commands in de juiste categorie + in de filters (`cmdCat`) houden.
@@ -97,6 +98,7 @@ Gebruik deze termen consistent:
 - **Zwaarte** — cijfer 1–5; **zwaar** = 4+; afkoeling daarna max zwaarte 2 (defaults uit content; zie bot)
 - **Afkoeling** — na zwaar weer mildere volgende roll; defaults na ≥4 → max 2; per server via `/weather settings cooldown`; `set` negeert
 - **Zwaarte- / magie-draaiknop** — tijdelijke beperking op rolls
+- **Gepland bericht** — vrije tekst die de bot later post in een gekozen kanaal (los van het weerkanaal); via `/announce`
 - **Eryndor bot** — productnaam (repo/package mag `weather-bot` / `eryndor-bot` blijven)
 
 Defaults in de handout moeten overeenkomen met content/`weather-rules.json` en schedule-defaults. Wijzigen die in de bot → handout meenemen. Snapshot `docs/handout/weather-table.json` meenemen als `content/weather-table.json` wijzigt.
@@ -106,7 +108,7 @@ Defaults in de handout moeten overeenkomen met content/`weather-rules.json` en s
 ## Workflow: feature → handout
 
 1. Feature **implemented** in de bot (zie feature-doc + `agent.md`).
-2. Schrijf een korte briefing: `docs/handout-update-<onderwerp>.md` (zie [`handout-update-guild-schedule-settings.md`](./handout-update-guild-schedule-settings.md)).
+2. Schrijf een korte briefing: `docs/handout-update-<onderwerp>.md` (zie [`handout-update-guild-schedule-settings.md`](./handout-update-guild-schedule-settings.md), [`handout-update-scheduled-announcements.md`](./handout-update-scheduled-announcements.md)).
 3. Werk `docs/handout/index.html` bij volgens **dit** bestand + die briefing.
 4. Geen secrets, geen interne implementatiedetails in de handout.
 5. Proposed features (bijv. [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md)) → **geen** handout tot status = implemented.
