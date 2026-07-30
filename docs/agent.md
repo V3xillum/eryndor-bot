@@ -240,7 +240,7 @@ Discord commands should only parse input, call the service, and format the reply
 
 Fetch order: Pages base URL first; on persistent 404, optional raw.githubusercontent.com fallback. Do not scrape HTML.
 
-Replies are Dutch Discord embeds (`content/messages.json` for labels/errors). Today embed: Harptos title, moon phase, NL-formatted Gregorian date under the moon, events list — **no** next-full-moon footer on today (full moon is only via `/world fullmoon`).
+Replies are Dutch Discord embeds (`content/messages.json` for labels/errors). Today embed: Harptos title, moon phase, NL-formatted Gregorian date under the moon, events list, then a markdown “Bekijk ↗” link to the calendar UI (`ERYNDOR_CALENDAR_BASE_URL`) under Events — **no** next-full-moon footer on today (full moon is only via `/world fullmoon`).
 
 UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec detail: [`docs/feature-eryndor-calendar.md`](./feature-eryndor-calendar.md). Daily auto-post of events: [`docs/feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 

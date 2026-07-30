@@ -82,6 +82,7 @@
   "calendarTodayTitle": "{label}",
   "calendarEventsHeader": "Events",
   "calendarNoEvents": "Geen events vandaag",
+  "calendarViewLink": "[Bekijk ↗]({url})",
   "calendarFullMoonTitle": "Volgende volle maan",
   "calendarFullMoonWhen": "{whenText}",
   "calendarSetupSuccess": "Kalender-events worden gepost naar {target} (ochtend, alleen als er events zijn).",

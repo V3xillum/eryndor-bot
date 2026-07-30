@@ -50,6 +50,9 @@ export class EryndorCalendarService {
 
     const gregorian = formatGregorianNl(day.gregorian.iso);
     const description = [`${day.moon.emoji} ${day.moon.phase}`, gregorian].join('\n');
+    const viewLink = formatTemplate(this.messages.calendarViewLink, {
+      url: this.options.baseUrl,
+    });
 
     const embed = new EmbedBuilder()
       .setColor(0xc9a227)
@@ -59,7 +62,8 @@ export class EryndorCalendarService {
       .setDescription(description)
       .addFields({
         name: this.messages.calendarEventsHeader,
-        value: events,
+        // Same field = tight spacing (a second field adds a large Discord gap).
+        value: `${events}\n${viewLink}`,
       });
 
     if (day.leapYearNote) {

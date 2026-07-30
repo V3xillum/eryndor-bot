@@ -166,6 +166,7 @@ export interface Messages {
   calendarTodayTitle: string;
   calendarEventsHeader: string;
   calendarNoEvents: string;
+  calendarViewLink: string;
   calendarFullMoonTitle: string;
   calendarFullMoonWhen: string;
   calendarSetupSuccess: string;
