@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Eryndor bot — DM-handout</title>
-  <meta name="description" content="Handleiding voor Dungeon Masters: weer- en wereldcommando's van Eryndor bot, en hoe je nieuwe weertypes aanlevert." />
+  <meta name="description" content="Handleiding voor Dungeon Masters: weer- en wereldcommando’s van Eryndor bot, en hoe je nieuwe weertypes aanlevert." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -514,7 +514,7 @@
         <img src="eryndor-logo.jpg" alt="Eryndor Campaign" width="220" height="220" />
       </div>
       <h1 class="hero-brand">Eryndor bot<span>DM-handout</span></h1>
-      <p>Hoe de Discord-bot werkt: slash-commands voor weer en kalender, en wat je moet aanleveren voor een nieuw weertype.</p>
+      <p>Wat de bot voor jullie tafel doet, welke Discord-commando’s je hebt, en wat je doorgeeft als er een nieuw weertype bij komt.</p>
     </header>
 
     <nav class="nav" role="tablist" aria-label="Handout secties">
@@ -526,37 +526,37 @@
 
     <section id="overzicht" class="panel active" role="tabpanel">
       <h2>Wat doet de bot?</h2>
-      <p class="lead">Eryndor bot houdt de wereld levend: automatische weerkaarten in jullie weerkanaal, Eryndor-datum en maan op verzoek, én geplande tekstberichten in een ander kanaal. Tussen weer-updates door dobbelt hij zelf — jij grijpt in wanneer de sessie dat vraagt.</p>
+      <p class="lead">Eryndor bot houdt de wereld levend tussen sessies: hij post weerkaarten in jullie weerkanaal, geeft op verzoek de Eryndor-datum en maan, en kan een tekstbericht klaarzetten voor later. Tussendoor dobbelt hij zelf — jij grijpt in wanneer de tafel dat vraagt.</p>
 
       <div class="grid-2">
         <article class="tile">
           <h3>Automatisch</h3>
-          <p>De bot dobbelt zelf nieuw weer volgens het standaard ritme (zie hieronder). Zwaar weer blijft meestal korter als daar een eigen duur voor staat. Na een zware storm volgt eerst milder weer (afkoeling).</p>
+          <p>De bot dobbelt zelf nieuw weer volgens het standaard ritme (zie hieronder). Zwaar weer blijft meestal korter als dat type een eigen duur heeft. Na een zware storm volgt eerst milder weer — dat heet <strong>afkoeling</strong>.</p>
         </article>
         <article class="tile">
           <h3>Jij als DM</h3>
-          <p>Dobbel handmatig, kies een type, pauzeer updates, draai aan zwaarte- of magie-knoppen, pas ritme en berichtenvenster aan, of zet een tekstbericht klaar voor later.</p>
+          <p>Weer vastzetten of laten dobbelen, automatische updates pauzeren tijdens de sessie, tijdelijk zwaarder of milder weer forceren, ritme aanpassen, of een wereldbericht klaarzetten voor later.</p>
         </article>
         <article class="tile">
           <h3>Spelers</h3>
-          <p>Iedereen mag het huidige weer privé bekijken en de kalender raadplegen. Alleen aangewezen DM’s sturen de bot aan.</p>
+          <p>Iedereen mag het huidige weer alleen voor zichzelf bekijken en de kalender raadplegen. Alleen aangewezen DM’s sturen de bot aan.</p>
         </article>
         <article class="tile">
           <h3>Kalender</h3>
-          <p><code>/world today</code> en <code>/world fullmoon</code> geven Eryndor-datum, maan en events — zonder te verklappen wanneer het weer wisselt.</p>
+          <p><code>/world today</code> en <code>/world fullmoon</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — zonder te verklappen wanneer het weer wisselt.</p>
         </article>
         <article class="tile">
           <h3>Geplande berichten</h3>
-          <p>Zet sfeer- of wereldtekst klaar; de bot post die op het gekozen moment in een <strong>ander kanaal</strong> dan het weer. Aanpassen: <code>/announce schedule</code>.</p>
+          <p>Zet sfeer- of wereldtekst klaar; de bot post die op het gekozen moment in een <strong>ander kanaal</strong> dan het weer. Commando: <code>/announce schedule</code>.</p>
         </article>
       </div>
 
       <h2 style="margin-top:1.5rem">Zwaarte (1–5)</h2>
       <p class="lead">
         Elk weertype heeft een cijfer van mild (1) tot catastrofaal (5).
-        Zwaar weer is standaard <strong>4 of hoger</strong>; daarna volgt eerst weer tot hoogstens zwaarte <strong>2</strong>.
-        <code>/weather set</code> negeert die regel. De zwaarte-draaiknop beperkt tijdelijk welk bereik mag vallen.
-        Aanpassen: <code>/weather settings cooldown</code>.
+        Weer van <strong>4 of hoger</strong> telt als zwaar; daarna dobbelt de bot eerst weer tot hoogstens zwaarte <strong>2</strong> (afkoeling).
+        Kies je zelf het weer met <code>/weather set</code>, dan geldt die afkoeling niet — jij hebt het laatste woord.
+        Afkoeling aanpassen: <code>/weather settings cooldown</code>.
       </p>
       <div class="severity-scale" aria-label="Zwaarte schaal">
         <div class="sev" data-n="1"><strong>1</strong>Mild</div>
@@ -567,18 +567,18 @@
       </div>
 
       <h2>Huidige weertypes</h2>
-      <p class="lead">Wat er nu in de tabel staat (d100-kans, zwaarte, magisch, optionele duur).</p>
+      <p class="lead">Wat er nu in de dobbel-tabel staat: kans op de d100, zwaarte, of het magisch is, en hoe lang het ongeveer blijft.</p>
       <div class="types" id="typeGrid"></div>
       <div class="note">
         <p style="margin:0 0 0.75rem"><strong>Standaard ritme</strong><br />
-        Tijd tot de bot zelf opnieuw dobbelt: standaard ergens tussen <strong>6 en 18 uur</strong>.
-        Een eigen duur per weertype, of een duur die jij bij set/schedule kiest, gaat daarvóór.
+        Hoe vaak de bot zelf opnieuw dobbelt: standaard ergens tussen <strong>6 en 18 uur</strong>.
+        Heeft een weertype een eigen duur, of kies jij een duur bij zetten/plannen, dan wint die.
         Aanpassen: <code>/weather settings interval</code>.</p>
         <p style="margin:0 0 0.75rem"><strong>Berichtenvenster</strong><br />
-        Automatische berichten alleen tussen <strong>06:00 en 23:00</strong> (Nederlandse tijd). Daarbuiten wacht de bot.
+        Automatische weerberichten alleen tussen <strong>06:00 en 23:00</strong> (Nederlandse tijd). Daarbuiten wacht de bot.
         Handmatig dobbelen of zetten werkt altijd. Aanpassen: <code>/weather settings window</code>.</p>
         <p style="margin:0 0 0.75rem"><strong>Terugzetten &amp; checken</strong><br />
-        Terug naar standaard: <code>/weather settings clear</code> (kies ritme/venster, afkoeling, of alles).
+        Terug naar de standaard: <code>/weather settings clear</code> — kies of je ritme/venster, afkoeling, of alles wilt wissen.
         Wat geldt er nu?: <code>/weather settings show</code> of <code>/weather status</code>.</p>
         <p style="margin:0"><strong>Afkoeling</strong><br />
         Zie <strong>Zwaarte</strong> hierboven (standaard: na 4+ eerst max 2). Aanpassen of uitzetten: <code>/weather settings cooldown</code>.</p>
@@ -587,7 +587,7 @@
 
     <section id="commands" class="panel" role="tabpanel" hidden>
       <h2>Commando’s</h2>
-      <p class="lead">Gegroepeerd op wie mag gebruiken, daarna op soort. Zoek of filter om in te zoomen.</p>
+      <p class="lead">Gegroepeerd op wie mag gebruiken, daarna op soort. Zoek op woord of kies wie/categorie om iets terug te vinden.</p>
       <div class="toolbar">
         <input type="search" id="cmdSearch" placeholder="Zoek (bijv. pauze, zwaarte, announce…)" aria-label="Zoek commando" />
         <select id="cmdWho" aria-label="Filter op wie">
@@ -611,81 +611,81 @@
 
     <section id="sessie" class="panel" role="tabpanel" hidden>
       <h2>Tijdens de sessie</h2>
-      <p class="lead">Snelle keuzes zonder te zoeken.</p>
+      <p class="lead">Snelle keuzes zonder te zoeken. Duur schrijf je als <code>30m</code> (minuten), <code>2h</code> (uren) of <code>1d</code> (dagen).</p>
       <div class="grid-2">
         <article class="tile">
           <h3>Sessie starten</h3>
-          <p><code>/weather pause 4h</code> — stop automatische updates terwijl je speelt. Daarna <code>/weather resume</code>.</p>
+          <p>Zet aan het begin van een sessie het weer vast: jij bepaalt onder welke omstandigheden gespeeld wordt, en de bot past het weer niet mid-sessie aan. <code>/weather pause 4h</code> — na afloop <code>/weather resume</code>.</p>
         </article>
         <article class="tile">
           <h3>Nu dit weer</h3>
-          <p><code>/weather set storm</code> — of vul je eigen d100 in. Optioneel hoe lang het blijft (<code>2h</code>). Ideaal als jij wilt dobbelen, of dit weer bij de scene past.</p>
+          <p>Dit weer past bij de scene — of jij wilt zelf de d100 gooien. <code>/weather set storm</code> (of vul je eigen score in). Optioneel hoe lang: bijv. <code>2h</code>.</p>
         </article>
         <article class="tile">
           <h3>Dobbel live</h3>
-          <p><code>/weather roll</code> — de bot dobbelt (met afkoeling en actieve draaiknoppen) en post meteen.</p>
+          <p>Laat de tafel meegenieten van een echte worp. <code>/weather roll</code> — de bot dobbelt (met afkoeling en eventuele draaiknoppen) en post meteen.</p>
         </article>
         <article class="tile">
           <h3>Gevaarlijke avond</h3>
-          <p><code>/weather severity set</code> min 4 max 5, duur 3h — dobbelstenen blijven zwaar tot de draaiknop verloopt.</p>
+          <p>Alleen zwaar weer voor de rest van de avond. <code>/weather severity set</code> — kies min 4, max 5, duur bijv. <code>3h</code>. Tot die tijd blijft de dobbelsteen in dat bereik.</p>
         </article>
         <article class="tile">
           <h3>Rustige trek</h3>
-          <p><code>/weather severity set</code> min 1 max 2 — alleen mild weer. Of <code>/weather magical set</code> op <strong>none</strong> voor géén magisch weer.</p>
+          <p>Alleen mild weer terwijl de party reist. <code>/weather severity set</code> — min 1, max 2. Of: géén magisch weer via <code>/weather magical set</code> → kies <strong>none</strong>.</p>
         </article>
         <article class="tile">
           <h3>Alleen magie</h3>
-          <p><code>/weather magical set</code> op <strong>only</strong> — of <strong>none</strong> voor juist geen magisch weer.</p>
+          <p>Arcane-thema: alleen magisch weer. <code>/weather magical set</code> → kies <strong>only</strong> (of juist <strong>none</strong> voor gewone lucht).</p>
         </article>
         <article class="tile">
           <h3>Ritme, venster of afkoeling</h3>
-          <p><code>/weather settings interval</code>, <code>window</code> of <code>cooldown</code>. Terugzetten: <code>/weather settings clear</code> (scope kiezen).</p>
+          <p>Hoe vaak de bot dobbelt, tussen welke uren hij mag posten, of hoe streng afkoeling is — per server. <code>/weather settings interval</code> (ritme), <code>window</code> (berichtenvenster) of <code>cooldown</code> (afkoeling). Terug naar standaard: <code>/weather settings clear</code> — kies ritme/venster, afkoeling, of alles.</p>
         </article>
         <article class="tile">
           <h3>Bericht voor later</h3>
-          <p><code>/announce schedule</code> — kies kanaal en wanneer, vul de tekst in. Handig voor een wereldgebeurtenis ’s ochtends terwijl jij slaapt. <code>/announce list</code> / <code>cancel</code> om te checken of te schrappen.</p>
+          <p>Wereldgebeurtenis klaarzetten terwijl jij slaapt. <code>/announce schedule</code> — kies kanaal en wanneer, vul de tekst in. Checken of schrappen: <code>/announce list</code> / <code>/announce cancel</code>.</p>
         </article>
         <article class="tile">
           <h3>Even checken</h3>
-          <p><code>/weather status</code> — zwaarte, planning, ritme, venster, afkoeling, draaiknoppen. <code>/weather next</code> — wanneer de volgende automatische update is.</p>
+          <p>Wat speelt er nu? <code>/weather status</code> — weer, planning, ritme, venster, afkoeling, draaiknoppen. Alleen de volgende update: <code>/weather next</code>.</p>
         </article>
       </div>
-      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is privé en post niets. Geplande tekstberichten gaan via <code>/announce</code> naar het kanaal dat jij kiest.</p>
+      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code> naar het kanaal dat jij kiest.</p>
     </section>
 
     <section id="aanleveren" class="panel" role="tabpanel" hidden>
       <h2>Nieuw weertype aanleveren</h2>
-      <p class="lead">Wil je een nieuw weertype in de bot? Lever onderstaande keuzes + plaatje aan bij wie de content bijwerkt. Discord toont alleen de weerkaart — geen aparte tekst.</p>
+      <p class="lead">Wil je een nieuw weertype? Lever onderstaande keuzes + een plaatje aan bij wie de content bijwerkt. In Discord zie je alleen de weerkaart — geen aparte sfeertekst.</p>
 
       <div class="grid-2">
         <article class="tile">
           <h3>1. Naam</h3>
-          <p>Hoe het type heet in de bot (bijv. <code>storm</code> of <code>Clockwork clouds</code>). Dit zie je terug in status en bij <code>/weather set</code>.</p>
+          <p>Hoe het type heet (bijv. <code>storm</code> of <code>Clockwork clouds</code>). Dit zie je terug in status en bij <code>/weather set</code>.</p>
         </article>
         <article class="tile">
           <h3>2. Plaatje</h3>
-          <p>De Discord-weerkaart. Bestandsnaam het liefst gelijk aan het <code>image</code>-veld (bijv. <code>ashen_fog.png</code>). Hier zit de sfeer.</p>
+          <p>De Discord-weerkaart. Bestandsnaam het liefst gelijk aan de type-naam (bijv. <code>ashen_fog.png</code>). Hier zit de sfeer.</p>
         </article>
         <article class="tile">
           <h3>3. Zwaarte (1–5)</h3>
-          <p>Hoe heftig is dit weer? Bepaalt afkoeling na zwaar weer en of de zwaarte-draaiknop het kan selecteren.</p>
+          <p>Hoe heftig is dit weer? Bepaalt of er afkoeling volgt na zwaar weer, en of de zwaarte-draaiknop het kan kiezen.</p>
         </article>
         <article class="tile">
           <h3>4. Magisch?</h3>
-          <p>Ja of nee. Nodig voor de magie-draaiknop (alleen magisch / juist géén magisch).</p>
+          <p>Ja of nee. Nodig als je tijdelijk “alleen magisch” of “geen magisch” weer wilt forceren.</p>
         </article>
         <article class="tile">
           <h3>5. Kans op de d100</h3>
-          <p>Hoe vaak mag het vallen? Wordt <code>min</code>–<code>max</code> op de tabel (samen met de rest moet 1–100 sluitend blijven).</p>
+          <p>Hoe vaak mag het vallen? Bijv. “87 tot 90”. Samen met de andere types moet 1–100 sluitend blijven — dat regelt wie de content bijwerkt.</p>
         </article>
         <article class="tile">
           <h3>6. Duur (optioneel)</h3>
-          <p>Min/max minuten dat dit weer mag blijven. Weglaten = standaard ritme (nu 6–18 uur).</p>
+          <p>Hoe lang dit weer ongeveer blijft (min/max in minuten). Weglaten = standaard ritme (nu 6–18 uur).</p>
         </article>
       </div>
 
-      <h2 style="margin-top:1.5rem">Voorbeeld (voor nette aanlevering)</h2>
-      <p class="lead">Eén nieuw type ziet er zo uit. Kopieer dit, vul in, en stuur het mee met het plaatje.</p>
+      <h2 style="margin-top:1.5rem">Voorbeeld (voor wie de content bijwerkt)</h2>
+      <p class="lead">Zo ziet één type er technisch uit. Jij hoeft dit niet zelf te schrijven — handig om mee te sturen als je de cijfers al hebt.</p>
       <pre class="output" id="jsonSnippet">{
   "min": 87,
   "max": 90,
@@ -697,14 +697,8 @@
   "durationMaxMinutes": 240
 }</pre>
       <p class="note" style="margin-top:0.85rem">
-        <code>durationMinMinutes</code> / <code>durationMaxMinutes</code> zijn optioneel (beide of geen).
-      </p>
-      <div class="actions" style="margin-top:0.85rem">
-        <a class="btn" href="weather-table.json" download="weather-table.json">Download huidige tabel</a>
-      </div>
-      <p class="note">
-        De download is ter <strong>referentie</strong> (bestaande namen, ranges, plaatjes).
-        Stuur wijzigingen + nieuwe afbeeldingen terug naar wie de bot-content beheert — gooi de live tabel niet zelf om zonder check op sluitende d100 (1–100).
+        Duur-velden zijn optioneel (beide of geen).
+        Stuur wijzigingen + nieuwe afbeeldingen terug naar wie de bot-content beheert — de d100-ranges moeten samen 1–100 blijven.
       </p>
     </section>
 
@@ -738,14 +732,14 @@
         cmd: "/weather current",
         who: "everyone",
         cat: "bekijken",
-        what: "Laat jou privé zien welk weer er nu staat. Post niets in het kanaal.",
+        what: "Laat jou alleen voor jezelf zien welk weer er nu staat. Post niets in het kanaal.",
         when: "Even checken zonder de tafel te storen.",
       },
       {
         cmd: "/world today",
         who: "everyone",
         cat: "bekijken",
-        what: "Huidige Harptos-dag, maanfase en events van Eryndor.",
+        what: "Huidige Harptos-dag (Eryndor-kalender), maanfase en events.",
         when: "Wereldtijd / feestdagen aan tafel.",
       },
       {
@@ -766,42 +760,42 @@
         cmd: "/weather settings show",
         who: "dm",
         cat: "instellingen",
-        what: "Toont welk ritme, berichtenvenster en afkoeling nu gelden voor deze server (eigen waarden of standaard).",
+        what: "Toont welk ritme, berichtenvenster en afkoeling nu gelden voor deze server (eigen waarden of de standaard).",
         when: "Even checken wat er actief is.",
       },
       {
         cmd: "/weather settings interval",
         who: "dm",
         cat: "instellingen",
-        what: "Stel het standaard ritme in voor deze server, in minuten (min en max). Geldt als het huidige type geen eigen duur heeft. Plant meteen opnieuw.",
+        what: "Stel het standaard ritme in voor deze server: minimale en maximale wachttijd in minuten. Geldt als het huidige type geen eigen duur heeft. De bot zet de volgende update meteen opnieuw klaar.",
         when: "Sneller testen (bijv. 1–5 min) of productie-achtig (bijv. 360–1080 = 6–18 uur).",
       },
       {
         cmd: "/weather settings window",
         who: "dm",
         cat: "instellingen",
-        what: "Berichtenvenster aan of uit, optioneel start/eind (bijv. 06:00–23:00). Alleen automatische berichten wachten hierop. Plant meteen opnieuw.",
+        what: "Berichtenvenster aan of uit, optioneel start/eind (bijv. 06:00–23:00). Alleen automatische weerberichten wachten hierop; handmatig werkt altijd. De bot zet de volgende update meteen opnieuw klaar.",
         when: "Kortere dagen, of 24/7 automatisch weer (venster uit).",
       },
       {
         cmd: "/weather settings cooldown",
         who: "dm",
         cat: "instellingen",
-        what: "Afkoeling voor deze server: aan/uit, drempel “zwaar” (after) en max zwaarte daarna (max_next). Laat velden weg om ze te houden. /weather set negeert afkoeling altijd.",
+        what: "Afkoeling voor deze server: aan/uit, vanaf welke zwaarte “zwaar” telt (after), en max zwaarte daarna (max_next). Laat velden leeg om ze te houden. /weather set negeert afkoeling altijd.",
         when: "Storm-arc zonder afkoeling (uit), of mildere/strengere wereld (andere drempels).",
       },
       {
         cmd: "/weather settings clear",
         who: "dm",
         cat: "instellingen",
-        what: "Wis server-aanpassingen terug naar de standaard. Kies scope: schedule (ritme/venster), cooldown (afkoeling), of all (alles). Plant opnieuw als ritme/venster wijzigt.",
+        what: "Wis server-aanpassingen terug naar de standaard. Kies wat je wist: schedule (ritme + berichtenvenster), cooldown (afkoeling), of all (alles). Bij ritme/venster zet de bot de volgende update opnieuw klaar.",
         when: "Klaar met testen, of terug naar de normale campagne-instellingen — zonder per ongeluk alles te wissen.",
       },
       {
         cmd: "/weather roll",
         who: "dm",
         cat: "acties",
-        what: "Dobbel nieuw weer (met afkoeling en draaiknoppen) en post meteen.",
+        what: "Dobbel nieuw weer (met afkoeling en actieve draaiknoppen) en post meteen in het weerkanaal.",
         when: "Live dobbelen tijdens de sessie.",
       },
       {
@@ -815,28 +809,28 @@
         cmd: "/weather schedule",
         who: "dm",
         cat: "acties",
-        what: "Huidig weer blijft; alleen het moment van de volgende automatische update wijzigen.",
+        what: "Huidig weer blijft staan; alleen het moment van de volgende automatische update wijzigen.",
         when: "Weer langer of korter laten hangen zonder opnieuw te dobbelen.",
       },
       {
         cmd: "/weather pause",
         who: "dm",
         cat: "acties",
-        what: "Pauzeer automatische updates voor een duur (30m, 2h, 1d).",
+        what: "Zet automatische updates stil voor een duur (30m, 2h, 1d). Het huidige weer blijft staan tot jij hervat of de pauze verloopt.",
         when: "Sessie starten — geen verrassingen mid-combat.",
       },
       {
         cmd: "/weather resume",
         who: "dm",
         cat: "acties",
-        what: "Hef de pauze op en plan de volgende update.",
+        what: "Hef de pauze op; de bot plant weer de volgende automatische update.",
         when: "Na de sessie of als je automatisch weer wilt.",
       },
       {
         cmd: "/announce schedule",
         who: "dm",
         cat: "berichten",
-        what: "Plan een tekstbericht: kies kanaal en wanneer (30m, 2h, 1d, of bijv. 31-07-2026 08:00). Daarna vul je de tekst in een venster (max 2000 tekens). Post naar dat kanaal — los van het weerkanaal. Volgt niet het berichtenvenster of een pauze van automatische weer-updates.",
+        what: "Plan een tekstbericht: kies kanaal en wanneer (30m, 2h, 1d, of bijv. 31-07-2026 08:00). Daarna vul je de tekst in (max 2000 tekens). Post naar dat kanaal — los van het weerkanaal. Volgt niet het berichtenvenster en stopt niet bij een weer-pauze.",
         when: "Wereldgebeurtenis of sfeertekst klaarzetten voor later.",
       },
       {
@@ -850,21 +844,21 @@
         cmd: "/announce cancel",
         who: "dm",
         cat: "berichten",
-        what: "Annuleer een openstaand gepland bericht op nummer (id uit list).",
+        what: "Annuleer een openstaand gepland bericht op nummer (het id uit list).",
         when: "Scene gewijzigd of bericht niet meer nodig.",
       },
       {
         cmd: "/weather severity set",
         who: "dm",
         cat: "draaiknoppen",
-        what: "Tijdelijke zwaarte-draaiknop: dobbelstenen alleen binnen min–max zwaarte (mild tot catastrofaal), voor een duur.",
+        what: "Tijdelijke zwaarte-draaiknop: nieuwe worpen alleen binnen min–max zwaarte (1 mild tot 5 catastrofaal), voor een duur.",
         when: "Escalatie-avond of juist een rustige trek.",
       },
       {
         cmd: "/weather severity clear",
         who: "dm",
         cat: "draaiknoppen",
-        what: "Zet de zwaarte-draaiknop uit → weer normaal gedrag.",
+        what: "Zet de zwaarte-draaiknop uit → weer normaal dobbelen.",
         when: "Draaiknop niet meer nodig.",
       },
       {
@@ -899,7 +893,7 @@
         cmd: "/weather next",
         who: "dm",
         cat: "info",
-        what: "Wanneer de volgende automatische update gepland staat (privé).",
+        what: "Wanneer de volgende automatische update gepland staat (alleen voor jou zichtbaar).",
         when: "Planning tussen scenes.",
       },
     ];
