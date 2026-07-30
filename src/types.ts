@@ -181,6 +181,8 @@ export interface Messages {
   announceBodyEmpty: string;
   announceModalTitle: string;
   announceModalBodyLabel: string;
+  announcePostFailedDm: string;
+  announcePostFailedDmIntro: string;
 }
 
 export type CalendarEvent =

@@ -24,7 +24,7 @@ Zie ook: [`agent.md`](./agent.md), Discord [slash commands](https://discord.com/
 - Post is plain text (geen embed); newlines blijven behouden.
 - **Geen** weer-actief-venster en **geen** weather-pause — dit is een bewuste DM-deadline.
 - Scheduler pollt elke **30s** (zelfde loop als weer). Missed `post_at` na restart → post bij eerstvolgende tick.
-- Transient Discord-fouten: blijft pending (retry). Ongeldig/verwijderd kanaal: wordt afgevinkt (`posted_at` gezet) + log warning.
+- Transient Discord-fouten: blijft pending (retry). Permanente fouten (geen View/Send, Missing Access/Permissions, ongeldig kanaal): DM naar `created_by` met de body (copy-paste), daarna afgevinkt (`posted_at`). Als DM faalt: body in console-log.
 
 ---
 

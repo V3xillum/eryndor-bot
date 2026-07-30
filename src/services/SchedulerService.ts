@@ -1,12 +1,25 @@
-import type { Client, TextBasedChannel } from 'discord.js';
-import { AttachmentBuilder } from 'discord.js';
+import type { Client, GuildChannel, TextBasedChannel } from 'discord.js';
+import {
+  AttachmentBuilder,
+  DiscordAPIError,
+  PermissionFlagsBits,
+  RESTJSONErrorCodes,
+} from 'discord.js';
 import { resolveImagePath } from '../content/loader.js';
-import type { WeatherResult } from '../types.js';
+import type { ScheduledPost, WeatherResult } from '../types.js';
 import { formatTemplate } from '../utils/helpers.js';
 import type { AnnounceService } from './AnnounceService.js';
 import type { WeatherService } from './WeatherService.js';
 
 const CHECK_INTERVAL_MS = 30 * 1000;
+const DISCORD_CONTENT_LIMIT = 2000;
+
+/** Channel/permission errors that will not succeed on retry. */
+const PERMANENT_ANNOUNCE_ERROR_CODES = new Set<number>([
+  RESTJSONErrorCodes.MissingAccess,
+  RESTJSONErrorCodes.MissingPermissions,
+  RESTJSONErrorCodes.UnknownChannel,
+]);
 
 export class SchedulerService {
   private timer: NodeJS.Timeout | null = null;
@@ -53,13 +66,21 @@ export class SchedulerService {
           console.warn(
             `Scheduled post ${post.id}: destination ${post.channel_id} is not a text channel`,
           );
-          this.announce.markPosted(post.id);
+          await this.failAnnounceWithDm(post);
           continue;
         }
 
         if (!('send' in channel)) {
           console.warn(`Scheduled post ${post.id}: channel does not support send`);
-          this.announce.markPosted(post.id);
+          await this.failAnnounceWithDm(post);
+          continue;
+        }
+
+        if (!botCanSendInChannel(channel)) {
+          console.warn(
+            `Scheduled post ${post.id}: bot lacks View/Send in ${post.channel_id}`,
+          );
+          await this.failAnnounceWithDm(post);
           continue;
         }
 
@@ -67,9 +88,43 @@ export class SchedulerService {
         this.announce.markPosted(post.id);
       } catch (error) {
         console.error(`Scheduled post ${post.id} failed:`, error);
+        if (isPermanentAnnounceError(error)) {
+          await this.failAnnounceWithDm(post);
+          continue;
+        }
         // Leave pending so the next tick can retry (e.g. transient Discord outage).
       }
     }
+  }
+
+  /** DM the creator with the body, then mark done so we stop retrying. */
+  private async failAnnounceWithDm(post: ScheduledPost): Promise<void> {
+    const channelMention = `<#${post.channel_id}>`;
+    const combined = formatTemplate(this.announce.messages.announcePostFailedDm, {
+      channel: channelMention,
+      body: post.body,
+    });
+
+    try {
+      const user = await this.client.users.fetch(post.created_by);
+      if (combined.length <= DISCORD_CONTENT_LIMIT) {
+        await user.send({ content: combined });
+      } else {
+        const intro = formatTemplate(this.announce.messages.announcePostFailedDmIntro, {
+          channel: channelMention,
+        });
+        await user.send({ content: intro.slice(0, DISCORD_CONTENT_LIMIT) });
+        await user.send({ content: post.body.slice(0, DISCORD_CONTENT_LIMIT) });
+      }
+    } catch (error) {
+      console.error(
+        `Scheduled post ${post.id}: could not DM creator ${post.created_by}`,
+        error,
+      );
+      console.error(`Scheduled post ${post.id} body:\n${post.body}`);
+    }
+
+    this.announce.markPosted(post.id);
   }
 
   async postWeather(guildId: string, result: WeatherResult): Promise<boolean> {
@@ -95,12 +150,13 @@ export class SchedulerService {
 }
 
 /**
- * Large attachment (full Discord image size) + markdown title.
+ * Large attachment (full Discord image size) + markdown title + @everyone.
  * Embeds shrink the image, so we avoid them here on purpose.
  */
 export function buildWeatherCard(result: WeatherResult): {
   content: string;
   files: AttachmentBuilder[];
+  allowedMentions: { parse: ['everyone'] };
 } {
   const attachment = new AttachmentBuilder(resolveImagePath(result.image), {
     name: result.image,
@@ -109,8 +165,9 @@ export function buildWeatherCard(result: WeatherResult): {
   const title = formatWeatherTitle(result.type);
 
   return {
-    content: `### ${title}`,
+    content: `@everyone\n### ${title}`,
     files: [attachment],
+    allowedMentions: { parse: ['everyone'] },
   };
 }
 
@@ -131,4 +188,23 @@ function formatWeatherTitle(type: string): string {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function botCanSendInChannel(channel: TextBasedChannel): boolean {
+  if (!('guild' in channel) || channel.guild == null) return false;
+  if (!('permissionsFor' in channel)) return false;
+
+  const me = channel.guild.members.me;
+  if (!me) return true;
+
+  const perms = (channel as GuildChannel).permissionsFor(me);
+  return Boolean(
+    perms?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]),
+  );
+}
+
+function isPermanentAnnounceError(error: unknown): boolean {
+  return (
+    error instanceof DiscordAPIError && PERMANENT_ANNOUNCE_ERROR_CODES.has(Number(error.code))
+  );
 }

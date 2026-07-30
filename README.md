@@ -20,10 +20,10 @@ Follow the official Discord developer docs where useful: [Applications](https://
 5. Invite the bot with `applications.commands` and `bot` scopes. Example URL (replace `CLIENT_ID`):
 
    ```text
-   https://discord.com/oauth2/authorize?client_id=1532005876448235542&scope=bot%20applications.commands&permissions=35840
+   https://discord.com/oauth2/authorize?client_id=1532005876448235542&scope=bot%20applications.commands&permissions=274878073856
    ```
 
-   `3072` = View Channel + Send Messages + Embed Links + Attach Files. Adjust if your server needs more (e.g. threads).
+   `274878073856` = View Channel + Send Messages + Send Messages in Threads + Attach Files + Mention Everyone. See [Discord permissions](https://discord.com/developers/docs/topics/permissions#permissions-bitwise-permission-flags).
 
 6. In the Developer Portal → **Bot**, you do **not** need privileged intents for this bot (it only uses Guilds).
 
@@ -37,7 +37,7 @@ cp .env.example .env
 # per-guild overrides at runtime: /weather settings (no restart)
 
 npm install
-npm run register-commands   # register /weather and /world
+npm run register-commands   # register /weather, /world and /announce
 npm run build
 npm start
 ```
@@ -108,7 +108,7 @@ Edit without touching TypeScript:
 - `content/messages.json` — bot reply strings (errors / confirmations only)
 - `content/images/` — one image per `image` field (DM weather cards)
 
-After severity ≥ `cooldownAfterSeverity`, the next auto-roll / `/weather roll` only picks milder types (up to `cooldownMaxNextSeverity`, escalating if that pool is empty). Defaults live in `content/weather-rules.json`; per-guild overrides via `/weather settings cooldown` (null = inherit). `/weather set` bypasses filters. Temporary dials: **severity** (`/weather severity set`) and **magical** (`/weather magical set only|none`) further limit the roll pool until they expire; setting either dial rejects empty pools and empty intersections. Channel posts stay image-only.
+After severity ≥ `cooldownAfterSeverity`, the next auto-roll / `/weather roll` only picks milder types (up to `cooldownMaxNextSeverity`, escalating if that pool is empty). Defaults live in `content/weather-rules.json`; per-guild overrides via `/weather settings cooldown` (null = inherit). `/weather set` bypasses filters. Temporary dials: **severity** (`/weather severity set`) and **magical** (`/weather magical set only|none`) further limit the roll pool until they expire; setting either dial rejects empty pools and empty intersections. Channel posts are image + title + `@everyone`.
 
 ## Data
 

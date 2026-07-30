@@ -100,5 +100,7 @@
   "announceWhenInPast": "Dat tijdstip ligt in het verleden. Kies een moment in de toekomst.",
   "announceBodyEmpty": "Tekst mag niet leeg zijn.",
   "announceModalTitle": "Gepland bericht",
-  "announceModalBodyLabel": "Tekst (max 2000 tekens)"
+  "announceModalBodyLabel": "Tekst (max 2000 tekens)",
+  "announcePostFailedDm": "Niet gelukt dit bericht in {channel} te posten.\n\n{body}",
+  "announcePostFailedDmIntro": "Niet gelukt dit bericht in {channel} te posten.\n\nHieronder de tekst om te kopiëren:"
 }

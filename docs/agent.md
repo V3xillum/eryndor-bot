@@ -286,10 +286,11 @@ Slash commands are registered globally via `npm run register-commands` (`Routes.
 
 ## Post format
 When posting weather (scheduler, `/weather roll`, or `/weather set`):
-- **Image-only** — attach the single image for that weather type
+- **Image + title + `@everyone`** — attach the single image for that weather type; ping the guild
+- Requires bot permission **Mention Everyone** (and channel must not deny it)
 - All flavor, stats, and atmosphere are in the image (like DM weather cards)
 - No Discord embed body / description pools / flavor text from JSON
-- Optionally include the weather `type` as a short title; nothing more
+- Include the weather `type` as a short markdown title under the ping
 - Bot/UI strings that are not weather flavor (errors, confirmations, calendar copy) live in `messages.json`
 
 ## Scheduler
