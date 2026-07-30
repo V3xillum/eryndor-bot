@@ -109,6 +109,63 @@ export function buildWeatherCommand(_weatherTypes: string[]) {
           sub.setName('clear').setDescription('Clear the magical dial (back to default)'),
         ),
     )
+    .addSubcommandGroup((group) =>
+      group
+        .setName('settings')
+        .setDescription('Per-guild schedule: interval and active posting window')
+        .addSubcommand((sub) =>
+          sub
+            .setName('show')
+            .setDescription('Show effective interval and active window for this server'),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName('interval')
+            .setDescription('Set guild fallback auto-update interval (minutes)')
+            .addIntegerOption((opt) =>
+              opt
+                .setName('min')
+                .setDescription('Minimum minutes between auto-updates')
+                .setRequired(true)
+                .setMinValue(1),
+            )
+            .addIntegerOption((opt) =>
+              opt
+                .setName('max')
+                .setDescription('Maximum minutes between auto-updates')
+                .setRequired(true)
+                .setMinValue(1),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName('window')
+            .setDescription('Set guild active posting window (timezone from .env)')
+            .addBooleanOption((opt) =>
+              opt
+                .setName('enabled')
+                .setDescription('Whether automatic posts only run inside the window')
+                .setRequired(true),
+            )
+            .addStringOption((opt) =>
+              opt
+                .setName('start')
+                .setDescription('Window start HH:mm (e.g. 06:00)')
+                .setRequired(false),
+            )
+            .addStringOption((opt) =>
+              opt
+                .setName('end')
+                .setDescription('Window end HH:mm (e.g. 23:00)')
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName('clear')
+            .setDescription('Clear guild schedule overrides (back to .env defaults)'),
+        ),
+    )
     .addSubcommand((sub) =>
       sub
         .setName('next')
@@ -193,7 +250,10 @@ export async function handleWeatherCommand(
   }
 
   const needsAllowlist =
-    group === 'severity' || group === 'magical' || ADMIN_SUBCOMMANDS.has(sub);
+    group === 'severity' ||
+    group === 'magical' ||
+    group === 'settings' ||
+    ADMIN_SUBCOMMANDS.has(sub);
   if (needsAllowlist && !config.allowedUserIds.includes(interaction.user.id)) {
     await interaction.reply({
       content: weather.messages.unauthorized,
@@ -222,6 +282,27 @@ export async function handleWeatherCommand(
     }
     if (sub === 'clear') {
       await handleMagicalClear(interaction, weather);
+      return;
+    }
+    await interaction.reply({ content: weather.messages.unknownSubcommand, ephemeral: true });
+    return;
+  }
+
+  if (group === 'settings') {
+    if (sub === 'show') {
+      await handleSettingsShow(interaction, weather);
+      return;
+    }
+    if (sub === 'interval') {
+      await handleSettingsInterval(interaction, weather);
+      return;
+    }
+    if (sub === 'window') {
+      await handleSettingsWindow(interaction, weather);
+      return;
+    }
+    if (sub === 'clear') {
+      await handleSettingsClear(interaction, weather);
       return;
     }
     await interaction.reply({ content: weather.messages.unknownSubcommand, ephemeral: true });
@@ -471,6 +552,132 @@ async function handleMagicalClear(
     content: hadActive
       ? weather.messages.magicalClearSuccess
       : weather.messages.magicalClearNone,
+    ephemeral: true,
+  });
+}
+
+async function handleSettingsShow(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const settings = weather.getScheduleSettings(interaction.guildId!);
+  const lines = [
+    formatTemplate(weather.messages.statusInterval, {
+      min: settings.updateMinMinutes,
+      max: settings.updateMaxMinutes,
+      source: settings.intervalFromGuild ? 'guild' : '.env',
+    }),
+  ];
+
+  if (settings.activeWindow && settings.windowStart && settings.windowEnd) {
+    lines.push(
+      formatTemplate(weather.messages.statusWindowOn, {
+        start: settings.windowStart,
+        end: settings.windowEnd,
+      }),
+    );
+    lines.push(
+      settings.windowFromGuild
+        ? weather.messages.statusWindowOverride
+        : weather.messages.statusWindowDefault,
+    );
+  } else {
+    lines.push(weather.messages.statusWindowOff);
+  }
+
+  await interaction.reply({
+    content: `**${weather.messages.settingsShowTitle}**\n${lines.join('\n')}`,
+    ephemeral: true,
+  });
+}
+
+async function handleSettingsInterval(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const min = interaction.options.getInteger('min', true);
+  const max = interaction.options.getInteger('max', true);
+
+  try {
+    const next = weather.setUpdateInterval(interaction.guildId!, min, max);
+    await interaction.reply({
+      content: formatTemplate(weather.messages.settingsIntervalSuccess, {
+        min,
+        max,
+        unix: Math.floor(next.getTime() / 1000),
+      }),
+      ephemeral: true,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'INVALID_UPDATE_INTERVAL') {
+      await interaction.reply({
+        content: weather.messages.invalidUpdateInterval,
+        ephemeral: true,
+      });
+      return;
+    }
+    throw error;
+  }
+}
+
+async function handleSettingsWindow(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const enabled = interaction.options.getBoolean('enabled', true);
+  const start = interaction.options.getString('start');
+  const end = interaction.options.getString('end');
+
+  try {
+    const next = weather.setActiveWindow(interaction.guildId!, enabled, start, end);
+    if (enabled) {
+      const settings = weather.getScheduleSettings(interaction.guildId!);
+      await interaction.reply({
+        content: formatTemplate(weather.messages.settingsWindowSuccess, {
+          start: settings.windowStart ?? '?',
+          end: settings.windowEnd ?? '?',
+          unix: Math.floor(next.getTime() / 1000),
+        }),
+        ephemeral: true,
+      });
+    } else {
+      await interaction.reply({
+        content: formatTemplate(weather.messages.settingsWindowDisabledSuccess, {
+          unix: Math.floor(next.getTime() / 1000),
+        }),
+        ephemeral: true,
+      });
+    }
+  } catch (error) {
+    if (!(error instanceof Error)) throw error;
+    if (error.message === 'INVALID_ACTIVE_WINDOW') {
+      await interaction.reply({
+        content: weather.messages.invalidActiveWindow,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (error.message === 'INVALID_TIME_OF_DAY') {
+      await interaction.reply({
+        content: weather.messages.invalidTimeOfDay,
+        ephemeral: true,
+      });
+      return;
+    }
+    throw error;
+  }
+}
+
+async function handleSettingsClear(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const { hadOverride, next } = weather.clearScheduleOverrides(interaction.guildId!);
+  await interaction.reply({
+    content: formatTemplate(
+      hadOverride ? weather.messages.settingsClearSuccess : weather.messages.settingsClearNone,
+      { unix: Math.floor(next.getTime() / 1000) },
+    ),
     ephemeral: true,
   });
 }

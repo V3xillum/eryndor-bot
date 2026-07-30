@@ -25,8 +25,12 @@ import type {
 } from '../types.js';
 import {
   clampToActiveWindow,
+  formatTimeOfDay,
   isWithinActiveWindow,
+  parseTimeOfDay,
+  timeOfDayToMinutes,
   type ActiveWindow,
+  type TimeOfDay,
 } from '../utils/activeWindow.js';
 import {
   formatTemplate,
@@ -47,6 +51,13 @@ export interface WeatherAdminStatus {
   durationMinHours: number | null;
   durationMaxHours: number | null;
   usesEnvDuration: boolean | null;
+  updateMinMinutes: number;
+  updateMaxMinutes: number;
+  intervalFromGuild: boolean;
+  activeWindowEnabled: boolean;
+  activeWindowStart: string | null;
+  activeWindowEnd: string | null;
+  windowFromGuild: boolean;
   cooldownActive: boolean;
   effectiveMaxNextSeverity: number | null;
   cooldownAfterSeverity: number;
@@ -60,13 +71,25 @@ export interface WeatherAdminStatus {
   magicalDialUntil: Date | null;
 }
 
+export interface GuildScheduleSettings {
+  updateMinMinutes: number;
+  updateMaxMinutes: number;
+  intervalFromGuild: boolean;
+  activeWindow: ActiveWindow | null;
+  windowFromGuild: boolean;
+  /** Raw HH:mm for display when window is on. */
+  windowStart: string | null;
+  windowEnd: string | null;
+}
+
 export class WeatherService {
   private readonly table: WeatherTableEntry[];
   private readonly rules: WeatherRules;
   readonly messages: Messages;
-  private readonly updateMinMinutes: number;
-  private readonly updateMaxMinutes: number;
-  private readonly activeWindow: ActiveWindow | null;
+  private readonly defaultUpdateMinMinutes: number;
+  private readonly defaultUpdateMaxMinutes: number;
+  private readonly defaultActiveWindow: ActiveWindow | null;
+  private readonly timeZone: string;
 
   constructor(
     private readonly db: Database.Database,
@@ -74,14 +97,16 @@ export class WeatherService {
       updateMinMinutes: number;
       updateMaxMinutes: number;
       activeWindow: ActiveWindow | null;
+      timeZone: string;
     },
   ) {
     this.table = loadWeatherTable();
     this.rules = loadWeatherRules();
     this.messages = loadMessages();
-    this.updateMinMinutes = options.updateMinMinutes;
-    this.updateMaxMinutes = options.updateMaxMinutes;
-    this.activeWindow = options.activeWindow;
+    this.defaultUpdateMinMinutes = options.updateMinMinutes;
+    this.defaultUpdateMaxMinutes = options.updateMaxMinutes;
+    this.defaultActiveWindow = options.activeWindow;
+    this.timeZone = options.timeZone;
   }
 
   getAvailableTypes(): string[] {
@@ -94,6 +119,77 @@ export class WeatherService {
 
   listGuildStates(): WorldState[] {
     return dbQueries.listGuildStates(this.db);
+  }
+
+  /** Effective interval + active window for a guild (DB override, else `.env` defaults). */
+  getScheduleSettings(guildId: string): GuildScheduleSettings {
+    const state = dbQueries.getWorldState(this.db, guildId);
+    return this.resolveScheduleSettings(state);
+  }
+
+  private resolveScheduleSettings(state: WorldState | null | undefined): GuildScheduleSettings {
+    const intervalFromGuild =
+      state?.update_min_minutes != null && state?.update_max_minutes != null;
+    const updateMinMinutes = intervalFromGuild
+      ? state!.update_min_minutes!
+      : this.defaultUpdateMinMinutes;
+    const updateMaxMinutes = intervalFromGuild
+      ? state!.update_max_minutes!
+      : this.defaultUpdateMaxMinutes;
+
+    const windowFromGuild =
+      state?.active_window_enabled != null ||
+      state?.active_window_start != null ||
+      state?.active_window_end != null;
+
+    const enabled =
+      state?.active_window_enabled != null
+        ? state.active_window_enabled === 1
+        : this.defaultActiveWindow !== null;
+
+    let activeWindow: ActiveWindow | null = null;
+    let windowStart: string | null = null;
+    let windowEnd: string | null = null;
+
+    if (enabled) {
+      const startTod = this.resolveWindowTimeOfDay(
+        state?.active_window_start,
+        this.defaultActiveWindow?.start ?? { hours: 6, minutes: 0 },
+      );
+      const endTod = this.resolveWindowTimeOfDay(
+        state?.active_window_end,
+        this.defaultActiveWindow?.end ?? { hours: 23, minutes: 0 },
+      );
+      activeWindow = {
+        start: startTod,
+        end: endTod,
+        timeZone: this.defaultActiveWindow?.timeZone ?? this.timeZone,
+      };
+      windowStart = formatTimeOfDay(startTod);
+      windowEnd = formatTimeOfDay(endTod);
+    }
+
+    return {
+      updateMinMinutes,
+      updateMaxMinutes,
+      intervalFromGuild,
+      activeWindow,
+      windowFromGuild,
+      windowStart,
+      windowEnd,
+    };
+  }
+
+  private resolveWindowTimeOfDay(
+    raw: string | null | undefined,
+    fallback: TimeOfDay,
+  ): TimeOfDay {
+    if (!raw) return fallback;
+    try {
+      return parseTimeOfDay(raw, 'active_window');
+    } catch {
+      return fallback;
+    }
   }
 
   /** Active dial band if override_until is still in the future; otherwise null. */
@@ -190,6 +286,7 @@ export class WeatherService {
       }
     }
     const hasDuration = entry ? entryHasDurationRange(entry) : false;
+    const scheduleSettings = this.resolveScheduleSettings(state);
 
     return {
       type: entry?.type ?? null,
@@ -205,6 +302,13 @@ export class WeatherService {
       durationMinHours: hasDuration && entry ? entry.durationMinHours! : null,
       durationMaxHours: hasDuration && entry ? entry.durationMaxHours! : null,
       usesEnvDuration: entry ? !hasDuration : null,
+      updateMinMinutes: scheduleSettings.updateMinMinutes,
+      updateMaxMinutes: scheduleSettings.updateMaxMinutes,
+      intervalFromGuild: scheduleSettings.intervalFromGuild,
+      activeWindowEnabled: scheduleSettings.activeWindow !== null,
+      activeWindowStart: scheduleSettings.windowStart,
+      activeWindowEnd: scheduleSettings.windowEnd,
+      windowFromGuild: scheduleSettings.windowFromGuild,
       cooldownActive: poolInfo.cooldownActive,
       effectiveMaxNextSeverity: poolInfo.effectiveMaxSeverity,
       cooldownAfterSeverity: this.rules.cooldownAfterSeverity,
@@ -250,7 +354,17 @@ export class WeatherService {
         );
       }
       if (status.usesEnvDuration === true) {
-        currentLines.push(this.messages.statusDurationEnv);
+        currentLines.push(
+          formatTemplate(
+            status.intervalFromGuild
+              ? this.messages.statusDurationGuild
+              : this.messages.statusDurationEnv,
+            {
+              min: status.updateMinMinutes,
+              max: status.updateMaxMinutes,
+            },
+          ),
+        );
       } else if (status.usesEnvDuration === false) {
         currentLines.push(
           formatTemplate(this.messages.statusDurationType, {
@@ -264,6 +378,28 @@ export class WeatherService {
     }
 
     const scheduleLines: string[] = [];
+    scheduleLines.push(
+      formatTemplate(this.messages.statusInterval, {
+        min: status.updateMinMinutes,
+        max: status.updateMaxMinutes,
+        source: status.intervalFromGuild ? 'guild' : '.env',
+      }),
+    );
+    if (status.activeWindowEnabled && status.activeWindowStart && status.activeWindowEnd) {
+      scheduleLines.push(
+        formatTemplate(this.messages.statusWindowOn, {
+          start: status.activeWindowStart,
+          end: status.activeWindowEnd,
+        }),
+      );
+      scheduleLines.push(
+        status.windowFromGuild
+          ? this.messages.statusWindowOverride
+          : this.messages.statusWindowDefault,
+      );
+    } else {
+      scheduleLines.push(this.messages.statusWindowOff);
+    }
     if (status.pausedUntil) {
       scheduleLines.push(
         formatTemplate(this.messages.statusPaused, {
@@ -411,6 +547,81 @@ export class WeatherService {
     return active !== null;
   }
 
+  /**
+   * Per-guild fallback interval (minutes) when the current type has no duration range.
+   * Reschedules the next auto-update immediately.
+   */
+  setUpdateInterval(guildId: string, minMinutes: number, maxMinutes: number): Date {
+    if (
+      !Number.isInteger(minMinutes) ||
+      !Number.isInteger(maxMinutes) ||
+      minMinutes <= 0 ||
+      maxMinutes < minMinutes
+    ) {
+      throw new Error('INVALID_UPDATE_INTERVAL');
+    }
+    dbQueries.setUpdateInterval(this.db, guildId, minMinutes, maxMinutes);
+    return this.scheduleNextUpdate(guildId);
+  }
+
+  /**
+   * Per-guild active posting window. Timezone always comes from `.env` (`WEATHER_TIMEZONE`).
+   * When enabling without start/end, keeps existing guild times or falls back to env defaults.
+   * Reschedules immediately.
+   */
+  setActiveWindow(
+    guildId: string,
+    enabled: boolean,
+    startRaw?: string | null,
+    endRaw?: string | null,
+  ): Date {
+    const state = dbQueries.getWorldState(this.db, guildId);
+    const defaults = this.defaultActiveWindow;
+
+    let start: string | null = state?.active_window_start ?? null;
+    let end: string | null = state?.active_window_end ?? null;
+
+    try {
+      if (startRaw != null && startRaw.trim() !== '') {
+        start = formatTimeOfDay(parseTimeOfDay(startRaw.trim(), 'start'));
+      }
+      if (endRaw != null && endRaw.trim() !== '') {
+        end = formatTimeOfDay(parseTimeOfDay(endRaw.trim(), 'end'));
+      }
+
+      if (enabled) {
+        const startTod = start
+          ? parseTimeOfDay(start, 'start')
+          : (defaults?.start ?? { hours: 6, minutes: 0 });
+        const endTod = end
+          ? parseTimeOfDay(end, 'end')
+          : (defaults?.end ?? { hours: 23, minutes: 0 });
+
+        if (timeOfDayToMinutes(startTod) >= timeOfDayToMinutes(endTod)) {
+          throw new Error('INVALID_ACTIVE_WINDOW');
+        }
+
+        start = formatTimeOfDay(startTod);
+        end = formatTimeOfDay(endTod);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message === 'INVALID_ACTIVE_WINDOW') {
+        throw error;
+      }
+      throw new Error('INVALID_TIME_OF_DAY');
+    }
+
+    dbQueries.setActiveWindowOverride(this.db, guildId, enabled, start, end);
+    return this.scheduleNextUpdate(guildId);
+  }
+
+  /** Clears guild interval + window overrides → `.env` defaults. Reschedules. */
+  clearScheduleOverrides(guildId: string): { hadOverride: boolean; next: Date } {
+    const hadOverride = dbQueries.clearScheduleOverrides(this.db, guildId);
+    const next = this.scheduleNextUpdate(guildId);
+    return { hadOverride, next };
+  }
+
   rollWeather(guildId: string): WeatherResult {
     const state = dbQueries.getWorldState(this.db, guildId);
     const currentEntry = state?.current_weather_type
@@ -498,22 +709,23 @@ export class WeatherService {
 
   /**
    * Schedule next auto-update from the **current** weather type's duration range,
-   * or the global env interval when the entry has no duration fields.
+   * or the guild/env fallback interval when the entry has no duration fields.
    */
   scheduleNextUpdate(guildId: string): Date {
     const state = dbQueries.getWorldState(this.db, guildId);
     const entry = state?.current_weather_type
       ? findEntryByType(this.table, state.current_weather_type)
       : undefined;
+    const settings = this.resolveScheduleSettings(state);
 
     const intervalMs =
       entry && entryHasDurationRange(entry)
         ? randomIntervalFromHours(entry.durationMinHours!, entry.durationMaxHours!)
-        : randomIntervalMs(this.updateMinMinutes, this.updateMaxMinutes);
+        : randomIntervalMs(settings.updateMinMinutes, settings.updateMaxMinutes);
 
     let next = new Date(Date.now() + intervalMs);
-    if (this.activeWindow) {
-      next = clampToActiveWindow(next, this.activeWindow);
+    if (settings.activeWindow) {
+      next = clampToActiveWindow(next, settings.activeWindow);
     }
     dbQueries.setNextUpdateAt(this.db, guildId, next.toISOString());
     return next;
@@ -551,9 +763,10 @@ export class WeatherService {
     return isPaused(state?.paused_until ?? null, now);
   }
 
-  isInActiveWindow(now = new Date()): boolean {
-    if (!this.activeWindow) return true;
-    return isWithinActiveWindow(now, this.activeWindow);
+  isInActiveWindow(guildId: string, now = new Date()): boolean {
+    const settings = this.getScheduleSettings(guildId);
+    if (!settings.activeWindow) return true;
+    return isWithinActiveWindow(now, settings.activeWindow);
   }
 
   getScheduleStatus(guildId: string, now = new Date()): {
@@ -570,21 +783,23 @@ export class WeatherService {
 
     const due =
       nextUpdateAt !== null && nextUpdateAt.getTime() <= now.getTime() && pausedUntil === null;
-    const dueButWaitingForWindow = due && !this.isInActiveWindow(now);
+    const dueButWaitingForWindow = due && !this.isInActiveWindow(guildId, now);
 
     return { nextUpdateAt, pausedUntil, dueButWaitingForWindow };
   }
 
-  /** Guilds whose automatic update is due — never outside the active window. */
+  /** Guilds whose automatic update is due — never outside that guild's active window. */
   dueGuilds(now = new Date()): WorldState[] {
-    if (this.activeWindow && !isWithinActiveWindow(now, this.activeWindow)) {
-      return [];
-    }
-
     return this.listGuildStates().filter((state) => {
       if (!state.next_update_at) return false;
       if (isPaused(state.paused_until, now)) return false;
-      return new Date(state.next_update_at).getTime() <= now.getTime();
+      if (new Date(state.next_update_at).getTime() > now.getTime()) return false;
+
+      const settings = this.resolveScheduleSettings(state);
+      if (settings.activeWindow && !isWithinActiveWindow(now, settings.activeWindow)) {
+        return false;
+      }
+      return true;
     });
   }
 }

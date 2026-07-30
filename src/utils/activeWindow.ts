@@ -11,12 +11,16 @@ export interface ActiveWindow {
 
 const HH_MM = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
-export function parseTimeOfDay(raw: string, envName: string): TimeOfDay {
+export function parseTimeOfDay(raw: string, label = 'time'): TimeOfDay {
   const match = HH_MM.exec(raw.trim());
   if (!match) {
-    throw new Error(`${envName} must be HH:mm (00:00–23:59), got: ${raw}`);
+    throw new Error(`${label} must be HH:mm (00:00–23:59), got: ${raw}`);
   }
   return { hours: Number(match[1]), minutes: Number(match[2]) };
+}
+
+export function formatTimeOfDay(t: TimeOfDay): string {
+  return `${String(t.hours).padStart(2, '0')}:${String(t.minutes).padStart(2, '0')}`;
 }
 
 export function timeOfDayToMinutes(t: TimeOfDay): number {

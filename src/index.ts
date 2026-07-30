@@ -14,10 +14,11 @@ async function main(): Promise<void> {
     updateMinMinutes: config.updateMinMinutes,
     updateMaxMinutes: config.updateMaxMinutes,
     activeWindow: config.activeWindow,
+    timeZone: config.eryndorCalendar.timeZone,
   });
   const calendar = new EryndorCalendarService(config.eryndorCalendar, weather.messages);
   console.log(
-    `Auto-update interval: ${config.updateMinMinutes}–${config.updateMaxMinutes} minutes`,
+    `Auto-update interval (default): ${config.updateMinMinutes}–${config.updateMaxMinutes} minutes`,
   );
   if (config.activeWindow) {
     const { start, end, timeZone } = config.activeWindow;

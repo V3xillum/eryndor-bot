@@ -1,6 +1,6 @@
 # Eryndor bot
 
-Discord bot for the Eryndor (West Marches) D&D server: atmospheric weather updates plus calendar commands. The bot posts weather automatically on a random interval (configurable in minutes via `.env`, default 6–18h) and gives allowlisted users slash-command control during sessions.
+Discord bot for the Eryndor (West Marches) D&D server: atmospheric weather updates plus calendar commands. The bot posts weather automatically on a random interval (defaults in `.env`, overridable per guild via `/weather settings`) and gives allowlisted users slash-command control during sessions.
 
 DM handout (GitHub Pages, from `/docs`): [`docs/handout/`](./docs/handout/).
 
@@ -32,8 +32,9 @@ Follow the official Discord developer docs where useful: [Applications](https://
 ```bash
 cp .env.example .env
 # fill DISCORD_TOKEN, DISCORD_CLIENT_ID, ALLOWED_USER_IDS
-# optional: WEATHER_UPDATE_MIN_MINUTES / MAX (e.g. 1 and 5 for testing)
-# optional: WEATHER_ACTIVE_START / END / TIMEZONE (default 06:00–23:00 Europe/Amsterdam)
+# optional defaults: WEATHER_UPDATE_MIN_MINUTES / MAX (e.g. 1 and 5 for testing)
+# optional defaults: WEATHER_ACTIVE_START / END / TIMEZONE (default 06:00–23:00 Europe/Amsterdam)
+# per-guild overrides at runtime: /weather settings (no restart)
 
 npm install
 npm run register-commands   # register /weather and /world
@@ -56,11 +57,15 @@ Global slash commands can take up to about an hour to appear after registration.
 | Command | Who | Effect |
 |---|---|---|
 | `/weather current` | everyone | Private status check (does not post to the weather channel) |
-| `/weather status` | allowlist | Admin detail: severity, magical, remaining time, duration, cooldown, dials |
+| `/weather status` | allowlist | Admin detail: severity, magical, remaining time, duration, interval/window, cooldown, dials |
 | `/weather severity set` | allowlist | Tijdelijke severity-band (`min`/`max`/`duration`) voor rolls |
 | `/weather severity clear` | allowlist | Severity dial uitzetten → default gedrag |
 | `/weather magical set` | allowlist | Tijdelijk alleen magisch (`only`) of juist niet (`none`) voor rolls |
 | `/weather magical clear` | allowlist | Magical dial uitzetten → default gedrag |
+| `/weather settings show` | allowlist | Effectief interval + postvenster (guild of `.env`) |
+| `/weather settings interval` | allowlist | Guild-fallback interval in minuten (reschedule) |
+| `/weather settings window` | allowlist | Guild actief postvenster aan/uit + `HH:mm` (reschedule) |
+| `/weather settings clear` | allowlist | Guild schedule-overrides wissen → `.env` |
 | `/weather next` | allowlist | When the next automatic update is due (ephemeral) |
 | `/weather setup <channel> [thread]` | allowlist | Where automated/`roll`/`set` posts go |
 | `/weather roll` | allowlist | d100 roll, update state, post to channel/thread |

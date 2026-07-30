@@ -54,6 +54,21 @@ function migrate(db: Database.Database): void {
   if (!names.has('magical_override_until')) {
     db.exec(`ALTER TABLE world_state ADD COLUMN magical_override_until DATETIME`);
   }
+  if (!names.has('update_min_minutes')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN update_min_minutes INTEGER`);
+  }
+  if (!names.has('update_max_minutes')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN update_max_minutes INTEGER`);
+  }
+  if (!names.has('active_window_enabled')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN active_window_enabled INTEGER`);
+  }
+  if (!names.has('active_window_start')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN active_window_start TEXT`);
+  }
+  if (!names.has('active_window_end')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN active_window_end TEXT`);
+  }
 }
 
 function nowIso(): string {
@@ -204,4 +219,59 @@ export function clearMagicalOverride(db: Database.Database, guildId: string): vo
      SET magical_mode = NULL, magical_override_until = NULL, updated_at = ?
      WHERE guild_id = ?`,
   ).run(nowIso(), guildId);
+}
+
+export function setUpdateInterval(
+  db: Database.Database,
+  guildId: string,
+  minMinutes: number,
+  maxMinutes: number,
+): void {
+  ensureGuild(db, guildId);
+  db.prepare(
+    `UPDATE world_state
+     SET update_min_minutes = ?, update_max_minutes = ?, updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(minMinutes, maxMinutes, nowIso(), guildId);
+}
+
+export function setActiveWindowOverride(
+  db: Database.Database,
+  guildId: string,
+  enabled: boolean,
+  start: string | null,
+  end: string | null,
+): void {
+  ensureGuild(db, guildId);
+  db.prepare(
+    `UPDATE world_state
+     SET active_window_enabled = ?, active_window_start = ?, active_window_end = ?, updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(enabled ? 1 : 0, start, end, nowIso(), guildId);
+}
+
+/** Clears guild schedule overrides (interval + active window) → fall back to `.env`. */
+export function clearScheduleOverrides(db: Database.Database, guildId: string): boolean {
+  ensureGuild(db, guildId);
+  const state = getWorldState(db, guildId);
+  const hadOverride =
+    state !== null &&
+    (state.update_min_minutes != null ||
+      state.update_max_minutes != null ||
+      state.active_window_enabled != null ||
+      state.active_window_start != null ||
+      state.active_window_end != null);
+
+  db.prepare(
+    `UPDATE world_state
+     SET update_min_minutes = NULL,
+         update_max_minutes = NULL,
+         active_window_enabled = NULL,
+         active_window_start = NULL,
+         active_window_end = NULL,
+         updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(nowIso(), guildId);
+
+  return hadOverride;
 }

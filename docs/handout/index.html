@@ -256,6 +256,35 @@
 
     .cmd.hidden { display: none; }
 
+    .who-block {
+      margin-top: 1.35rem;
+    }
+
+    .who-block:first-child { margin-top: 0.35rem; }
+
+    .who-block > h3 {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      letter-spacing: 0.04em;
+      color: #f0e4cc;
+      margin: 0 0 0.85rem;
+      padding-bottom: 0.45rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .cat-block {
+      margin: 0 0 1.1rem;
+    }
+
+    .cat-block h4 {
+      margin: 0 0 0.55rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--parchment);
+    }
+
     .cmd-top {
       display: flex;
       flex-wrap: wrap;
@@ -504,21 +533,28 @@
         </article>
         <article class="tile">
           <h3>Jij als DM</h3>
-          <p>Dobbel handmatig, forceer een type, pauzeer updates, of zet tijdelijk een “draaiknop”: alleen zwaar of juist mild weer, en/of alleen magisch of juist géén magisch weer.</p>
+          <p>Dobbel handmatig, kies een type, pauzeer updates, draai aan zwaarte- of magie-knoppen, of pas ritme en berichtenvenster aan voor deze server.</p>
         </article>
         <article class="tile">
           <h3>Spelers</h3>
-          <p>Iedereen mag het huidige weer privé bekijken en de kalender raadplegen. Alleen allowlist-DM’s sturen de bot aan.</p>
+          <p>Iedereen mag het huidige weer privé bekijken en de kalender raadplegen. Alleen aangewezen DM’s sturen de bot aan.</p>
         </article>
         <article class="tile">
           <h3>Kalender</h3>
-          <p><code>/world today</code> en <code>/world fullmoon</code> geven Eryndor-datum, maan en events — zonder weather-timers te spoilers.</p>
+          <p><code>/world today</code> en <code>/world fullmoon</code> geven Eryndor-datum, maan en events — zonder te verklappen wanneer het weer wisselt.</p>
         </article>
       </div>
 
-      <h2 style="margin-top:1.5rem">Zwaartegraad (severity)</h2>
-      <p class="lead">Elk weertype heeft een cijfer 1–5. De bot gebruikt dit voor afkoeling en voor jouw severity-draaiknop.</p>
-      <div class="severity-scale" aria-label="Severity schaal">
+      <h2 style="margin-top:1.5rem">Zwaarte (1–5)</h2>
+      <p class="lead">
+        Elk weertype heeft een cijfer van mild (1) tot catastrofaal (5).
+        Zwaar weer is <strong>4 of hoger</strong>.
+        Daarna kiest de volgende automatische dobbelsteen of <code>/weather roll</code> eerst iets milders:
+        hoogstens zwaarte <strong>2</strong>.
+        Zo blijven zware stormen niet achter elkaar hangen. <code>/weather set</code> negeert die regel.
+        De zwaarte-draaiknop beperkt tijdelijk welk bereik nog mag vallen.
+      </p>
+      <div class="severity-scale" aria-label="Zwaarte schaal">
         <div class="sev" data-n="1"><strong>1</strong>Mild</div>
         <div class="sev" data-n="2"><strong>2</strong>Merkbaar</div>
         <div class="sev" data-n="3"><strong>3</strong>Lastig</div>
@@ -531,22 +567,38 @@
       <div class="types" id="typeGrid"></div>
       <div class="note">
         <p style="margin:0 0 0.75rem"><strong>Standaard ritme</strong><br />
-        Hoe lang het duurt tot de bot zelf opnieuw dobbelt. Nu staat dat op een willekeurige tijd tussen <strong>6 en 18 uur</strong>. Heb je bij set of schedule zelf een duur gekozen, of heeft dit weertype een eigen duur in de tabel? Dan geldt die — niet dit ritme.</p>
+        Tijd tot de bot zelf opnieuw dobbelt: standaard ergens tussen <strong>6 en 18 uur</strong>.
+        Een eigen duur per weertype, of een duur die jij bij set/schedule kiest, gaat daarvóór.
+        Aanpassen: <code>/weather settings interval</code>.</p>
         <p style="margin:0 0 0.75rem"><strong>Berichtenvenster</strong><br />
-        Automatische posts gebeuren alleen tussen <strong>06:00 en 23:00</strong> (Nederlandse tijd). Valt de geplande update daarbuiten, dan wacht de bot tot het venster weer open is. Handmatige commands (roll, set) werken altijd.</p>
-        <p style="margin:0">Beide kun je <strong>op verzoek</strong> laten aanpassen — zeg het even tegen wie de bot beheert.</p>
+        Automatische berichten alleen tussen <strong>06:00 en 23:00</strong> (Nederlandse tijd). Daarbuiten wacht de bot.
+        Handmatig dobbelen of zetten werkt altijd. Aanpassen: <code>/weather settings window</code>.</p>
+        <p style="margin:0 0 0.75rem"><strong>Terugzetten &amp; checken</strong><br />
+        Terug naar standaard: <code>/weather settings clear</code>. <br>
+        Wat geldt er nu?: <code>/weather settings show</code> of <code>/weather status</code>.</p>
+        <p style="margin:0"><strong>Afkoeling</strong><br />
+        Zie <strong>Zwaarte</strong> hierboven: na 4+ volgt eerst weer tot zwaarte 2. <code>/weather set</code> negeert dat.</p>
       </div>
     </section>
 
     <section id="commands" class="panel" role="tabpanel" hidden>
       <h2>Commando’s</h2>
-      <p class="lead">Filter op wie het mag gebruiken, of zoek op naam.</p>
+      <p class="lead">Gegroepeerd op wie mag gebruiken, daarna op soort. Zoek of filter om in te zoomen.</p>
       <div class="toolbar">
-        <input type="search" id="cmdSearch" placeholder="Zoek (bijv. pause, severity…)" aria-label="Zoek commando" />
+        <input type="search" id="cmdSearch" placeholder="Zoek (bijv. pauze, zwaarte, settings…)" aria-label="Zoek commando" />
         <select id="cmdWho" aria-label="Filter op wie">
           <option value="all">Iedereen + DM</option>
           <option value="everyone">Alleen iedereen</option>
           <option value="dm">Alleen DM</option>
+        </select>
+        <select id="cmdCat" aria-label="Filter op categorie">
+          <option value="all">Alle categorieën</option>
+          <option value="bekijken">Bekijken</option>
+          <option value="inrichten">Inrichten</option>
+          <option value="instellingen">Instellingen</option>
+          <option value="acties">Acties</option>
+          <option value="draaiknoppen">Draaiknoppen</option>
+          <option value="info">Info</option>
         </select>
       </div>
       <div id="cmdList"></div>
@@ -558,31 +610,35 @@
       <div class="grid-2">
         <article class="tile">
           <h3>Sessie starten</h3>
-          <p><code>/weather pause 4h</code> — stop auto-updates terwijl je speelt. Daarna <code>/weather resume</code>.</p>
+          <p><code>/weather pause 4h</code> — stop automatische updates terwijl je speelt. Daarna <code>/weather resume</code>.</p>
         </article>
         <article class="tile">
           <h3>Nu dit weer</h3>
-          <p><code>/weather set storm</code> — of vul je eigen d100 in. Optioneel: <code>duration: 2h</code>. Ideaal als jij de dobbelsteen wilt, of dit weer gewoon bij de scene past.</p>
+          <p><code>/weather set storm</code> — of vul je eigen d100 in. Optioneel hoe lang het blijft (<code>2h</code>). Ideaal als jij wilt dobbelen, of dit weer bij de scene past.</p>
         </article>
         <article class="tile">
           <h3>Dobbel live</h3>
-          <p><code>/weather roll</code> — bot dobbelt (rekening houdend met afkoeling en actieve draaiknoppen) en post meteen.</p>
+          <p><code>/weather roll</code> — de bot dobbelt (met afkoeling en actieve draaiknoppen) en post meteen.</p>
         </article>
         <article class="tile">
           <h3>Gevaarlijke avond</h3>
-          <p><code>/weather severity set</code> min 4 max 5 duration 3h — rolls blijven zwaar tot de dial verloopt.</p>
+          <p><code>/weather severity set</code> min 4 max 5, duur 3h — dobbelstenen blijven zwaar tot de draaiknop verloopt.</p>
         </article>
         <article class="tile">
           <h3>Rustige trek</h3>
-          <p><code>/weather severity set</code> min 1 max 2 — alleen mild weer. Of magical <strong>none</strong> voor géén magisch weer.</p>
+          <p><code>/weather severity set</code> min 1 max 2 — alleen mild weer. Of <code>/weather magical set</code> op <strong>none</strong> voor géén magisch weer.</p>
         </article>
         <article class="tile">
           <h3>Alleen magie</h3>
-          <p><code>/weather magical set</code> mode <strong>only</strong> — of <strong>none</strong> voor juist geen magisch weer.</p>
+          <p><code>/weather magical set</code> op <strong>only</strong> — of <strong>none</strong> voor juist geen magisch weer.</p>
+        </article>
+        <article class="tile">
+          <h3>Ritme of venster</h3>
+          <p><code>/weather settings interval</code> (minuten) of <code>/weather settings window</code>. Voorbeeld testen: interval 1–5. Terug naar standaard: <code>/weather settings clear</code>.</p>
         </article>
         <article class="tile">
           <h3>Even checken</h3>
-          <p><code>/weather status</code> — zwaarte, planning, cooldown, dials. <code>/weather next</code> — wanneer de volgende auto-roll is.</p>
+          <p><code>/weather status</code> — zwaarte, planning, ritme, venster, afkoeling, draaiknoppen. <code>/weather next</code> — wanneer de volgende automatische update is.</p>
         </article>
       </div>
       <p class="note">Er is geen apart “post”-commando: alles wat het weer verandert, post ook naar het kanaal. <code>/weather current</code> is privé en post niets.</p>
@@ -603,11 +659,11 @@
         </article>
         <article class="tile">
           <h3>3. Zwaarte (1–5)</h3>
-          <p>Hoe heftig is dit weer? Bepaalt afkoeling na zwaar weer en of severity-draaiknoppen het kunnen selecteren.</p>
+          <p>Hoe heftig is dit weer? Bepaalt afkoeling na zwaar weer en of de zwaarte-draaiknop het kan selecteren.</p>
         </article>
         <article class="tile">
           <h3>4. Magisch?</h3>
-          <p>Ja of nee. Nodig voor de magical-draaiknop (alleen magisch / juist géén magisch).</p>
+          <p>Ja of nee. Nodig voor de magie-draaiknop (alleen magisch / juist géén magisch).</p>
         </article>
         <article class="tile">
           <h3>5. Kans op de d100</h3>
@@ -639,96 +695,148 @@
       { type: "arcane_storm", min: 95, max: 100, severity: 5, magical: true, durationMinHours: 1, durationMaxHours: 3 },
     ];
 
+    const CATEGORIES = [
+      { id: "bekijken", label: "Bekijken" },
+      { id: "inrichten", label: "Inrichten" },
+      { id: "instellingen", label: "Instellingen" },
+      { id: "acties", label: "Acties" },
+      { id: "draaiknoppen", label: "Draaiknoppen" },
+      { id: "info", label: "Info" },
+    ];
+
     const COMMANDS = [
       {
         cmd: "/weather current",
         who: "everyone",
+        cat: "bekijken",
         what: "Laat jou privé zien welk weer er nu staat. Post niets in het kanaal.",
         when: "Even checken zonder de tafel te storen.",
       },
       {
         cmd: "/world today",
         who: "everyone",
+        cat: "bekijken",
         what: "Huidige Harptos-dag, maanfase en events van Eryndor.",
         when: "Wereldtijd / feestdagen aan tafel.",
       },
       {
         cmd: "/world fullmoon",
         who: "everyone",
+        cat: "bekijken",
         what: "Wanneer de volgende exacte volle maan is.",
         when: "Lycantropie, rituelen, nacht-scenes.",
       },
       {
         cmd: "/weather setup",
         who: "dm",
+        cat: "inrichten",
         what: "Kies in welk kanaal (en optioneel thread) weerupdates verschijnen.",
         when: "Eenmalig bij start, of als het kanaal wijzigt.",
       },
       {
-        cmd: "/weather status",
+        cmd: "/weather settings show",
         who: "dm",
-        what: "Admin-overzicht: zwaarte, magisch, planning, cooldown, actieve draaiknoppen.",
-        when: "Debuggen of checken of dials nog aan staan.",
+        cat: "instellingen",
+        what: "Toont welk ritme (interval) en berichtenvenster nu gelden voor deze server.",
+        when: "Even checken of je eigen waarden of de standaard gebruikt.",
       },
       {
-        cmd: "/weather next",
+        cmd: "/weather settings interval",
         who: "dm",
-        what: "Wanneer de volgende automatische update gepland staat (privé).",
-        when: "Planning tussen scenes.",
+        cat: "instellingen",
+        what: "Stel het standaard ritme in voor deze server, in minuten (min en max). Geldt als het huidige type geen eigen duur heeft. Plant meteen opnieuw.",
+        when: "Sneller testen (bijv. 1–5 min) of productie-achtig (bijv. 360–1080 = 6–18 uur).",
+      },
+      {
+        cmd: "/weather settings window",
+        who: "dm",
+        cat: "instellingen",
+        what: "Berichtenvenster aan of uit, optioneel start/eind (bijv. 06:00–23:00). Alleen automatische berichten wachten hierop. Plant meteen opnieuw.",
+        when: "Kortere dagen, of 24/7 automatisch weer (venster uit).",
+      },
+      {
+        cmd: "/weather settings clear",
+        who: "dm",
+        cat: "instellingen",
+        what: "Wis jouw server-aanpassingen voor ritme en venster → terug naar de standaard. Plant opnieuw.",
+        when: "Klaar met testen, of terug naar de normale campagne-instellingen.",
       },
       {
         cmd: "/weather roll",
         who: "dm",
-        what: "Dobbel nieuw weer (met filters) en post meteen.",
+        cat: "acties",
+        what: "Dobbel nieuw weer (met afkoeling en draaiknoppen) en post meteen.",
         when: "Live dobbelen tijdens de sessie.",
       },
       {
         cmd: "/weather set",
         who: "dm",
-        what: "Kies zelf het weer voor de sessie: typ een weertype (bijv. storm) of gooi zelf een d100 en vul die score in. Optioneel hoe lang het blijft (30m, 2h, 1d). Bypass’t severity- en magical-draaiknoppen — jij hebt het laatste woord.",
+        cat: "acties",
+        what: "Kies zelf het weer: typ een weertype (bijv. storm) of gooi zelf een d100 en vul die score in. Optioneel hoe lang het blijft (30m, 2h, 1d). Negeert afkoeling en draaiknoppen — jij hebt het laatste woord.",
         when: "Als je zelf wilt dobbelen, of gewoon dit weer wilt omdat het bij de scene past.",
       },
       {
         cmd: "/weather schedule",
         who: "dm",
-        what: "Huidig weer blijft; alleen het moment van de volgende auto-roll wijzigen.",
-        when: "Weer langer of korter laten hangen zonder te herrollen.",
+        cat: "acties",
+        what: "Huidig weer blijft; alleen het moment van de volgende automatische update wijzigen.",
+        when: "Weer langer of korter laten hangen zonder opnieuw te dobbelen.",
       },
       {
         cmd: "/weather pause",
         who: "dm",
+        cat: "acties",
         what: "Pauzeer automatische updates voor een duur (30m, 2h, 1d).",
         when: "Sessie starten — geen verrassingen mid-combat.",
       },
       {
         cmd: "/weather resume",
         who: "dm",
+        cat: "acties",
         what: "Hef de pauze op en plan de volgende update.",
-        when: "Na de sessie of als je auto-weer weer wilt.",
+        when: "Na de sessie of als je automatisch weer wilt.",
       },
       {
         cmd: "/weather severity set",
         who: "dm",
-        what: "Tijdelijke draaiknop: rolls alleen binnen min–max zwaarte (mild tot catastrofaal), voor een duur.",
+        cat: "draaiknoppen",
+        what: "Tijdelijke zwaarte-draaiknop: dobbelstenen alleen binnen min–max zwaarte (mild tot catastrofaal), voor een duur.",
         when: "Escalatie-avond of juist een rustige trek.",
       },
       {
         cmd: "/weather severity clear",
         who: "dm",
-        what: "Zet de severity-draaiknop uit → weer normaal gedrag.",
-        when: "Dial niet meer nodig.",
+        cat: "draaiknoppen",
+        what: "Zet de zwaarte-draaiknop uit → weer normaal gedrag.",
+        when: "Draaiknop niet meer nodig.",
       },
       {
         cmd: "/weather magical set",
         who: "dm",
-        what: "Tijdelijk alleen magisch weer (only) of juist geen magisch weer (none).",
+        cat: "draaiknoppen",
+        what: "Tijdelijke magie-draaiknop: alleen magisch weer (only) of juist geen magisch weer (none), voor een duur.",
         when: "Arcane-thema of juist “gewone lucht”.",
       },
       {
         cmd: "/weather magical clear",
         who: "dm",
-        what: "Zet de magical-draaiknop uit.",
-        when: "Dial niet meer nodig.",
+        cat: "draaiknoppen",
+        what: "Zet de magie-draaiknop uit.",
+        when: "Draaiknop niet meer nodig.",
+      },
+      {
+        cmd: "/weather status",
+        who: "dm",
+        cat: "info",
+        what: "Overzicht: huidig weer, zwaarte, magisch, planning, ritme, berichtenvenster, afkoeling en actieve draaiknoppen.",
+        when: "Checken wat er speelt: planning, draaiknoppen, of welk ritme/venster geldt.",
+      },
+      {
+        cmd: "/weather next",
+        who: "dm",
+        cat: "info",
+        what: "Wanneer de volgende automatische update gepland staat (privé).",
+        when: "Planning tussen scenes.",
       },
     ];
 
@@ -765,29 +873,66 @@
         </article>`;
     }).join("");
 
+    function cmdCard(c) {
+      const label = c.who === "everyone" ? "Iedereen" : "DM";
+      return `
+        <article class="cmd" data-who="${c.who}" data-cat="${c.cat}">
+          <div class="cmd-top">
+            <code>${c.cmd}</code>
+            <span class="badge ${c.who}">${label}</span>
+          </div>
+          <p>${c.what}</p>
+          <div class="when">Wanneer: ${c.when}</div>
+        </article>`;
+    }
+
     const cmdList = document.getElementById("cmdList");
     function renderCommands() {
       const q = document.getElementById("cmdSearch").value.trim().toLowerCase();
       const who = document.getElementById("cmdWho").value;
-      cmdList.innerHTML = COMMANDS.map((c) => {
+      const cat = document.getElementById("cmdCat").value;
+
+      const matched = COMMANDS.filter((c) => {
         const matchWho = who === "all" || c.who === who;
-        const hay = `${c.cmd} ${c.what} ${c.when}`.toLowerCase();
+        const matchCat = cat === "all" || c.cat === cat;
+        const hay = `${c.cmd} ${c.what} ${c.when} ${c.cat}`.toLowerCase();
         const matchQ = !q || hay.includes(q);
-        const show = matchWho && matchQ;
-        const label = c.who === "everyone" ? "Iedereen" : "DM";
-        return `
-          <article class="cmd${show ? "" : " hidden"}" data-who="${c.who}">
-            <div class="cmd-top">
-              <code>${c.cmd}</code>
-              <span class="badge ${c.who}">${label}</span>
-            </div>
-            <p>${c.what}</p>
-            <div class="when">Wanneer: ${c.when}</div>
-          </article>`;
-      }).join("");
+        return matchWho && matchCat && matchQ;
+      });
+
+      const whoOrder = [
+        { id: "everyone", title: "Iedereen" },
+        { id: "dm", title: "DM" },
+      ];
+
+      const html = whoOrder
+        .map((w) => {
+          const inWho = matched.filter((c) => c.who === w.id);
+          if (!inWho.length) return "";
+          const catsHtml = CATEGORIES.map((cg) => {
+            const inCat = inWho.filter((c) => c.cat === cg.id);
+            if (!inCat.length) return "";
+            return `
+              <div class="cat-block">
+                <h4>${cg.label}</h4>
+                ${inCat.map(cmdCard).join("")}
+              </div>`;
+          }).join("");
+          return `
+            <div class="who-block">
+              <h3>${w.title}</h3>
+              ${catsHtml}
+            </div>`;
+        })
+        .join("");
+
+      cmdList.innerHTML =
+        html ||
+        '<p class="lead" style="margin:0">Geen commando’s gevonden voor deze zoekopdracht.</p>';
     }
     document.getElementById("cmdSearch").addEventListener("input", renderCommands);
     document.getElementById("cmdWho").addEventListener("change", renderCommands);
+    document.getElementById("cmdCat").addEventListener("change", renderCommands);
     renderCommands();
   </script>
 </body>

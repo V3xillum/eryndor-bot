@@ -43,9 +43,10 @@ Geen aparte `maxDurationHours`: `durationMaxHours` *is* al leidend.
 
 1. Expliciete DM-duur (`/weather set … duration`, `/weather schedule`) — wint altijd
 2. Entry heeft `durationMinHours` / `durationMaxHours` → random interval in die range
-3. Anders → bestaande globale env (`WEATHER_UPDATE_*_MINUTES`)
+3. Guild `/weather settings interval` (SQLite)
+4. Anders → globale env (`WEATHER_UPDATE_*_MINUTES`)
 
-Alleen types die van de globale ritme afwijken krijgen duration-velden; de rest valt terug op `.env`.
+Alleen types die van de globale ritme afwijken krijgen duration-velden; de rest valt terug op guild/`.env`.
 
 ### Validatie (bij load)
 - Beide gezet, of geen van beide

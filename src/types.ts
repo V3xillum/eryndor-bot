@@ -37,6 +37,19 @@ export interface WorldState {
   /** Temporary dial: `only` | `none` while override_until is in the future. */
   magical_mode: MagicalMode | null;
   magical_override_until: string | null;
+  /**
+   * Optional per-guild auto-update interval (minutes). Both set together, or both null
+   * (fall back to `.env` / defaults).
+   */
+  update_min_minutes: number | null;
+  update_max_minutes: number | null;
+  /**
+   * Optional per-guild active posting window. `null` = inherit env;
+   * `0` = disabled; `1` = enabled (use start/end or env defaults for missing times).
+   */
+  active_window_enabled: number | null;
+  active_window_start: string | null;
+  active_window_end: string | null;
 }
 
 export interface WeatherResult {
@@ -75,6 +88,21 @@ export interface Messages {
   statusWaitingWindow: string;
   statusDurationType: string;
   statusDurationEnv: string;
+  statusDurationGuild: string;
+  statusInterval: string;
+  statusWindowOn: string;
+  statusWindowOff: string;
+  statusWindowOverride: string;
+  statusWindowDefault: string;
+  settingsShowTitle: string;
+  settingsIntervalSuccess: string;
+  settingsWindowSuccess: string;
+  settingsWindowDisabledSuccess: string;
+  settingsClearSuccess: string;
+  settingsClearNone: string;
+  invalidUpdateInterval: string;
+  invalidActiveWindow: string;
+  invalidTimeOfDay: string;
   statusCooldownOn: string;
   statusCooldownOff: string;
   statusDialOn: string;
