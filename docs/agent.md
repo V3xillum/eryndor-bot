@@ -372,6 +372,8 @@ Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / def
 ### Calendar events channel — implemented
 `/world setup` stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/world today` embed **only when** `events.length > 0`. Empty days stay silent. `/world clear` disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
+**Possible adjustment (not built):** post the today-embed **every** morning. Days with events: keep `@everyone` (and normal notifications). Empty days: no `@everyone`, plus Discord `MessageFlags.SuppressNotifications` (no sound/push). Current preference remains “only post on event days” — a daily date post is likely noise; anyone curious can run `/world today` on demand.
+
 ## Non-Goals
 Do not introduce:
 - Firebase, MongoDB, Redis
