@@ -130,17 +130,30 @@ CREATE TABLE weather_log (
   posted_at DATETIME,
   forced BOOLEAN DEFAULT 0        -- true when set via /weather set, not a roll
 );
+
+CREATE TABLE scheduled_posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  guild_id TEXT NOT NULL,
+  channel_id TEXT NOT NULL,
+  body TEXT NOT NULL,
+  post_at DATETIME NOT NULL,
+  created_by TEXT NOT NULL,
+  created_at DATETIME NOT NULL,
+  posted_at DATETIME              -- NULL = pending
+);
 ```
 
 On restart: if `next_update_at` is in the past and the guild isn't paused, post immediately and reschedule. This means state never needs a separate "missed update" recovery path.
 
 Automated posts go to `thread_id` when set, otherwise to `channel_id`. If neither is configured, skip posting for that guild (log a warning) until `/weather setup` has been run.
 
+Pending rows in `scheduled_posts` with `post_at` in the past are posted on the next scheduler tick (same 30s loop). Announcements ignore the weather active window and pause.
+
 ## Content Format
 
 `content/weather-table.json` — a d100 table as **ranges**. There are not 100 weather types; there are ~5–15 types mapped onto rolls 1–100. Common weather gets wide ranges; rare magical effects get narrow ones.
 
-Each entry has a numeric **`severity`** (1 = mild … 5 = catastrophic), a boolean **`magical`**, and points to **exactly one** image under `content/images/`. Optional **`durationMinHours` / `durationMaxHours`** override the guild/`.env` fallback interval while that type is current. Flavor text lives **in the image** — not in JSON.
+Each entry has a numeric **`severity`** (1 = mild … 5 = catastrophic), a boolean **`magical`**, and points to **exactly one** image under `content/images/`. Optional **`durationMinMinutes` / `durationMaxMinutes`** override the guild/`.env` fallback interval while that type is current. Flavor text lives **in the image** — not in JSON.
 
 ```json
 [
@@ -159,8 +172,8 @@ Each entry has a numeric **`severity`** (1 = mild … 5 = catastrophic), a boole
     "image": "storm.png",
     "severity": 4,
     "magical": false,
-    "durationMinHours": 2,
-    "durationMaxHours": 6
+    "durationMinMinutes": 120,
+    "durationMaxMinutes": 360
   },
   {
     "min": 95,
@@ -169,8 +182,8 @@ Each entry has a numeric **`severity`** (1 = mild … 5 = catastrophic), a boole
     "image": "arcane_storm.png",
     "severity": 5,
     "magical": true,
-    "durationMinHours": 1,
-    "durationMaxHours": 3
+    "durationMinMinutes": 15,
+    "durationMaxMinutes": 60
   }
 ]
 ```
@@ -250,7 +263,7 @@ There is **no** `/weather post`. Anything that changes weather also broadcasts t
 - `/weather magical set <only|none> <duration>` — temporary magical filter for auto-roll / `/weather roll` (`only` = magical types only; `none` = non-magical only). Lazy-expires. Rejects empty pools and empty intersection with an active severity dial. Allowlist only. Does not change current weather or post.
 - `/weather magical clear` — clear the magical dial early. Allowlist only.
 - `/weather settings show` — show effective auto-update interval, active posting window, and cooldown (guild override or defaults). Allowlist only.
-- `/weather settings interval <min> <max>` — set per-guild fallback interval in minutes (when the current type has no `duration*Hours`). Reschedules immediately. Allowlist only.
+- `/weather settings interval <min> <max>` — set per-guild fallback interval in minutes (when the current type has no `duration*Minutes`). Reschedules immediately. Allowlist only.
 - `/weather settings window <enabled> [start] [end]` — set per-guild active posting window (`HH:mm`, same-day). Timezone stays in `.env`. Reschedules immediately. Allowlist only.
 - `/weather settings cooldown [enabled] [after] [max_next]` — per-guild severity cooldown overrides (field-level; null = inherit `weather-rules.json`). At least one option required. Does not reschedule. Soft-warns if `max_next >= after` or start pool would be empty. Allowlist only.
 - `/weather settings clear <scope>` — clear guild overrides by scope: `schedule` (→ `.env`), `cooldown` (→ content), or `all`. Schedule clears reschedule. Allowlist only.
@@ -264,6 +277,11 @@ There is **no** `/weather post`. Anything that changes weather also broadcasts t
 ### World / calendar
 - `/world today` — current Harptos day, moon phase, events (embed). Everyone.
 - `/world fullmoon` — next exact Full Moon from `full-moons.json` (embed). Everyone.
+
+### Announcements (DM-scheduled text)
+- `/announce schedule <channel> <when>` — open a modal for body text; store for later. `when`: `30m`/`2h`/`1d` or `YYYY-MM-DD HH:mm` in `WEATHER_TIMEZONE`. Allowlist only. Destination is independent of `/weather setup`.
+- `/announce list` — pending posts (ephemeral). Allowlist only.
+- `/announce cancel <id>` — cancel a pending post. Allowlist only.
 
 Slash commands are registered globally via `npm run register-commands` (`Routes.applicationCommands`). Global commands can take up to ~1 hour to appear in Discord clients; guild-scoped registration is faster for single-server testing if needed later.
 
@@ -281,14 +299,15 @@ Responsible for:
 - rolling new weather and posting it to the configured channel/thread when it's time
 - recalculating and storing the next `next_update_at` from the current type’s duration range when set, otherwise the guild override minute range, otherwise `.env` defaults
 - honouring each guild’s effective active posting window (guild override or `.env`)
+- posting due rows from `scheduled_posts` (DM announcements) to their own `channel_id` — independent of weather destination / pause / active window
 
-Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/weather roll`, `/weather set`); the scheduler owns the recurring automatic updates.
+Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/weather roll`, `/weather set`); the scheduler owns the recurring automatic updates and due announcements.
 
 **Choice:** `.env` holds **defaults** (and timezone). Per-guild cadence and posting window can be overridden in SQLite via `/weather settings` so DMs can change them without host access or a restart. Empty/null guild columns mean “inherit `.env`”.
 
 ### Weather duration precedentie (hoog → laag)
 1. Expliciete DM-duur (`/weather set … duration`, `/weather schedule`)
-2. Entry `durationMinHours` / `durationMaxHours`
+2. Entry `durationMinMinutes` / `durationMaxMinutes`
 3. Guild `/weather settings interval`
 4. `.env` `WEATHER_UPDATE_*_MINUTES`
 
@@ -311,7 +330,7 @@ Architecture should allow these without major refactoring, but **none should be 
 ### Already listed
 - Multiple regions
 - Seasons
-- Random world events
+- Random world events (ad-hoc DM text scheduling is covered by `/announce`; random tables remain future)
 - Encounter tables
 - Forecast system (preview upcoming weather)
 - Role-based allowlists (in addition to user IDs)
@@ -321,7 +340,7 @@ Architecture should allow these without major refactoring, but **none should be 
 - Guild-scoped slash command registration for faster iteration on a single server
 
 ### Weather duration (per type) — implemented
-Each weather type may define `durationMinHours` / `durationMaxHours`. When present, that range schedules the next auto-update after the type becomes current; otherwise the guild `/weather settings interval` applies when set, else the global `.env` interval. Explicit DM duration (`/weather set … duration`, `/weather schedule`) always wins.
+Each weather type may define `durationMinMinutes` / `durationMaxMinutes`. When present, that range schedules the next auto-update after the type becomes current; otherwise the guild `/weather settings interval` applies when set, else the global `.env` interval. Explicit DM duration (`/weather set … duration`, `/weather schedule`) always wins.
 
 ### Guild schedule settings — implemented
 `/weather settings` stores optional per-guild overrides on `world_state`: `update_min_minutes` / `update_max_minutes`, `active_window_enabled` / `active_window_start` / `active_window_end`. Null = inherit `.env`. Timezone stays in `.env` (`WEATHER_TIMEZONE`). Changing settings reschedules `next_update_at` immediately. Visible on `/weather status` and `/weather settings show`. Clear via `/weather settings clear scope:schedule|all`.
@@ -337,6 +356,9 @@ Each weather entry has boolean **`magical`**. `/weather magical set <only|none> 
 
 ### Guild cooldown settings — implemented
 Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / default on; `0`/`1` = off/on), `cooldown_after_severity`, `cooldown_max_next_severity` (null = inherit `content/weather-rules.json`). Field-level merge. `/weather settings cooldown` patches provided fields; soft-warns when `max_next >= after` or the start pool would be empty (escalate still applies). `/weather settings clear scope:cooldown|all` clears overrides. Visible on `/weather status` and `settings show` with source label `guild` | `content`. Does not reschedule. See [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
+
+### Scheduled announcements — implemented
+`/announce schedule|list|cancel` stores free-text posts in `scheduled_posts` and posts them via the existing 30s scheduler to a chosen channel (not the weather destination). Relative or absolute `when` in `WEATHER_TIMEZONE`. Modal body max 2000 chars. Allowlist only. See [`feature-scheduled-announcements.md`](./feature-scheduled-announcements.md).
 
 ## Non-Goals
 Do not introduce:

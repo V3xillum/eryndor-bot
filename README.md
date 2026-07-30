@@ -78,6 +78,16 @@ Global slash commands can take up to about an hour to appear after registration.
 
 There is no `/weather post` — anything that changes weather also broadcasts.
 
+### Announcements (scheduled text)
+
+Allowlist only. Posts go to the channel you pick — independent of `/weather setup`.
+
+| Command | Effect |
+|---|---|
+| `/announce schedule <channel> <when>` | Opens a modal for the text; posts later (`30m`/`2h`/`1d` or `YYYY-MM-DD HH:mm` in `WEATHER_TIMEZONE`) |
+| `/announce list` | Pending posts (ephemeral) |
+| `/announce cancel <id>` | Cancel a pending post |
+
 ### Calendar (Eryndor)
 
 Data comes from the static [Calendar of Eryndor](https://v3xillum.github.io/eryndor/) JSON API. Everyone in the guild may use these (world info, no weather-timer spoilers). Replies are in Dutch.
@@ -93,7 +103,7 @@ Optional env: `ERYNDOR_CALENDAR_BASE_URL` / `ERYNDOR_CALENDAR_FALLBACK_URL` (see
 
 Edit without touching TypeScript:
 
-- `content/weather-table.json` — d100 ranges, types, images, required `severity` + `magical`, optional `durationMinHours` / `durationMaxHours`
+- `content/weather-table.json` — d100 ranges, types, images, required `severity` + `magical`, optional `durationMinMinutes` / `durationMaxMinutes`
 - `content/weather-rules.json` — cooldown thresholds after high-severity weather
 - `content/messages.json` — bot reply strings (errors / confirmations only)
 - `content/images/` — one image per `image` field (DM weather cards)

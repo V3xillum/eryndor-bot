@@ -3,6 +3,7 @@ import { loadConfig } from './config.js';
 import { openDatabase } from './db/index.js';
 import { registerInteractionHandler } from './events/interactionCreate.js';
 import { registerReadyHandler } from './events/ready.js';
+import { AnnounceService } from './services/AnnounceService.js';
 import { EryndorCalendarService } from './services/EryndorCalendarService.js';
 import { SchedulerService } from './services/SchedulerService.js';
 import { WeatherService } from './services/WeatherService.js';
@@ -16,6 +17,7 @@ async function main(): Promise<void> {
     activeWindow: config.activeWindow,
     timeZone: config.eryndorCalendar.timeZone,
   });
+  const announce = new AnnounceService(db, weather.messages);
   const calendar = new EryndorCalendarService(config.eryndorCalendar, weather.messages);
   console.log(
     `Auto-update interval (default): ${config.updateMinMinutes}–${config.updateMaxMinutes} minutes`,
@@ -34,10 +36,10 @@ async function main(): Promise<void> {
     intents: [GatewayIntentBits.Guilds],
   });
 
-  const scheduler = new SchedulerService(client, weather);
+  const scheduler = new SchedulerService(client, weather, announce);
 
   registerReadyHandler(client, scheduler);
-  registerInteractionHandler(client, { weather, scheduler, calendar, config });
+  registerInteractionHandler(client, { weather, scheduler, calendar, announce, config });
 
   process.on('SIGINT', () => shutdown(client, scheduler, db));
   process.on('SIGTERM', () => shutdown(client, scheduler, db));

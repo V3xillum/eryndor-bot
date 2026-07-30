@@ -9,9 +9,9 @@ export interface WeatherTableEntry {
   severity: number;
   /** Whether this weather is magical (arcane / clockwork / etc.). */
   magical: boolean;
-  /** Optional; both must be set together. Hours until next auto-update while this type is current. */
-  durationMinHours?: number;
-  durationMaxHours?: number;
+  /** Optional; both must be set together. Minutes until next auto-update while this type is current. */
+  durationMinMinutes?: number;
+  durationMaxMinutes?: number;
 }
 
 /** Transition / cooldown thresholds — loaded from content/weather-rules.json */
@@ -64,6 +64,18 @@ export interface WeatherResult {
   image: string;
   roll?: number;
   forced: boolean;
+}
+
+/** DM-scheduled free-text post (separate from weather destination). */
+export interface ScheduledPost {
+  id: number;
+  guild_id: string;
+  channel_id: string;
+  body: string;
+  post_at: string;
+  created_by: string;
+  created_at: string;
+  posted_at: string | null;
 }
 
 export interface Messages {
@@ -161,6 +173,17 @@ export interface Messages {
   helpEveryoneBody: string;
   helpFieldDm: string;
   helpDmBody: string;
+  announceScheduleSuccess: string;
+  announceListEmpty: string;
+  announceListTitle: string;
+  announceListItem: string;
+  announceCancelSuccess: string;
+  announceCancelNotFound: string;
+  announceInvalidWhen: string;
+  announceWhenInPast: string;
+  announceBodyEmpty: string;
+  announceModalTitle: string;
+  announceModalBodyLabel: string;
 }
 
 export type CalendarEvent =

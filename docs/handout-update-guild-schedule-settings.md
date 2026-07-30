@@ -21,7 +21,7 @@ Allowlist only (zelfde als andere admin weather-commands).
 | Command | Wat het doet |
 |---|---|
 | `/weather settings show` | Toont effectief interval + postvenster (guild of `.env`) |
-| `/weather settings interval <min> <max>` | Guild-fallback interval in **minuten** (als het current type geen `duration*Hours` heeft). Plant meteen opnieuw. |
+| `/weather settings interval <min> <max>` | Guild-fallback interval in **minuten** (als het current type geen `duration*Minutes` heeft). Plant meteen opnieuw. |
 | `/weather settings window <enabled> [start] [end]` | Actief postvenster aan/uit; optioneel `HH:mm` start/eind (zelfde dag). Timezone blijft `WEATHER_TIMEZONE` uit `.env`. Plant meteen opnieuw. |
 | `/weather settings clear scope:schedule\|cooldown\|all` | Wis guild-overrides per scope → terug naar defaults; schedule/all plant opnieuw |
 
@@ -37,7 +37,7 @@ Voorbeelden:
 
 ## Wat moet de handout uitleggen?
 
-1. **Interval vs type-duration** — types met `durationMinHours`/`durationMaxHours` in content winnen van het guild/`.env`-interval. Expliciete DM-duur (`/weather set … duration`, `/weather schedule`) wint altijd.
+1. **Interval vs type-duration** — types met `durationMinMinutes`/`durationMaxMinutes` in content winnen van het guild/`.env`-interval. Expliciete DM-duur (`/weather set … duration`, `/weather schedule`) wint altijd.
 2. **Postvenster** — alleen **automatische** posts wachten op het venster. Handmatige `/weather roll` en `/weather set` werken ook daarbuiten.
 3. **Timezone** — niet via Discord instelbaar; host-config (`WEATHER_TIMEZONE`).
 4. **Status** — `/weather status` toont nu ook intervalbron (guild / `.env`) en postvenster; handout-regel over status mag dat noemen.

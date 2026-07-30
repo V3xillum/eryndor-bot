@@ -34,15 +34,15 @@ Ontwerpdoc voor een latere implementatie. Bouwt voort op de future extensions in
 ### Model
 Optionele range op de entry die **net current werd** (“hoe lang blijft *dit* weer”):
 
-- `durationMinHours`
-- `durationMaxHours`
+- `durationMinMinutes`
+- `durationMaxMinutes`
 
-Geen aparte `maxDurationHours`: `durationMaxHours` *is* al leidend.
+Geen aparte `maxDurationMinutes`: `durationMaxMinutes` *is* al leidend.
 
 ### Precedentie (hoog → laag)
 
 1. Expliciete DM-duur (`/weather set … duration`, `/weather schedule`) — wint altijd
-2. Entry heeft `durationMinHours` / `durationMaxHours` → random interval in die range
+2. Entry heeft `durationMinMinutes` / `durationMaxMinutes` → random interval in die range
 3. Guild `/weather settings interval` (SQLite)
 4. Anders → globale env (`WEATHER_UPDATE_*_MINUTES`)
 
@@ -50,8 +50,8 @@ Alleen types die van de globale ritme afwijken krijgen duration-velden; de rest 
 
 ### Validatie (bij load)
 - Beide gezet, of geen van beide
-- `durationMinHours > 0` en `<= durationMaxHours`
-- Eenheden: hours in JSON; intern omzetten naar ms bij schedulen (consistent met huidige helpers)
+- `durationMinMinutes > 0` en `<= durationMaxMinutes`
+- Eenheden: minutes in JSON; intern omzetten naar ms bij schedulen (zelfde helper als guild/`.env`-interval)
 
 ### Scheduling-hook
 `scheduleNextUpdate` (of equivalent) moet na een roll/set de duration van het **nieuwe** current type gebruiken, niet van het vorige.
@@ -145,8 +145,8 @@ Illustratief — niet shippen tot implementatie:
     "type": "storm",
     "image": "storm.png",
     "severity": 4,
-    "durationMinHours": 2,
-    "durationMaxHours": 6
+    "durationMinMinutes": 120,
+    "durationMaxMinutes": 360
   },
   {
     "min": 95,
@@ -154,8 +154,8 @@ Illustratief — niet shippen tot implementatie:
     "type": "arcane_storm",
     "image": "arcane_storm.png",
     "severity": 5,
-    "durationMinHours": 1,
-    "durationMaxHours": 3
+    "durationMinMinutes": 15,
+    "durationMaxMinutes": 60
   }
 ]
 ```

@@ -3,6 +3,7 @@ import { AttachmentBuilder } from 'discord.js';
 import { resolveImagePath } from '../content/loader.js';
 import type { WeatherResult } from '../types.js';
 import { formatTemplate } from '../utils/helpers.js';
+import type { AnnounceService } from './AnnounceService.js';
 import type { WeatherService } from './WeatherService.js';
 
 const CHECK_INTERVAL_MS = 30 * 1000;
@@ -13,6 +14,7 @@ export class SchedulerService {
   constructor(
     private readonly client: Client,
     private readonly weather: WeatherService,
+    private readonly announce: AnnounceService,
   ) {}
 
   start(): void {
@@ -36,6 +38,36 @@ export class SchedulerService {
         await this.postWeather(state.guild_id, result);
       } catch (error) {
         console.error(`Scheduler failed for guild ${state.guild_id}:`, error);
+      }
+    }
+
+    await this.tickAnnouncements();
+  }
+
+  private async tickAnnouncements(): Promise<void> {
+    const due = this.announce.duePosts();
+    for (const post of due) {
+      try {
+        const channel = await this.client.channels.fetch(post.channel_id);
+        if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+          console.warn(
+            `Scheduled post ${post.id}: destination ${post.channel_id} is not a text channel`,
+          );
+          this.announce.markPosted(post.id);
+          continue;
+        }
+
+        if (!('send' in channel)) {
+          console.warn(`Scheduled post ${post.id}: channel does not support send`);
+          this.announce.markPosted(post.id);
+          continue;
+        }
+
+        await channel.send({ content: post.body });
+        this.announce.markPosted(post.id);
+      } catch (error) {
+        console.error(`Scheduled post ${post.id} failed:`, error);
+        // Leave pending so the next tick can retry (e.g. transient Discord outage).
       }
     }
   }

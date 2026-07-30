@@ -35,7 +35,6 @@ import {
 import {
   formatTemplate,
   isPaused,
-  randomIntervalFromHours,
   randomIntervalMs,
 } from '../utils/helpers.js';
 
@@ -48,8 +47,8 @@ export interface WeatherAdminStatus {
   nextUpdateAt: Date | null;
   pausedUntil: Date | null;
   dueButWaitingForWindow: boolean;
-  durationMinHours: number | null;
-  durationMaxHours: number | null;
+  durationMinMinutes: number | null;
+  durationMaxMinutes: number | null;
   usesEnvDuration: boolean | null;
   updateMinMinutes: number;
   updateMaxMinutes: number;
@@ -351,8 +350,8 @@ export class WeatherService {
       nextUpdateAt: schedule.nextUpdateAt,
       pausedUntil: schedule.pausedUntil,
       dueButWaitingForWindow: schedule.dueButWaitingForWindow,
-      durationMinHours: hasDuration && entry ? entry.durationMinHours! : null,
-      durationMaxHours: hasDuration && entry ? entry.durationMaxHours! : null,
+      durationMinMinutes: hasDuration && entry ? entry.durationMinMinutes! : null,
+      durationMaxMinutes: hasDuration && entry ? entry.durationMaxMinutes! : null,
       usesEnvDuration: entry ? !hasDuration : null,
       updateMinMinutes: scheduleSettings.updateMinMinutes,
       updateMaxMinutes: scheduleSettings.updateMaxMinutes,
@@ -422,8 +421,8 @@ export class WeatherService {
       } else if (status.usesEnvDuration === false) {
         currentLines.push(
           formatTemplate(this.messages.statusDurationType, {
-            min: status.durationMinHours ?? '?',
-            max: status.durationMaxHours ?? '?',
+            min: status.durationMinMinutes ?? '?',
+            max: status.durationMaxMinutes ?? '?',
           }),
         );
       }
@@ -869,7 +868,7 @@ export class WeatherService {
 
     const intervalMs =
       entry && entryHasDurationRange(entry)
-        ? randomIntervalFromHours(entry.durationMinHours!, entry.durationMaxHours!)
+        ? randomIntervalMs(entry.durationMinMinutes!, entry.durationMaxMinutes!)
         : randomIntervalMs(settings.updateMinMinutes, settings.updateMaxMinutes);
 
     let next = new Date(Date.now() + intervalMs);

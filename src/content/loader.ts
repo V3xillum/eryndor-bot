@@ -59,19 +59,19 @@ function validateWeatherTable(table: WeatherTableEntry[]): void {
       throw new Error(`Type ${entry.type}: magical must be a boolean`);
     }
 
-    const hasMin = entry.durationMinHours !== undefined;
-    const hasMax = entry.durationMaxHours !== undefined;
+    const hasMin = entry.durationMinMinutes !== undefined;
+    const hasMax = entry.durationMaxMinutes !== undefined;
     if (hasMin !== hasMax) {
       throw new Error(
-        `Type ${entry.type}: durationMinHours and durationMaxHours must both be set or both omitted`,
+        `Type ${entry.type}: durationMinMinutes and durationMaxMinutes must both be set or both omitted`,
       );
     }
     if (hasMin && hasMax) {
-      const minH = entry.durationMinHours!;
-      const maxH = entry.durationMaxHours!;
-      if (!(minH > 0) || maxH < minH || !Number.isFinite(minH) || !Number.isFinite(maxH)) {
+      const minM = entry.durationMinMinutes!;
+      const maxM = entry.durationMaxMinutes!;
+      if (!(minM > 0) || maxM < minM || !Number.isFinite(minM) || !Number.isFinite(maxM)) {
         throw new Error(
-          `Type ${entry.type}: invalid duration range ${minH}–${maxH} hours`,
+          `Type ${entry.type}: invalid duration range ${minM}–${maxM} minutes`,
         );
       }
     }
@@ -214,7 +214,7 @@ export function pickWeightedFromPool(pool: WeatherTableEntry[]): {
 }
 
 export function entryHasDurationRange(entry: WeatherTableEntry): boolean {
-  return entry.durationMinHours !== undefined && entry.durationMaxHours !== undefined;
+  return entry.durationMinMinutes !== undefined && entry.durationMaxMinutes !== undefined;
 }
 
 export function parseMagicalMode(raw: string): MagicalMode | null {

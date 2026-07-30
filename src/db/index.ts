@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { WorldState } from '../types.js';
+import type { ScheduledPost, WorldState } from '../types.js';
 
 const DEFAULT_DB_PATH = path.resolve(process.cwd(), 'storage', 'world.sqlite');
 
@@ -33,6 +33,17 @@ function migrate(db: Database.Database): void {
       weather_type TEXT,
       posted_at DATETIME,
       forced BOOLEAN DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS scheduled_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      body TEXT NOT NULL,
+      post_at DATETIME NOT NULL,
+      created_by TEXT NOT NULL,
+      created_at DATETIME NOT NULL,
+      posted_at DATETIME
     );
   `);
 
@@ -355,4 +366,98 @@ export function clearCooldownOverrides(db: Database.Database, guildId: string): 
   ).run(nowIso(), guildId);
 
   return hadOverride;
+}
+
+export function insertScheduledPost(
+  db: Database.Database,
+  input: {
+    guildId: string;
+    channelId: string;
+    body: string;
+    postAt: string;
+    createdBy: string;
+  },
+): ScheduledPost {
+  const createdAt = nowIso();
+  const result = db
+    .prepare(
+      `INSERT INTO scheduled_posts
+         (guild_id, channel_id, body, post_at, created_by, created_at, posted_at)
+       VALUES (?, ?, ?, ?, ?, ?, NULL)`,
+    )
+    .run(
+      input.guildId,
+      input.channelId,
+      input.body,
+      input.postAt,
+      input.createdBy,
+      createdAt,
+    );
+
+  const row = getScheduledPost(db, Number(result.lastInsertRowid));
+  if (!row) throw new Error('Failed to insert scheduled_posts row');
+  return row;
+}
+
+export function getScheduledPost(
+  db: Database.Database,
+  id: number,
+): ScheduledPost | null {
+  return (
+    (db.prepare(`SELECT * FROM scheduled_posts WHERE id = ?`).get(id) as
+      | ScheduledPost
+      | undefined) ?? null
+  );
+}
+
+export function listPendingScheduledPosts(
+  db: Database.Database,
+  guildId: string,
+): ScheduledPost[] {
+  return db
+    .prepare(
+      `SELECT * FROM scheduled_posts
+       WHERE guild_id = ? AND posted_at IS NULL
+       ORDER BY post_at ASC, id ASC`,
+    )
+    .all(guildId) as ScheduledPost[];
+}
+
+/** Pending posts whose post_at is at or before `nowIso`. */
+export function listDueScheduledPosts(
+  db: Database.Database,
+  nowIsoValue = nowIso(),
+): ScheduledPost[] {
+  return db
+    .prepare(
+      `SELECT * FROM scheduled_posts
+       WHERE posted_at IS NULL AND post_at <= ?
+       ORDER BY post_at ASC, id ASC`,
+    )
+    .all(nowIsoValue) as ScheduledPost[];
+}
+
+export function markScheduledPostPosted(
+  db: Database.Database,
+  id: number,
+  postedAt = nowIso(),
+): void {
+  db.prepare(
+    `UPDATE scheduled_posts SET posted_at = ? WHERE id = ? AND posted_at IS NULL`,
+  ).run(postedAt, id);
+}
+
+/** Deletes a pending post for this guild. Returns false if missing or already posted. */
+export function cancelScheduledPost(
+  db: Database.Database,
+  guildId: string,
+  id: number,
+): boolean {
+  const result = db
+    .prepare(
+      `DELETE FROM scheduled_posts
+       WHERE id = ? AND guild_id = ? AND posted_at IS NULL`,
+    )
+    .run(id, guildId);
+  return result.changes > 0;
 }

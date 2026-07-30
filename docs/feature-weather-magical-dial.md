@@ -36,8 +36,8 @@ Elke entry in `weather-table.json`:
   "image": "arcane_storm.png",
   "severity": 5,
   "magical": true,
-  "durationMinHours": 1,
-  "durationMaxHours": 3
+  "durationMinMinutes": 15,
+  "durationMaxMinutes": 60
 }
 ```
 

@@ -25,7 +25,7 @@
   "statusNextNone": "Auto-roll niet gepland",
   "statusPaused": "Gepauzeerd tot <t:{unix}:F>",
   "statusWaitingWindow": "Due — wacht op actief postvenster",
-  "statusDurationType": "Duration **{min}–{max}u** (content)",
+  "statusDurationType": "Duration **{min}–{max} min** (content)",
   "statusDurationEnv": "Duration-fallback: **{min}–{max} min** (`.env`)",
   "statusDurationGuild": "Duration-fallback: **{min}–{max} min** (guild settings)",
   "statusInterval": "Interval **{min}–{max} min** ({source})",
@@ -92,5 +92,17 @@
   "helpFieldEveryone": "Iedereen",
   "helpEveryoneBody": "`/weather current` — huidig weer (privé)\n`/weather help` — deze hulp + handout-link\n`/world today` — Harptos-dag, maan, events\n`/world fullmoon` — volgende volle maan",
   "helpFieldDm": "DM (allowlist)",
-  "helpDmBody": "`/weather roll` / `set` — dobbel of zet weer (+ post)\n`/weather pause` / `resume` — auto-updates\n`/weather schedule` — volgende auto-roll\n`/weather severity` / `magical` — draaiknoppen\n`/weather settings` — ritme, venster, afkoeling\n`/weather status` / `next` / `setup` — check & inrichten"
+  "helpDmBody": "`/weather roll` / `set` — dobbel of zet weer (+ post)\n`/weather pause` / `resume` — auto-updates\n`/weather schedule` — volgende auto-roll\n`/weather severity` / `magical` — draaiknoppen\n`/weather settings` — ritme, venster, afkoeling\n`/weather status` / `next` / `setup` — check & inrichten\n`/announce schedule` / `list` / `cancel` — gepland tekstbericht (ander kanaal)",
+  "announceSchedulePrompt": "Vul de tekst in het venster in.",
+  "announceScheduleSuccess": "Bericht **#{id}** gepland voor {channel} om <t:{unix}:F> (<t:{unix}:R>).",
+  "announceListEmpty": "Geen geplande berichten openstaand.",
+  "announceListTitle": "**Geplande berichten**",
+  "announceListItem": "`#{id}` → {channel} · <t:{unix}:F> (<t:{unix}:R>)\n> {preview}",
+  "announceCancelSuccess": "Gepland bericht **#{id}** geannuleerd.",
+  "announceCancelNotFound": "Geen openstaand bericht met id **#{id}**.",
+  "announceInvalidWhen": "Ongeldig tijdstip. Gebruik `30m` / `2h` / `1d`, of `YYYY-MM-DD HH:mm` in tijdzone **{timezone}**.",
+  "announceWhenInPast": "Dat tijdstip ligt in het verleden. Kies een moment in de toekomst.",
+  "announceBodyEmpty": "Tekst mag niet leeg zijn.",
+  "announceModalTitle": "Gepland bericht",
+  "announceModalBodyLabel": "Tekst (max 2000 tekens)"
 }

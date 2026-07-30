@@ -671,7 +671,7 @@
         </article>
         <article class="tile">
           <h3>6. Duur (optioneel)</h3>
-          <p>Min/max uren dat dit weer mag blijven. Weglaten = standaard ritme (nu 6–18 uur).</p>
+          <p>Min/max minuten dat dit weer mag blijven. Weglaten = standaard ritme (nu 6–18 uur).</p>
         </article>
       </div>
 
@@ -684,11 +684,11 @@
   "image": "ashen_fog.png",
   "severity": 3,
   "magical": false,
-  "durationMinHours": 2,
-  "durationMaxHours": 4
+  "durationMinMinutes": 120,
+  "durationMaxMinutes": 240
 }</pre>
       <p class="note" style="margin-top:0.85rem">
-        <code>durationMinHours</code> / <code>durationMaxHours</code> zijn optioneel (beide of geen).
+        <code>durationMinMinutes</code> / <code>durationMaxMinutes</code> zijn optioneel (beide of geen).
         Geen sfeertekst-veld: dat zit in het plaatje.
       </p>
       <div class="actions" style="margin-top:0.85rem">
@@ -711,8 +711,8 @@
       { type: "Clockwork clouds", min: 59, max: 68, severity: 2, magical: true },
       { type: "rain", min: 69, max: 74, severity: 2, magical: false },
       { type: "wind", min: 75, max: 86, severity: 2, magical: false },
-      { type: "storm", min: 87, max: 94, severity: 4, magical: false, durationMinHours: 2, durationMaxHours: 6 },
-      { type: "arcane_storm", min: 95, max: 100, severity: 5, magical: true, durationMinHours: 1, durationMaxHours: 3 },
+      { type: "storm", min: 87, max: 94, severity: 4, magical: false, durationMinMinutes: 120, durationMaxMinutes: 360 },
+      { type: "arcane_storm", min: 95, max: 100, severity: 5, magical: true, durationMinMinutes: 15, durationMaxMinutes: 60 },
     ];
 
     const CATEGORIES = [
@@ -892,8 +892,8 @@
     const typeGrid = document.getElementById("typeGrid");
     typeGrid.innerHTML = WEATHER_TYPES.map((t) => {
       const dur =
-        t.durationMinHours != null
-          ? `${t.durationMinHours}–${t.durationMaxHours}u`
+        t.durationMinMinutes != null
+          ? `${t.durationMinMinutes}–${t.durationMaxMinutes} min`
           : "standaard (6–18u)";
       return `
         <article class="type-card">

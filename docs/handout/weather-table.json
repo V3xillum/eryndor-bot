@@ -54,8 +54,8 @@
     "image": "storm.png",
     "severity": 4,
     "magical": false,
-    "durationMinHours": 2,
-    "durationMaxHours": 6
+    "durationMinMinutes": 120,
+    "durationMaxMinutes": 360
   },
   {
     "min": 95,
@@ -64,7 +64,7 @@
     "image": "arcane_storm.png",
     "severity": 5,
     "magical": true,
-    "durationMinHours": 1,
-    "durationMaxHours": 3
+    "durationMinMinutes": 15,
+    "durationMaxMinutes": 60
   }
 ]
