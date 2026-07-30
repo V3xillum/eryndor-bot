@@ -1,6 +1,10 @@
 import type Database from 'better-sqlite3';
+import { EmbedBuilder } from 'discord.js';
 import {
+  countEntriesInSeverityRange,
+  countEntriesWithMagicalMode,
   entryHasDurationRange,
+  filterDialIntersection,
   findEntryByRoll,
   findEntryByType,
   listWeatherTypes,
@@ -12,6 +16,7 @@ import {
 } from '../content/loader.js';
 import * as dbQueries from '../db/index.js';
 import type {
+  MagicalMode,
   Messages,
   WeatherResult,
   WeatherRules,
@@ -24,14 +29,16 @@ import {
   type ActiveWindow,
 } from '../utils/activeWindow.js';
 import {
+  formatTemplate,
   isPaused,
   randomIntervalFromHours,
   randomIntervalMs,
 } from '../utils/helpers.js';
 
 export interface WeatherAdminStatus {
-  type: string;
-  severity: number;
+  type: string | null;
+  severity: number | null;
+  magical: boolean | null;
   forced: boolean;
   rolledAt: Date | null;
   nextUpdateAt: Date | null;
@@ -39,11 +46,18 @@ export interface WeatherAdminStatus {
   dueButWaitingForWindow: boolean;
   durationMinHours: number | null;
   durationMaxHours: number | null;
-  usesEnvDuration: boolean;
+  usesEnvDuration: boolean | null;
   cooldownActive: boolean;
   effectiveMaxNextSeverity: number | null;
   cooldownAfterSeverity: number;
   cooldownMaxNextSeverity: number;
+  dialActive: boolean;
+  dialMin: number | null;
+  dialMax: number | null;
+  dialUntil: Date | null;
+  magicalDialActive: boolean;
+  magicalDialMode: MagicalMode | null;
+  magicalDialUntil: Date | null;
 }
 
 export class WeatherService {
@@ -82,6 +96,55 @@ export class WeatherService {
     return dbQueries.listGuildStates(this.db);
   }
 
+  /** Active dial band if override_until is still in the future; otherwise null. */
+  getActiveSeverityDial(
+    guildId: string,
+    now = new Date(),
+  ): { min: number; max: number; until: Date } | null {
+    const state = dbQueries.getWorldState(this.db, guildId);
+    return this.readActiveDial(state, now);
+  }
+
+  getActiveMagicalDial(
+    guildId: string,
+    now = new Date(),
+  ): { mode: MagicalMode; until: Date } | null {
+    const state = dbQueries.getWorldState(this.db, guildId);
+    return this.readActiveMagicalDial(state, now);
+  }
+
+  private readActiveDial(
+    state: WorldState | null | undefined,
+    now: Date,
+  ): { min: number; max: number; until: Date } | null {
+    if (
+      !state ||
+      state.severity_min == null ||
+      state.severity_max == null ||
+      !state.severity_override_until
+    ) {
+      return null;
+    }
+    const until = new Date(state.severity_override_until);
+    if (until.getTime() <= now.getTime()) return null;
+    return { min: state.severity_min, max: state.severity_max, until };
+  }
+
+  private readActiveMagicalDial(
+    state: WorldState | null | undefined,
+    now: Date,
+  ): { mode: MagicalMode; until: Date } | null {
+    if (!state || !state.magical_mode || !state.magical_override_until) {
+      return null;
+    }
+    if (state.magical_mode !== 'only' && state.magical_mode !== 'none') {
+      return null;
+    }
+    const until = new Date(state.magical_override_until);
+    if (until.getTime() <= now.getTime()) return null;
+    return { mode: state.magical_mode, until };
+  }
+
   getCurrentWeather(guildId: string): WeatherResult | null {
     const state = dbQueries.getWorldState(this.db, guildId);
     if (!state?.current_weather_type) return null;
@@ -98,34 +161,254 @@ export class WeatherService {
 
   getAdminStatus(guildId: string, now = new Date()): WeatherAdminStatus | null {
     const state = dbQueries.getWorldState(this.db, guildId);
-    if (!state?.current_weather_type) return null;
+    const dial = this.readActiveDial(state, now);
+    const magicalDial = this.readActiveMagicalDial(state, now);
+    const entry = state?.current_weather_type
+      ? findEntryByType(this.table, state.current_weather_type)
+      : undefined;
 
-    const entry = findEntryByType(this.table, state.current_weather_type);
-    if (!entry) return null;
+    if (!entry && !dial && !magicalDial) return null;
 
     const schedule = this.getScheduleStatus(guildId, now);
-    const log = dbQueries.getLatestWeatherLog(this.db, guildId);
-    const poolInfo = resolveRollPool(this.table, entry.severity, this.rules);
-    const hasDuration = entryHasDurationRange(entry);
+    const log = entry ? dbQueries.getLatestWeatherLog(this.db, guildId) : null;
+    let poolInfo: {
+      cooldownActive: boolean;
+      effectiveMaxSeverity: number | null;
+    } = { cooldownActive: false, effectiveMaxSeverity: null };
+    try {
+      poolInfo = resolveRollPool(
+        this.table,
+        entry?.severity ?? null,
+        this.rules,
+        dial ? { min: dial.min, max: dial.max } : null,
+        magicalDial?.mode ?? null,
+      );
+    } catch (error) {
+      // Content changed after dials were set — still show dial state without cooldown detail.
+      if (!(error instanceof Error) || error.message !== 'EMPTY_DIAL_POOL') {
+        throw error;
+      }
+    }
+    const hasDuration = entry ? entryHasDurationRange(entry) : false;
 
     return {
-      type: entry.type,
-      severity: entry.severity,
-      forced: log?.forced === 1 && log.weather_type === entry.type,
-      rolledAt: state.current_weather_rolled_at
+      type: entry?.type ?? null,
+      severity: entry?.severity ?? null,
+      magical: entry?.magical ?? null,
+      forced: Boolean(entry && log?.forced === 1 && log.weather_type === entry.type),
+      rolledAt: state?.current_weather_rolled_at
         ? new Date(state.current_weather_rolled_at)
         : null,
       nextUpdateAt: schedule.nextUpdateAt,
       pausedUntil: schedule.pausedUntil,
       dueButWaitingForWindow: schedule.dueButWaitingForWindow,
-      durationMinHours: hasDuration ? entry.durationMinHours! : null,
-      durationMaxHours: hasDuration ? entry.durationMaxHours! : null,
-      usesEnvDuration: !hasDuration,
+      durationMinHours: hasDuration && entry ? entry.durationMinHours! : null,
+      durationMaxHours: hasDuration && entry ? entry.durationMaxHours! : null,
+      usesEnvDuration: entry ? !hasDuration : null,
       cooldownActive: poolInfo.cooldownActive,
       effectiveMaxNextSeverity: poolInfo.effectiveMaxSeverity,
       cooldownAfterSeverity: this.rules.cooldownAfterSeverity,
       cooldownMaxNextSeverity: this.rules.cooldownMaxNextSeverity,
+      dialActive: dial !== null,
+      dialMin: dial?.min ?? null,
+      dialMax: dial?.max ?? null,
+      dialUntil: dial?.until ?? null,
+      magicalDialActive: magicalDial !== null,
+      magicalDialMode: magicalDial?.mode ?? null,
+      magicalDialUntil: magicalDial?.until ?? null,
     };
+  }
+
+  buildStatusEmbed(status: WeatherAdminStatus): EmbedBuilder {
+    const title =
+      status.type !== null
+        ? formatTemplate(this.messages.statusEmbedTitleWithType, { type: status.type })
+        : this.messages.statusEmbedTitle;
+
+    const currentLines: string[] = [];
+    if (status.type !== null && status.severity !== null) {
+      currentLines.push(
+        formatTemplate(this.messages.statusSeverity, { severity: status.severity }),
+      );
+      if (status.magical !== null) {
+        currentLines.push(
+          formatTemplate(this.messages.statusMagical, {
+            magical: status.magical ? 'ja' : 'nee',
+          }),
+        );
+      }
+      currentLines.push(
+        formatTemplate(this.messages.statusForced, {
+          forced: status.forced ? 'ja' : 'nee',
+        }),
+      );
+      if (status.rolledAt) {
+        currentLines.push(
+          formatTemplate(this.messages.statusRolledAt, {
+            unix: Math.floor(status.rolledAt.getTime() / 1000),
+          }),
+        );
+      }
+      if (status.usesEnvDuration === true) {
+        currentLines.push(this.messages.statusDurationEnv);
+      } else if (status.usesEnvDuration === false) {
+        currentLines.push(
+          formatTemplate(this.messages.statusDurationType, {
+            min: status.durationMinHours ?? '?',
+            max: status.durationMaxHours ?? '?',
+          }),
+        );
+      }
+    } else {
+      currentLines.push(this.messages.noWeatherYet);
+    }
+
+    const scheduleLines: string[] = [];
+    if (status.pausedUntil) {
+      scheduleLines.push(
+        formatTemplate(this.messages.statusPaused, {
+          unix: Math.floor(status.pausedUntil.getTime() / 1000),
+        }),
+      );
+    }
+    if (status.dueButWaitingForWindow) {
+      scheduleLines.push(this.messages.statusWaitingWindow);
+    }
+    if (status.nextUpdateAt) {
+      scheduleLines.push(
+        formatTemplate(this.messages.statusNext, {
+          unix: Math.floor(status.nextUpdateAt.getTime() / 1000),
+        }),
+      );
+    } else if (status.type !== null) {
+      scheduleLines.push(this.messages.statusNextNone);
+    }
+    if (scheduleLines.length === 0) {
+      scheduleLines.push(this.messages.statusNextNone);
+    }
+
+    const rulesLines: string[] = [];
+    if (status.dialActive && status.dialUntil && status.dialMin !== null && status.dialMax !== null) {
+      rulesLines.push(
+        formatTemplate(this.messages.statusDialOn, {
+          min: status.dialMin,
+          max: status.dialMax,
+          unix: Math.floor(status.dialUntil.getTime() / 1000),
+        }),
+      );
+    } else {
+      rulesLines.push(this.messages.statusDialOff);
+    }
+    if (
+      status.magicalDialActive &&
+      status.magicalDialUntil &&
+      status.magicalDialMode !== null
+    ) {
+      rulesLines.push(
+        formatTemplate(this.messages.statusMagicalDialOn, {
+          mode: status.magicalDialMode,
+          unix: Math.floor(status.magicalDialUntil.getTime() / 1000),
+        }),
+      );
+    } else {
+      rulesLines.push(this.messages.statusMagicalDialOff);
+    }
+    if (status.cooldownActive && status.effectiveMaxNextSeverity !== null) {
+      rulesLines.push(
+        formatTemplate(this.messages.statusCooldownOn, {
+          maxSeverity: status.effectiveMaxNextSeverity,
+          defaultMax: status.cooldownMaxNextSeverity,
+        }),
+      );
+    } else {
+      rulesLines.push(this.messages.statusCooldownOff);
+    }
+
+    return new EmbedBuilder()
+      .setColor(severityEmbedColor(status.severity))
+      .setTitle(title)
+      .addFields(
+        {
+          name: this.messages.statusFieldCurrent,
+          value: currentLines.join('\n'),
+        },
+        {
+          name: this.messages.statusFieldSchedule,
+          value: scheduleLines.join('\n'),
+        },
+        {
+          name: this.messages.statusFieldRules,
+          value: rulesLines.join('\n'),
+        },
+      );
+  }
+
+  /**
+   * Temporary severity band for auto-rolls / `/weather roll`.
+   * Does not change current weather; expires at `until`.
+   * Rejects empty severity bands and empty intersection with an active magical dial.
+   */
+  setSeverityDial(guildId: string, min: number, max: number, durationMs: number): Date {
+    if (!Number.isInteger(min) || !Number.isInteger(max) || min < 1 || max < min) {
+      throw new Error('INVALID_SEVERITY_RANGE');
+    }
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
+      throw new Error('INVALID_DURATION');
+    }
+    if (countEntriesInSeverityRange(this.table, min, max) === 0) {
+      throw new Error('SEVERITY_RANGE_EMPTY');
+    }
+
+    const magicalDial = this.getActiveMagicalDial(guildId);
+    if (
+      filterDialIntersection(this.table, { min, max }, magicalDial?.mode ?? null).length === 0
+    ) {
+      throw new Error('DIAL_FILTER_EMPTY');
+    }
+
+    const until = new Date(Date.now() + durationMs);
+    dbQueries.setSeverityOverride(this.db, guildId, min, max, until.toISOString());
+    return until;
+  }
+
+  /** Clears the dial; returns false if none was active. */
+  clearSeverityDial(guildId: string, now = new Date()): boolean {
+    const active = this.getActiveSeverityDial(guildId, now);
+    dbQueries.clearSeverityOverride(this.db, guildId);
+    return active !== null;
+  }
+
+  /**
+   * Temporary magical filter for auto-rolls / `/weather roll`.
+   * Rejects empty magical pools and empty intersection with an active severity dial.
+   */
+  setMagicalDial(guildId: string, mode: MagicalMode, durationMs: number): Date {
+    if (mode !== 'only' && mode !== 'none') {
+      throw new Error('INVALID_MAGICAL_MODE');
+    }
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
+      throw new Error('INVALID_DURATION');
+    }
+    if (countEntriesWithMagicalMode(this.table, mode) === 0) {
+      throw new Error('MAGICAL_POOL_EMPTY');
+    }
+
+    const severityDial = this.getActiveSeverityDial(guildId);
+    const dial = severityDial ? { min: severityDial.min, max: severityDial.max } : null;
+    if (filterDialIntersection(this.table, dial, mode).length === 0) {
+      throw new Error('DIAL_FILTER_EMPTY');
+    }
+
+    const until = new Date(Date.now() + durationMs);
+    dbQueries.setMagicalOverride(this.db, guildId, mode, until.toISOString());
+    return until;
+  }
+
+  /** Clears the magical dial; returns false if none was active. */
+  clearMagicalDial(guildId: string, now = new Date()): boolean {
+    const active = this.getActiveMagicalDial(guildId, now);
+    dbQueries.clearMagicalOverride(this.db, guildId);
+    return active !== null;
   }
 
   rollWeather(guildId: string): WeatherResult {
@@ -134,8 +417,17 @@ export class WeatherService {
       ? findEntryByType(this.table, state.current_weather_type)
       : undefined;
     const currentSeverity = currentEntry?.severity ?? null;
+    const now = new Date();
+    const dial = this.readActiveDial(state, now);
+    const magicalDial = this.readActiveMagicalDial(state, now);
 
-    const { pool } = resolveRollPool(this.table, currentSeverity, this.rules);
+    const { pool } = resolveRollPool(
+      this.table,
+      currentSeverity,
+      this.rules,
+      dial ? { min: dial.min, max: dial.max } : null,
+      magicalDial?.mode ?? null,
+    );
     const { entry, roll } = pickWeightedFromPool(pool);
 
     dbQueries.updateWeather(this.db, guildId, entry.type, false);
@@ -152,7 +444,7 @@ export class WeatherService {
   /**
    * Apply weather from a type name (`storm`) or a physical d100 result (`81`).
    * Type → forced=true; numeric roll → forced=false (external die).
-   * Bypasses severity cooldown (DM may escalate deliberately).
+   * Bypasses severity cooldown and dials (DM may escalate deliberately).
    */
   setFromInput(guildId: string, input: string, durationMs?: number): WeatherResult {
     const trimmed = input.trim();
@@ -295,4 +587,13 @@ export class WeatherService {
       return new Date(state.next_update_at).getTime() <= now.getTime();
     });
   }
+}
+
+function severityEmbedColor(severity: number | null): number {
+  if (severity === null) return 0x607d8b;
+  if (severity <= 1) return 0x7cb342;
+  if (severity === 2) return 0xc0ca33;
+  if (severity === 3) return 0xffb300;
+  if (severity === 4) return 0xfb8c00;
+  return 0xe53935;
 }

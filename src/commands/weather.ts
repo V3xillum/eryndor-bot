@@ -7,6 +7,7 @@ import type { AppConfig } from '../config.js';
 import type { SchedulerService } from '../services/SchedulerService.js';
 import { buildWeatherCard } from '../services/SchedulerService.js';
 import type { WeatherService } from '../services/WeatherService.js';
+import { parseMagicalMode } from '../content/loader.js';
 import { formatTemplate, parseDuration } from '../utils/helpers.js';
 
 export function buildWeatherCommand(_weatherTypes: string[]) {
@@ -42,7 +43,71 @@ export function buildWeatherCommand(_weatherTypes: string[]) {
     .addSubcommand((sub) =>
       sub
         .setName('status')
-        .setDescription('Admin: current weather details (severity, schedule, cooldown)'),
+        .setDescription(
+          'Admin: current weather details (severity, magical, schedule, cooldown, dials)',
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName('severity')
+        .setDescription('Temporary severity dial for auto-rolls')
+        .addSubcommand((sub) =>
+          sub
+            .setName('set')
+            .setDescription('Limit rolls to a severity range for a duration')
+            .addIntegerOption((opt) =>
+              opt
+                .setName('min')
+                .setDescription('Minimum severity (inclusive)')
+                .setRequired(true)
+                .setMinValue(1),
+            )
+            .addIntegerOption((opt) =>
+              opt
+                .setName('max')
+                .setDescription('Maximum severity (inclusive)')
+                .setRequired(true)
+                .setMinValue(1),
+            )
+            .addStringOption((opt) =>
+              opt
+                .setName('duration')
+                .setDescription('How long the dial stays active (e.g. 2h, 1d)')
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName('clear').setDescription('Clear the severity dial (back to default)'),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName('magical')
+        .setDescription('Temporary magical dial for auto-rolls')
+        .addSubcommand((sub) =>
+          sub
+            .setName('set')
+            .setDescription('Limit rolls to magical or non-magical weather for a duration')
+            .addStringOption((opt) =>
+              opt
+                .setName('mode')
+                .setDescription('only = magical weather; none = non-magical only')
+                .setRequired(true)
+                .addChoices(
+                  { name: 'only (magical)', value: 'only' },
+                  { name: 'none (non-magical)', value: 'none' },
+                ),
+            )
+            .addStringOption((opt) =>
+              opt
+                .setName('duration')
+                .setDescription('How long the dial stays active (e.g. 2h, 1d)')
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName('clear').setDescription('Clear the magical dial (back to default)'),
+        ),
     )
     .addSubcommand((sub) =>
       sub
@@ -116,6 +181,7 @@ export async function handleWeatherCommand(
   },
 ): Promise<void> {
   const { weather, scheduler, config } = deps;
+  const group = interaction.options.getSubcommandGroup(false);
   const sub = interaction.options.getSubcommand();
 
   if (!interaction.guildId) {
@@ -126,11 +192,39 @@ export async function handleWeatherCommand(
     return;
   }
 
-  if (ADMIN_SUBCOMMANDS.has(sub) && !config.allowedUserIds.includes(interaction.user.id)) {
+  const needsAllowlist =
+    group === 'severity' || group === 'magical' || ADMIN_SUBCOMMANDS.has(sub);
+  if (needsAllowlist && !config.allowedUserIds.includes(interaction.user.id)) {
     await interaction.reply({
       content: weather.messages.unauthorized,
       ephemeral: true,
     });
+    return;
+  }
+
+  if (group === 'severity') {
+    if (sub === 'set') {
+      await handleSeveritySet(interaction, weather);
+      return;
+    }
+    if (sub === 'clear') {
+      await handleSeverityClear(interaction, weather);
+      return;
+    }
+    await interaction.reply({ content: weather.messages.unknownSubcommand, ephemeral: true });
+    return;
+  }
+
+  if (group === 'magical') {
+    if (sub === 'set') {
+      await handleMagicalSet(interaction, weather);
+      return;
+    }
+    if (sub === 'clear') {
+      await handleMagicalClear(interaction, weather);
+      return;
+    }
+    await interaction.reply({ content: weather.messages.unknownSubcommand, ephemeral: true });
     return;
   }
 
@@ -222,68 +316,161 @@ async function handleStatus(
     return;
   }
 
-  const lines: string[] = [
-    formatTemplate(weather.messages.statusTitle, { type: status.type }),
-    formatTemplate(weather.messages.statusSeverity, { severity: status.severity }),
-    formatTemplate(weather.messages.statusForced, {
-      forced: status.forced ? 'ja' : 'nee',
-    }),
-  ];
-
-  if (status.rolledAt) {
-    lines.push(
-      formatTemplate(weather.messages.statusRolledAt, {
-        unix: Math.floor(status.rolledAt.getTime() / 1000),
-      }),
-    );
-  }
-
-  if (status.usesEnvDuration) {
-    lines.push(weather.messages.statusDurationEnv);
-  } else {
-    lines.push(
-      formatTemplate(weather.messages.statusDurationType, {
-        min: status.durationMinHours ?? '?',
-        max: status.durationMaxHours ?? '?',
-      }),
-    );
-  }
-
-  if (status.pausedUntil) {
-    lines.push(
-      formatTemplate(weather.messages.statusPaused, {
-        unix: Math.floor(status.pausedUntil.getTime() / 1000),
-      }),
-    );
-  }
-
-  if (status.dueButWaitingForWindow) {
-    lines.push(weather.messages.statusWaitingWindow);
-  }
-
-  if (status.nextUpdateAt) {
-    lines.push(
-      formatTemplate(weather.messages.statusNext, {
-        unix: Math.floor(status.nextUpdateAt.getTime() / 1000),
-      }),
-    );
-  } else {
-    lines.push(weather.messages.statusNextNone);
-  }
-
-  if (status.cooldownActive && status.effectiveMaxNextSeverity !== null) {
-    lines.push(
-      formatTemplate(weather.messages.statusCooldownOn, {
-        maxSeverity: status.effectiveMaxNextSeverity,
-        defaultMax: status.cooldownMaxNextSeverity,
-      }),
-    );
-  } else {
-    lines.push(weather.messages.statusCooldownOff);
-  }
-
   await interaction.reply({
-    content: lines.join('\n'),
+    embeds: [weather.buildStatusEmbed(status)],
+    ephemeral: true,
+  });
+}
+
+async function handleSeveritySet(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const min = interaction.options.getInteger('min', true);
+  const max = interaction.options.getInteger('max', true);
+  const durationRaw = interaction.options.getString('duration', true);
+  const ms = parseDuration(durationRaw);
+  if (ms === null) {
+    await interaction.reply({
+      content: weather.messages.invalidDuration,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  try {
+    const until = weather.setSeverityDial(interaction.guildId!, min, max, ms);
+    await interaction.reply({
+      content: formatTemplate(weather.messages.severitySetSuccess, {
+        min,
+        max,
+        unix: Math.floor(until.getTime() / 1000),
+      }),
+      ephemeral: true,
+    });
+  } catch (error) {
+    if (!(error instanceof Error)) throw error;
+    if (error.message === 'INVALID_SEVERITY_RANGE') {
+      await interaction.reply({
+        content: weather.messages.invalidSeverityRange,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (error.message === 'SEVERITY_RANGE_EMPTY') {
+      await interaction.reply({
+        content: formatTemplate(weather.messages.severityRangeEmpty, { min, max }),
+        ephemeral: true,
+      });
+      return;
+    }
+    if (error.message === 'DIAL_FILTER_EMPTY') {
+      await interaction.reply({
+        content: weather.messages.dialFilterEmpty,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (error.message === 'INVALID_DURATION') {
+      await interaction.reply({
+        content: weather.messages.invalidDuration,
+        ephemeral: true,
+      });
+      return;
+    }
+    throw error;
+  }
+}
+
+async function handleSeverityClear(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const hadActive = weather.clearSeverityDial(interaction.guildId!);
+  await interaction.reply({
+    content: hadActive
+      ? weather.messages.severityClearSuccess
+      : weather.messages.severityClearNone,
+    ephemeral: true,
+  });
+}
+
+async function handleMagicalSet(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const modeRaw = interaction.options.getString('mode', true);
+  const mode = parseMagicalMode(modeRaw);
+  if (!mode) {
+    await interaction.reply({
+      content: weather.messages.invalidMagicalMode,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const durationRaw = interaction.options.getString('duration', true);
+  const ms = parseDuration(durationRaw);
+  if (ms === null) {
+    await interaction.reply({
+      content: weather.messages.invalidDuration,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  try {
+    const until = weather.setMagicalDial(interaction.guildId!, mode, ms);
+    await interaction.reply({
+      content: formatTemplate(weather.messages.magicalSetSuccess, {
+        mode,
+        unix: Math.floor(until.getTime() / 1000),
+      }),
+      ephemeral: true,
+    });
+  } catch (error) {
+    if (!(error instanceof Error)) throw error;
+    if (error.message === 'INVALID_MAGICAL_MODE') {
+      await interaction.reply({
+        content: weather.messages.invalidMagicalMode,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (error.message === 'MAGICAL_POOL_EMPTY') {
+      await interaction.reply({
+        content: formatTemplate(weather.messages.magicalPoolEmpty, { mode }),
+        ephemeral: true,
+      });
+      return;
+    }
+    if (error.message === 'DIAL_FILTER_EMPTY') {
+      await interaction.reply({
+        content: weather.messages.dialFilterEmpty,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (error.message === 'INVALID_DURATION') {
+      await interaction.reply({
+        content: weather.messages.invalidDuration,
+        ephemeral: true,
+      });
+      return;
+    }
+    throw error;
+  }
+}
+
+async function handleMagicalClear(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const hadActive = weather.clearMagicalDial(interaction.guildId!);
+  await interaction.reply({
+    content: hadActive
+      ? weather.messages.magicalClearSuccess
+      : weather.messages.magicalClearNone,
     ephemeral: true,
   });
 }
@@ -341,20 +528,28 @@ async function handleRoll(
   }
 
   await interaction.deferReply({ ephemeral: true });
-  const result = weather.rollWeather(interaction.guildId!);
-  const posted = await scheduler.postWeather(interaction.guildId!, result);
+  try {
+    const result = weather.rollWeather(interaction.guildId!);
+    const posted = await scheduler.postWeather(interaction.guildId!, result);
 
-  if (!posted) {
-    await interaction.editReply({ content: weather.messages.notConfigured });
-    return;
+    if (!posted) {
+      await interaction.editReply({ content: weather.messages.notConfigured });
+      return;
+    }
+
+    await interaction.editReply({
+      content: formatTemplate(weather.messages.rollSuccess, {
+        roll: result.roll ?? '?',
+        type: result.type,
+      }),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'EMPTY_DIAL_POOL') {
+      await interaction.editReply({ content: weather.messages.dialFilterEmpty });
+      return;
+    }
+    throw error;
   }
-
-  await interaction.editReply({
-    content: formatTemplate(weather.messages.rollSuccess, {
-      roll: result.roll ?? '?',
-      type: result.type,
-    }),
-  });
 }
 
 async function handleSet(

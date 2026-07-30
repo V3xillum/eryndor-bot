@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { Messages, WeatherRules, WeatherTableEntry } from '../types.js';
+import type { MagicalMode, Messages, WeatherRules, WeatherTableEntry } from '../types.js';
 
 const CONTENT_ROOT = path.resolve(process.cwd(), 'content');
 
@@ -55,6 +55,9 @@ function validateWeatherTable(table: WeatherTableEntry[]): void {
     if (!Number.isInteger(entry.severity) || entry.severity < 1) {
       throw new Error(`Invalid severity for type ${entry.type}: ${entry.severity}`);
     }
+    if (typeof entry.magical !== 'boolean') {
+      throw new Error(`Type ${entry.type}: magical must be a boolean`);
+    }
 
     const hasMin = entry.durationMinHours !== undefined;
     const hasMax = entry.durationMaxHours !== undefined;
@@ -98,32 +101,84 @@ export function listWeatherTypes(table: WeatherTableEntry[]): string[] {
   return table.map((entry) => entry.type);
 }
 
+export function applySeverityDial(
+  table: WeatherTableEntry[],
+  dial: { min: number; max: number } | null,
+): WeatherTableEntry[] {
+  if (!dial) return table;
+  return table.filter((e) => e.severity >= dial.min && e.severity <= dial.max);
+}
+
+export function applyMagicalDial(
+  table: WeatherTableEntry[],
+  mode: MagicalMode | null,
+): WeatherTableEntry[] {
+  if (!mode) return table;
+  return table.filter((e) => (mode === 'only' ? e.magical : !e.magical));
+}
+
+/**
+ * Entries matching an optional severity band and optional magical mode (intersection).
+ */
+export function filterDialIntersection(
+  table: WeatherTableEntry[],
+  dial: { min: number; max: number } | null,
+  magicalMode: MagicalMode | null,
+): WeatherTableEntry[] {
+  return applyMagicalDial(applySeverityDial(table, dial), magicalMode);
+}
+
 /**
  * Pool for the next auto-roll /weather roll.
- * After high severity, only milder entries; if that pool is empty, raise the
- * ceiling (2 → 3 → 4 …) until at least one entry matches.
+ * 1) Optional DM severity dial band
+ * 2) Optional DM magical dial (only / none)
+ * 3) After high severity, only milder entries within that base; if empty, raise the
+ *    ceiling until at least one entry matches (within the base set).
  */
 export function resolveRollPool(
   table: WeatherTableEntry[],
   currentSeverity: number | null,
   rules: WeatherRules,
+  dial: { min: number; max: number } | null = null,
+  magicalMode: MagicalMode | null = null,
 ): { pool: WeatherTableEntry[]; cooldownActive: boolean; effectiveMaxSeverity: number | null } {
-  if (currentSeverity === null || currentSeverity < rules.cooldownAfterSeverity) {
-    return { pool: table, cooldownActive: false, effectiveMaxSeverity: null };
+  const base = filterDialIntersection(table, dial, magicalMode);
+
+  if (base.length === 0) {
+    throw new Error('EMPTY_DIAL_POOL');
   }
 
-  const tableMax = Math.max(...table.map((e) => e.severity));
+  if (currentSeverity === null || currentSeverity < rules.cooldownAfterSeverity) {
+    return { pool: base, cooldownActive: false, effectiveMaxSeverity: null };
+  }
+
+  const bandMax = Math.max(...base.map((e) => e.severity));
   let maxNext = rules.cooldownMaxNextSeverity;
 
-  while (maxNext <= tableMax) {
-    const pool = table.filter((e) => e.severity <= maxNext);
+  while (maxNext <= bandMax) {
+    const pool = base.filter((e) => e.severity <= maxNext);
     if (pool.length > 0) {
       return { pool, cooldownActive: true, effectiveMaxSeverity: maxNext };
     }
     maxNext += 1;
   }
 
-  return { pool: table, cooldownActive: true, effectiveMaxSeverity: tableMax };
+  return { pool: base, cooldownActive: true, effectiveMaxSeverity: bandMax };
+}
+
+export function countEntriesInSeverityRange(
+  table: WeatherTableEntry[],
+  min: number,
+  max: number,
+): number {
+  return table.filter((e) => e.severity >= min && e.severity <= max).length;
+}
+
+export function countEntriesWithMagicalMode(
+  table: WeatherTableEntry[],
+  mode: MagicalMode,
+): number {
+  return applyMagicalDial(table, mode).length;
 }
 
 /**
@@ -154,4 +209,10 @@ export function pickWeightedFromPool(pool: WeatherTableEntry[]): {
 
 export function entryHasDurationRange(entry: WeatherTableEntry): boolean {
   return entry.durationMinHours !== undefined && entry.durationMaxHours !== undefined;
+}
+
+export function parseMagicalMode(raw: string): MagicalMode | null {
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === 'only' || normalized === 'none') return normalized;
+  return null;
 }

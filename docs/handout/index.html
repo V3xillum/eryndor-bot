@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eryndor Weer — DM-handout</title>
+  <meta name="description" content="Handleiding voor Dungeon Masters: weercommando's en hoe je nieuwe weertypes aanlevert." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0c1218;
+      --ink-2: #15202b;
+      --panel: rgba(22, 34, 46, 0.72);
+      --line: rgba(180, 210, 220, 0.14);
+      --mist: #9eb6c4;
+      --text: #e7eef3;
+      --muted: #9aacb8;
+      --accent: #6db3a0;
+      --accent-2: #d4b16a;
+      --danger: #d4836a;
+      --ok: #7ec48a;
+      --radius: 14px;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      --font-display: "Fraunces", Georgia, serif;
+      --font-body: "Figtree", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 12% -10%, rgba(109, 179, 160, 0.18), transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, rgba(212, 177, 106, 0.12), transparent 50%),
+        linear-gradient(180deg, #0a1016 0%, #101820 40%, #0c1218 100%);
+      line-height: 1.55;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.35;
+      background-image:
+        repeating-linear-gradient(
+          -12deg,
+          transparent 0,
+          transparent 11px,
+          rgba(255, 255, 255, 0.012) 11px,
+          rgba(255, 255, 255, 0.012) 12px
+        );
+      animation: drift 28s linear infinite;
+    }
+
+    @keyframes drift {
+      from { transform: translateY(0); }
+      to { transform: translateY(-24px); }
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .wrap {
+      width: min(980px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2.5rem 0 4rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 2.4rem 1rem 2rem;
+      animation: rise 0.7s ease both;
+    }
+
+    .hero-brand {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 6vw, 3.6rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0;
+      background: linear-gradient(120deg, #eef6f8 10%, var(--accent) 55%, var(--accent-2) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      margin: 0.85rem auto 0;
+      max-width: 34rem;
+      color: var(--mist);
+      font-size: 1.05rem;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin: 1.75rem 0 1.5rem;
+      animation: rise 0.8s ease both;
+    }
+
+    .nav button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: rgba(16, 24, 34, 0.7);
+      color: var(--mist);
+      font: 600 0.92rem var(--font-body);
+      padding: 0.65rem 1rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
+    }
+
+    .nav button:hover { color: var(--text); border-color: rgba(109, 179, 160, 0.45); }
+    .nav button[aria-selected="true"] {
+      background: rgba(109, 179, 160, 0.18);
+      color: #dff7ef;
+      border-color: rgba(109, 179, 160, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .panel {
+      display: none;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.35rem 1.25rem 1.5rem;
+      backdrop-filter: blur(10px);
+      animation: rise 0.45s ease both;
+    }
+
+    .panel.active { display: block; }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: 1.55rem;
+      margin: 0 0 0.35rem;
+      font-weight: 700;
+    }
+
+    .lead {
+      color: var(--muted);
+      margin: 0 0 1.25rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      gap: 0.9rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .tile {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1rem;
+      background: rgba(8, 14, 20, 0.35);
+    }
+
+    .tile h3 {
+      margin: 0 0 0.4rem;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+
+    .tile p { margin: 0; color: var(--mist); font-size: 0.95rem; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-bottom: 1rem;
+    }
+
+    .toolbar input,
+    .toolbar select,
+    .form-grid input,
+    .form-grid select,
+    .form-grid textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: rgba(8, 14, 20, 0.55);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 0.7rem 0.85rem;
+      font: 500 0.95rem var(--font-body);
+    }
+
+    .toolbar input { flex: 1 1 220px; }
+    .toolbar select { flex: 0 1 180px; }
+
+    .cmd {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.95rem 1rem;
+      margin-bottom: 0.65rem;
+      background: rgba(8, 14, 20, 0.28);
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .cmd:hover { border-color: rgba(109, 179, 160, 0.35); background: rgba(8, 14, 20, 0.42); }
+    .cmd.hidden { display: none; }
+
+    .cmd-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.75rem;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .cmd code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92rem;
+      color: #dff4ec;
+      background: rgba(109, 179, 160, 0.12);
+      border: 1px solid rgba(109, 179, 160, 0.25);
+      padding: 0.18rem 0.45rem;
+      border-radius: 7px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.22rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    .badge.everyone { color: #b7e0c8; border-color: rgba(126, 196, 138, 0.35); }
+    .badge.dm { color: #efd7a4; border-color: rgba(212, 177, 106, 0.4); }
+
+    .cmd p { margin: 0.55rem 0 0; color: var(--mist); }
+
+    .when {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      color: var(--accent-2);
+    }
+
+    .severity-scale {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.45rem;
+      margin: 1rem 0 1.25rem;
+    }
+
+    .sev {
+      text-align: center;
+      padding: 0.7rem 0.35rem;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      font-size: 0.82rem;
+      color: var(--mist);
+      background: rgba(8, 14, 20, 0.35);
+    }
+
+    .sev strong {
+      display: block;
+      font-size: 1.15rem;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+
+    .sev[data-n="1"] { border-color: rgba(126, 196, 138, 0.35); }
+    .sev[data-n="2"] { border-color: rgba(109, 179, 160, 0.4); }
+    .sev[data-n="3"] { border-color: rgba(212, 177, 106, 0.4); }
+    .sev[data-n="4"] { border-color: rgba(212, 131, 106, 0.45); }
+    .sev[data-n="5"] { border-color: rgba(212, 106, 106, 0.5); background: rgba(80, 28, 28, 0.2); }
+
+    .types {
+      display: grid;
+      gap: 0.65rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin-top: 0.75rem;
+    }
+
+    .type-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.85rem;
+      background: rgba(8, 14, 20, 0.35);
+    }
+
+    .type-card .name {
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .chip {
+      font-size: 0.75rem;
+      padding: 0.18rem 0.45rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    .chip.magic { color: #c9b6ef; border-color: rgba(180, 150, 230, 0.35); }
+    .type-card .range { font-size: 0.85rem; color: var(--muted); }
+
+    .form-grid {
+      display: grid;
+      gap: 0.85rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .field { display: grid; gap: 0.35rem; }
+    .field label { font-size: 0.85rem; color: var(--mist); font-weight: 600; }
+    .field.full { grid-column: 1 / -1; }
+
+    .checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.1rem;
+      margin-top: 0.25rem;
+    }
+
+    .checks label {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+      color: var(--mist);
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid rgba(109, 179, 160, 0.45);
+      background: rgba(109, 179, 160, 0.18);
+      color: #e8fff7;
+      font: 700 0.95rem var(--font-body);
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.2s;
+    }
+
+    .btn:hover { background: rgba(109, 179, 160, 0.28); transform: translateY(-1px); }
+    .btn.secondary {
+      background: transparent;
+      border-color: var(--line);
+      color: var(--mist);
+      font-weight: 600;
+    }
+
+    .output {
+      margin-top: 1rem;
+      border: 1px dashed rgba(212, 177, 106, 0.4);
+      border-radius: 12px;
+      padding: 1rem;
+      background: rgba(8, 14, 20, 0.45);
+      white-space: pre-wrap;
+      font-size: 0.95rem;
+      color: #f0e6c8;
+      min-height: 6rem;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 1.25rem;
+      transform: translateX(-50%) translateY(120%);
+      background: #163229;
+      color: #dff7ef;
+      border: 1px solid rgba(109, 179, 160, 0.5);
+      padding: 0.7rem 1rem;
+      border-radius: 999px;
+      font-weight: 600;
+      opacity: 0;
+      transition: transform 0.25s, opacity 0.25s;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .note {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      border-left: 3px solid var(--accent);
+      background: rgba(109, 179, 160, 0.08);
+      color: var(--mist);
+      border-radius: 0 10px 10px 0;
+      font-size: 0.92rem;
+    }
+
+    footer {
+      margin-top: 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 560px) {
+      .severity-scale { grid-template-columns: repeat(2, 1fr); }
+      .wrap { width: min(980px, calc(100% - 1.25rem)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1 class="hero-brand">Eryndor Weer</h1>
+      <p>DM-handout: hoe de Discord-weerbot werkt, welke slash-commands je gebruikt, en wat je moet aanleveren voor een nieuw weertype.</p>
+    </header>
+
+    <nav class="nav" role="tablist" aria-label="Handout secties">
+      <button type="button" role="tab" aria-selected="true" data-panel="overzicht">Overzicht</button>
+      <button type="button" role="tab" aria-selected="false" data-panel="commands">Commando’s</button>
+      <button type="button" role="tab" aria-selected="false" data-panel="sessie">Tijdens de sessie</button>
+      <button type="button" role="tab" aria-selected="false" data-panel="aanleveren">Nieuw weertype</button>
+    </nav>
+
+    <section id="overzicht" class="panel active" role="tabpanel">
+      <h2>Wat doet de bot?</h2>
+      <p class="lead">De bot post automatisch weerkaarten (alleen een plaatje) in jullie weerkanaal. Tussen updates door dobbelt hij zelf — jij grijpt in wanneer de sessie dat vraagt.</p>
+
+      <div class="grid-2">
+        <article class="tile">
+          <h3>Automatisch</h3>
+          <p>Op een willekeurig interval verschijnt nieuw weer. Zwaar weer blijft meestal korter. Na een zware storm volgt eerst milder weer (afkoeling).</p>
+        </article>
+        <article class="tile">
+          <h3>Jij als DM</h3>
+          <p>Dobbel handmatig, forceer een type, pauzeer updates, of zet tijdelijk een “draaiknop” zodat alleen gevaarlijk of alleen magisch weer kan vallen.</p>
+        </article>
+        <article class="tile">
+          <h3>Spelers</h3>
+          <p>Iedereen mag het huidige weer privé bekijken en de kalender raadplegen. Alleen allowlist-DM’s sturen de bot aan.</p>
+        </article>
+        <article class="tile">
+          <h3>Kalender</h3>
+          <p><code>/world today</code> en <code>/world fullmoon</code> geven Eryndor-datum, maan en events — zonder weather-timers te spoilers.</p>
+        </article>
+      </div>
+
+      <h2 style="margin-top:1.5rem">Zwaartegraad (severity)</h2>
+      <p class="lead">Elk weertype heeft een cijfer 1–5. De bot gebruikt dit voor afkoeling en voor jouw severity-draaiknop.</p>
+      <div class="severity-scale" aria-label="Severity schaal">
+        <div class="sev" data-n="1"><strong>1</strong>Mild</div>
+        <div class="sev" data-n="2"><strong>2</strong>Merkbaar</div>
+        <div class="sev" data-n="3"><strong>3</strong>Lastig</div>
+        <div class="sev" data-n="4"><strong>4</strong>Gevaarlijk</div>
+        <div class="sev" data-n="5"><strong>5</strong>Catastrofaal</div>
+      </div>
+
+      <h2>Huidige weertypes</h2>
+      <p class="lead">Wat er nu in de tabel staat (d100-kans, zwaarte, magisch, optionele duur).</p>
+      <div class="types" id="typeGrid"></div>
+      <p class="note">Duur in uren geldt alleen als die is ingevuld. Anders gebruikt de bot het globale ritme. Jouw handmatige duur (bij set/schedule) wint altijd.</p>
+    </section>
+
+    <section id="commands" class="panel" role="tabpanel" hidden>
+      <h2>Commando’s</h2>
+      <p class="lead">Filter op wie het mag gebruiken, of zoek op naam.</p>
+      <div class="toolbar">
+        <input type="search" id="cmdSearch" placeholder="Zoek (bijv. pause, severity…)" aria-label="Zoek commando" />
+        <select id="cmdWho" aria-label="Filter op wie">
+          <option value="all">Iedereen + DM</option>
+          <option value="everyone">Alleen iedereen</option>
+          <option value="dm">Alleen DM</option>
+        </select>
+      </div>
+      <div id="cmdList"></div>
+    </section>
+
+    <section id="sessie" class="panel" role="tabpanel" hidden>
+      <h2>Tijdens de sessie</h2>
+      <p class="lead">Snelle keuzes zonder te zoeken.</p>
+      <div class="grid-2">
+        <article class="tile">
+          <h3>Sessie starten</h3>
+          <p><code>/weather pause 4h</code> — stop auto-updates terwijl je speelt. Daarna <code>/weather resume</code>.</p>
+        </article>
+        <article class="tile">
+          <h3>Nu dit weer</h3>
+          <p><code>/weather set storm</code> of een d100-waarde. Optioneel: <code>duration: 2h</code> zodat het zo lang blijft.</p>
+        </article>
+        <article class="tile">
+          <h3>Dobbel live</h3>
+          <p><code>/weather roll</code> — bot dobbelt (rekening houdend met afkoeling en actieve draaiknoppen) en post meteen.</p>
+        </article>
+        <article class="tile">
+          <h3>Gevaarlijke avond</h3>
+          <p><code>/weather severity set</code> min 4 max 5 duration 3h — rolls blijven zwaar tot de dial verloopt.</p>
+        </article>
+        <article class="tile">
+          <h3>Alleen magie</h3>
+          <p><code>/weather magical set</code> mode <strong>only</strong> — of <strong>none</strong> voor juist geen magisch weer.</p>
+        </article>
+        <article class="tile">
+          <h3>Even checken</h3>
+          <p><code>/weather status</code> — zwaarte, planning, cooldown, dials. <code>/weather next</code> — wanneer de volgende auto-roll is.</p>
+        </article>
+      </div>
+      <p class="note">Er is geen apart “post”-commando: alles wat het weer verandert, post ook naar het kanaal. <code>/weather current</code> is privé en post niets.</p>
+    </section>
+
+    <section id="aanleveren" class="panel" role="tabpanel" hidden>
+      <h2>Nieuw weertype aanleveren</h2>
+      <p class="lead">Vul dit in en stuur het naar wie de content bijwerkt. Geen code nodig — wel duidelijke keuzes.</p>
+
+      <form id="briefForm" class="form-grid" autocomplete="off">
+        <div class="field">
+          <label for="wName">Naam van het weer</label>
+          <input id="wName" name="name" required placeholder="bijv. Ashen Fog" />
+        </div>
+        <div class="field">
+          <label for="wSev">Zwaarte (1–5)</label>
+          <select id="wSev" name="severity">
+            <option value="1">1 — Mild</option>
+            <option value="2" selected>2 — Merkbaar</option>
+            <option value="3">3 — Lastig</option>
+            <option value="4">4 — Gevaarlijk</option>
+            <option value="5">5 — Catastrofaal</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="wMagic">Magisch?</label>
+          <select id="wMagic" name="magical">
+            <option value="false">Nee — gewoon weer</option>
+            <option value="true">Ja — magisch / arcane / clockwork</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="wChance">Hoe vaak mag het vallen?</label>
+          <input id="wChance" name="chance" placeholder="bijv. zeldzaam, ~5% op d100, of ‘tussen storm en arcane’" />
+        </div>
+        <div class="field">
+          <label for="wDurMin">Min. duur (uren, optioneel)</label>
+          <input id="wDurMin" name="durMin" type="number" min="1" step="1" placeholder="leeg = globaal ritme" />
+        </div>
+        <div class="field">
+          <label for="wDurMax">Max. duur (uren, optioneel)</label>
+          <input id="wDurMax" name="durMax" type="number" min="1" step="1" placeholder="leeg = globaal ritme" />
+        </div>
+        <div class="field full">
+          <label for="wImage">Plaatje</label>
+          <input id="wImage" name="image" placeholder="bestandsnaam of link, bijv. ashen_fog.png — kaart voor Discord" />
+        </div>
+        <div class="field full">
+          <label for="wFlavor">Sfeer / wat merken spelers?</label>
+          <textarea id="wFlavor" name="flavor" rows="3" placeholder="Korte beschrijving voor de tafel (niet voor Discord — Discord toont alleen het plaatje)."></textarea>
+        </div>
+        <div class="field full">
+          <span class="label-like" style="font-size:0.85rem;color:var(--mist);font-weight:600">Checklist</span>
+          <div class="checks">
+            <label><input type="checkbox" name="hasArt" /> Kunst/plaatje klaar</label>
+            <label><input type="checkbox" name="hasSev" /> Zwaarte gekozen</label>
+            <label><input type="checkbox" name="hasChance" /> Kans / plek op d100 besproken</label>
+            <label><input type="checkbox" name="hasDur" /> Duur bewust gekozen of “standaard ok”</label>
+          </div>
+        </div>
+      </form>
+
+      <div class="actions">
+        <button type="button" class="btn" id="genBrief">Maak briefing</button>
+        <button type="button" class="btn secondary" id="copyBrief">Kopieer</button>
+        <button type="button" class="btn secondary" id="resetBrief">Reset</button>
+      </div>
+      <pre class="output" id="briefOut" aria-live="polite">Vul het formulier in en klik op “Maak briefing”.</pre>
+      <p class="note">
+        Wat er onder de motorkap nodig is (voor de content-persoon): naam, d100-bereik (min–max), plaatje, zwaarte, magisch ja/nee,
+        en optioneel min/max uren duur. Jij levert de keuzes; iemand anders zet het in de weather-tabel.
+      </p>
+    </section>
+
+    <footer>Eryndor Weer · DM-handout · bereikbaar via GitHub Pages op <code>/handout/</code></footer>
+  </div>
+
+  <div class="toast" id="toast" role="status">Gekopieerd</div>
+
+  <script>
+    const WEATHER_TYPES = [
+      { type: "clear", min: 1, max: 22, severity: 1, magical: false },
+      { type: "cloudy", min: 23, max: 42, severity: 1, magical: false },
+      { type: "fog", min: 43, max: 58, severity: 1, magical: false },
+      { type: "Clockwork clouds", min: 59, max: 68, severity: 2, magical: true },
+      { type: "rain", min: 69, max: 74, severity: 2, magical: false },
+      { type: "wind", min: 75, max: 86, severity: 2, magical: false },
+      { type: "storm", min: 87, max: 94, severity: 4, magical: false, durationMinHours: 2, durationMaxHours: 6 },
+      { type: "arcane_storm", min: 95, max: 100, severity: 5, magical: true, durationMinHours: 1, durationMaxHours: 3 },
+    ];
+
+    const COMMANDS = [
+      {
+        cmd: "/weather current",
+        who: "everyone",
+        what: "Laat jou privé zien welk weer er nu staat. Post niets in het kanaal.",
+        when: "Even checken zonder de tafel te storen.",
+      },
+      {
+        cmd: "/world today",
+        who: "everyone",
+        what: "Huidige Harptos-dag, maanfase en events van Eryndor.",
+        when: "Wereldtijd / feestdagen aan tafel.",
+      },
+      {
+        cmd: "/world fullmoon",
+        who: "everyone",
+        what: "Wanneer de volgende exacte volle maan is.",
+        when: "Lycantropie, rituelen, nacht-scenes.",
+      },
+      {
+        cmd: "/weather setup",
+        who: "dm",
+        what: "Kies in welk kanaal (en optioneel thread) weerupdates verschijnen.",
+        when: "Eenmalig bij start, of als het kanaal wijzigt.",
+      },
+      {
+        cmd: "/weather status",
+        who: "dm",
+        what: "Admin-overzicht: zwaarte, magisch, planning, cooldown, actieve draaiknoppen.",
+        when: "Debuggen of checken of dials nog aan staan.",
+      },
+      {
+        cmd: "/weather next",
+        who: "dm",
+        what: "Wanneer de volgende automatische update gepland staat (privé).",
+        when: "Planning tussen scenes.",
+      },
+      {
+        cmd: "/weather roll",
+        who: "dm",
+        what: "Dobbel nieuw weer (met filters) en post meteen.",
+        when: "Live dobbelen tijdens de sessie.",
+      },
+      {
+        cmd: "/weather set",
+        who: "dm",
+        what: "Zet weer op een type of d100-waarde (1–100) en post. Optionele duration (30m, 2h, 1d). Slaat filters over.",
+        when: "Story-gestuurd weer forceren.",
+      },
+      {
+        cmd: "/weather schedule",
+        who: "dm",
+        what: "Huidig weer blijft; alleen het moment van de volgende auto-roll wijzigen.",
+        when: "Weer langer of korter laten hangen zonder te herrollen.",
+      },
+      {
+        cmd: "/weather pause",
+        who: "dm",
+        what: "Pauzeer automatische updates voor een duur (30m, 2h, 1d).",
+        when: "Sessie starten — geen verrassingen mid-combat.",
+      },
+      {
+        cmd: "/weather resume",
+        who: "dm",
+        what: "Hef de pauze op en plan de volgende update.",
+        when: "Na de sessie of als je auto-weer weer wilt.",
+      },
+      {
+        cmd: "/weather severity set",
+        who: "dm",
+        what: "Tijdelijke draaiknop: rolls alleen binnen min–max zwaarte, voor een duur.",
+        when: "Escalatie-avond of juist een rustige trek.",
+      },
+      {
+        cmd: "/weather severity clear",
+        who: "dm",
+        what: "Zet de severity-draaiknop uit → weer normaal gedrag.",
+        when: "Dial niet meer nodig.",
+      },
+      {
+        cmd: "/weather magical set",
+        who: "dm",
+        what: "Tijdelijk alleen magisch weer (only) of juist geen magisch weer (none).",
+        when: "Arcane-thema of juist “gewone lucht”.",
+      },
+      {
+        cmd: "/weather magical clear",
+        who: "dm",
+        what: "Zet de magical-draaiknop uit.",
+        when: "Dial niet meer nodig.",
+      },
+    ];
+
+    const panels = document.querySelectorAll(".panel");
+    const tabs = document.querySelectorAll(".nav button");
+    const toast = document.getElementById("toast");
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const id = tab.dataset.panel;
+        tabs.forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+        panels.forEach((p) => {
+          const on = p.id === id;
+          p.classList.toggle("active", on);
+          p.hidden = !on;
+        });
+      });
+    });
+
+    const typeGrid = document.getElementById("typeGrid");
+    typeGrid.innerHTML = WEATHER_TYPES.map((t) => {
+      const dur =
+        t.durationMinHours != null
+          ? `${t.durationMinHours}–${t.durationMaxHours}u`
+          : "standaard ritme";
+      return `
+        <article class="type-card">
+          <div class="name">${t.type}</div>
+          <div class="meta">
+            <span class="chip">zwaarte ${t.severity}</span>
+            ${t.magical ? '<span class="chip magic">magisch</span>' : '<span class="chip">normaal</span>'}
+            <span class="chip">${dur}</span>
+          </div>
+          <div class="range">d100: ${t.min}–${t.max}</div>
+        </article>`;
+    }).join("");
+
+    const cmdList = document.getElementById("cmdList");
+    function renderCommands() {
+      const q = document.getElementById("cmdSearch").value.trim().toLowerCase();
+      const who = document.getElementById("cmdWho").value;
+      cmdList.innerHTML = COMMANDS.map((c) => {
+        const matchWho = who === "all" || c.who === who;
+        const hay = `${c.cmd} ${c.what} ${c.when}`.toLowerCase();
+        const matchQ = !q || hay.includes(q);
+        const show = matchWho && matchQ;
+        const label = c.who === "everyone" ? "Iedereen" : "DM";
+        return `
+          <article class="cmd${show ? "" : " hidden"}" data-who="${c.who}">
+            <div class="cmd-top">
+              <code>${c.cmd}</code>
+              <span class="badge ${c.who}">${label}</span>
+            </div>
+            <p>${c.what}</p>
+            <div class="when">Wanneer: ${c.when}</div>
+          </article>`;
+      }).join("");
+    }
+    document.getElementById("cmdSearch").addEventListener("input", renderCommands);
+    document.getElementById("cmdWho").addEventListener("change", renderCommands);
+    renderCommands();
+
+    function buildBrief() {
+      const f = document.getElementById("briefForm");
+      const data = Object.fromEntries(new FormData(f).entries());
+      const checks = [...f.querySelectorAll('input[type="checkbox"]')]
+        .map((c) => `${c.checked ? "✓" : "○"} ${c.parentElement.textContent.trim()}`)
+        .join("\n");
+      const magical = data.magical === "true" ? "ja" : "nee";
+      const dur =
+        data.durMin || data.durMax
+          ? `${data.durMin || "?"}–${data.durMax || "?"} uur`
+          : "standaard ritme (geen speciale duur)";
+      return [
+        "Weertype-briefing (Eryndor Weer)",
+        "===============================",
+        `Naam: ${data.name || "(nog leeg)"}`,
+        `Zwaarte: ${data.severity}`,
+        `Magisch: ${magical}`,
+        `Kans / plek op d100: ${data.chance || "(nog invullen)"}`,
+        `Duur: ${dur}`,
+        `Plaatje: ${data.image || "(nog aanleveren)"}`,
+        "",
+        "Sfeer:",
+        data.flavor || "(nog geen beschrijving)",
+        "",
+        "Checklist:",
+        checks,
+      ].join("\n");
+    }
+
+    document.getElementById("genBrief").addEventListener("click", () => {
+      document.getElementById("briefOut").textContent = buildBrief();
+      showToast("Briefing gemaakt");
+    });
+
+    document.getElementById("copyBrief").addEventListener("click", async () => {
+      const text = document.getElementById("briefOut").textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("Gekopieerd");
+      } catch {
+        showToast("Kopiëren mislukt — selecteer handmatig");
+      }
+    });
+
+    document.getElementById("resetBrief").addEventListener("click", () => {
+      document.getElementById("briefForm").reset();
+      document.getElementById("briefOut").textContent =
+        'Vul het formulier in en klik op “Maak briefing”.';
+    });
+  </script>
+</body>
+</html>

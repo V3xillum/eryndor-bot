@@ -1,9 +1,14 @@
+/** Temporary DM dial: only magical types, or only non-magical. */
+export type MagicalMode = 'only' | 'none';
+
 export interface WeatherTableEntry {
   min: number;
   max: number;
   type: string;
   image: string;
   severity: number;
+  /** Whether this weather is magical (arcane / clockwork / etc.). */
+  magical: boolean;
   /** Optional; both must be set together. Hours until next auto-update while this type is current. */
   durationMinHours?: number;
   durationMaxHours?: number;
@@ -25,6 +30,13 @@ export interface WorldState {
   paused_until: string | null;
   season: string;
   updated_at: string | null;
+  /** Temporary dial: inclusive severity band while override_until is in the future. */
+  severity_min: number | null;
+  severity_max: number | null;
+  severity_override_until: string | null;
+  /** Temporary dial: `only` | `none` while override_until is in the future. */
+  magical_mode: MagicalMode | null;
+  magical_override_until: string | null;
 }
 
 export interface WeatherResult {
@@ -49,6 +61,11 @@ export interface Messages {
   nextPaused: string;
   nextWaitingWindow: string;
   statusTitle: string;
+  statusEmbedTitle: string;
+  statusEmbedTitleWithType: string;
+  statusFieldCurrent: string;
+  statusFieldSchedule: string;
+  statusFieldRules: string;
   statusSeverity: string;
   statusForced: string;
   statusRolledAt: string;
@@ -60,6 +77,22 @@ export interface Messages {
   statusDurationEnv: string;
   statusCooldownOn: string;
   statusCooldownOff: string;
+  statusDialOn: string;
+  statusDialOff: string;
+  statusMagical: string;
+  statusMagicalDialOn: string;
+  statusMagicalDialOff: string;
+  severitySetSuccess: string;
+  severityClearSuccess: string;
+  severityClearNone: string;
+  invalidSeverityRange: string;
+  severityRangeEmpty: string;
+  dialFilterEmpty: string;
+  magicalSetSuccess: string;
+  magicalClearSuccess: string;
+  magicalClearNone: string;
+  invalidMagicalMode: string;
+  magicalPoolEmpty: string;
   noWeatherYet: string;
   notConfigured: string;
   unauthorized: string;

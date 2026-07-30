@@ -2,7 +2,7 @@
 
 Ontwerpdoc voor een latere implementatie. Bouwt voort op de future extensions in [`agent.md`](./agent.md) (Weather duration, Severity & transition rules, DM danger dial).
 
-**Status:** implemented — severity, per-type duration, cooldown filter (+ empty-pool escalate), `/weather status`.
+**Status:** implemented — severity, per-type duration, cooldown filter (+ empty-pool escalate), DM severity dial, `/weather status`.
 
 **Doel:** gevaarlijk weer mag niet te lang blijven hangen én mag niet eindeloos chainen via pure d100-pech, zonder type-namen hard te coderen.
 
@@ -18,9 +18,7 @@ Ontwerpdoc voor een latere implementatie. Bouwt voort op de future extensions in
 
 ### Explicit out of scope (voor nu)
 - `allowedFollowups` / per-type next pools
-- DM danger dial (`/weather danger`)
-- Nieuwe DB-kolommen puur voor deze feature (tenzij later nodig voor danger dial)
-- Wijzigingen aan bestaande migraties
+- Wijzigingen aan bestaande migraties (alleen additive ALTER)
 
 ---
 
@@ -176,11 +174,11 @@ Mild types zonder duration-velden → globale env-interval.
 
 ## 6. Later (bewust niet nu)
 
-- **DM danger dial** — guild bias/ceiling op `world_state`, toegepast bij rollen
 - **`allowedFollowups`** — optionele override per entry als severity-cooldown niet narratief genoeg is; alleen dan, met duidelijke precedentie t.o.v. severity-filter
 - Per-guild duration override via slash command + DB
 
-Suggested combo later: per-type duration + severity cooldown + danger dial.
+### DM severity dial — implemented
+`/weather severity set min max duration` → tijdelijke band op `world_state`; lazy expiry; `/weather severity clear`; zichtbaar in `/weather status`. Roll-volgorde: dial-band → cooldown-filter binnen band → één pick. `/weather set` bypass.
 
 ---
 

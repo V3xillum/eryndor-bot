@@ -35,6 +35,25 @@ function migrate(db: Database.Database): void {
       forced BOOLEAN DEFAULT 0
     );
   `);
+
+  // Backward-compatible additive columns (do not edit the CREATE above).
+  const columns = db.prepare(`PRAGMA table_info(world_state)`).all() as Array<{ name: string }>;
+  const names = new Set(columns.map((c) => c.name));
+  if (!names.has('severity_min')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN severity_min INTEGER`);
+  }
+  if (!names.has('severity_max')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN severity_max INTEGER`);
+  }
+  if (!names.has('severity_override_until')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN severity_override_until DATETIME`);
+  }
+  if (!names.has('magical_mode')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN magical_mode TEXT`);
+  }
+  if (!names.has('magical_override_until')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN magical_override_until DATETIME`);
+  }
 }
 
 function nowIso(): string {
@@ -138,4 +157,51 @@ export function getLatestWeatherLog(
       .get(guildId) as { weather_type: string; posted_at: string; forced: number } | undefined) ??
     null
   );
+}
+
+export function setSeverityOverride(
+  db: Database.Database,
+  guildId: string,
+  min: number,
+  max: number,
+  untilIso: string,
+): void {
+  ensureGuild(db, guildId);
+  db.prepare(
+    `UPDATE world_state
+     SET severity_min = ?, severity_max = ?, severity_override_until = ?, updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(min, max, untilIso, nowIso(), guildId);
+}
+
+export function clearSeverityOverride(db: Database.Database, guildId: string): void {
+  ensureGuild(db, guildId);
+  db.prepare(
+    `UPDATE world_state
+     SET severity_min = NULL, severity_max = NULL, severity_override_until = NULL, updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(nowIso(), guildId);
+}
+
+export function setMagicalOverride(
+  db: Database.Database,
+  guildId: string,
+  mode: 'only' | 'none',
+  untilIso: string,
+): void {
+  ensureGuild(db, guildId);
+  db.prepare(
+    `UPDATE world_state
+     SET magical_mode = ?, magical_override_until = ?, updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(mode, untilIso, nowIso(), guildId);
+}
+
+export function clearMagicalOverride(db: Database.Database, guildId: string): void {
+  ensureGuild(db, guildId);
+  db.prepare(
+    `UPDATE world_state
+     SET magical_mode = NULL, magical_override_until = NULL, updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(nowIso(), guildId);
 }

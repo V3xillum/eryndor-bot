@@ -54,7 +54,11 @@ Global slash commands can take up to about an hour to appear after registration.
 | Command | Who | Effect |
 |---|---|---|
 | `/weather current` | everyone | Private status check (does not post to the weather channel) |
-| `/weather status` | allowlist | Admin detail: severity, remaining time, duration source, cooldown |
+| `/weather status` | allowlist | Admin detail: severity, magical, remaining time, duration, cooldown, dials |
+| `/weather severity set` | allowlist | Tijdelijke severity-band (`min`/`max`/`duration`) voor rolls |
+| `/weather severity clear` | allowlist | Severity dial uitzetten → default gedrag |
+| `/weather magical set` | allowlist | Tijdelijk alleen magisch (`only`) of juist niet (`none`) voor rolls |
+| `/weather magical clear` | allowlist | Magical dial uitzetten → default gedrag |
 | `/weather next` | allowlist | When the next automatic update is due (ephemeral) |
 | `/weather setup <channel> [thread]` | allowlist | Where automated/`roll`/`set` posts go |
 | `/weather roll` | allowlist | d100 roll, update state, post to channel/thread |
@@ -80,12 +84,12 @@ Optional env: `ERYNDOR_CALENDAR_BASE_URL` / `ERYNDOR_CALENDAR_FALLBACK_URL` (see
 
 Edit without touching TypeScript:
 
-- `content/weather-table.json` — d100 ranges, types, images, required `severity`, optional `durationMinHours` / `durationMaxHours`
+- `content/weather-table.json` — d100 ranges, types, images, required `severity` + `magical`, optional `durationMinHours` / `durationMaxHours`
 - `content/weather-rules.json` — cooldown thresholds after high-severity weather
 - `content/messages.json` — bot reply strings (errors / confirmations only)
 - `content/images/` — one image per `image` field (DM weather cards)
 
-After severity ≥ `cooldownAfterSeverity`, the next auto-roll / `/weather roll` only picks milder types (up to `cooldownMaxNextSeverity`, escalating if that pool is empty). `/weather set` bypasses the cooldown. Channel posts stay image-only.
+After severity ≥ `cooldownAfterSeverity`, the next auto-roll / `/weather roll` only picks milder types (up to `cooldownMaxNextSeverity`, escalating if that pool is empty). `/weather set` bypasses filters. Temporary dials: **severity** (`/weather severity set`) and **magical** (`/weather magical set only|none`) further limit the roll pool until they expire; setting either dial rejects empty pools and empty intersections. Channel posts stay image-only.
 
 ## Data
 
