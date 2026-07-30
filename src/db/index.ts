@@ -69,6 +69,15 @@ function migrate(db: Database.Database): void {
   if (!names.has('active_window_end')) {
     db.exec(`ALTER TABLE world_state ADD COLUMN active_window_end TEXT`);
   }
+  if (!names.has('cooldown_enabled')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN cooldown_enabled INTEGER`);
+  }
+  if (!names.has('cooldown_after_severity')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN cooldown_after_severity INTEGER`);
+  }
+  if (!names.has('cooldown_max_next_severity')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN cooldown_max_next_severity INTEGER`);
+  }
 }
 
 function nowIso(): string {
@@ -254,13 +263,7 @@ export function setActiveWindowOverride(
 export function clearScheduleOverrides(db: Database.Database, guildId: string): boolean {
   ensureGuild(db, guildId);
   const state = getWorldState(db, guildId);
-  const hadOverride =
-    state !== null &&
-    (state.update_min_minutes != null ||
-      state.update_max_minutes != null ||
-      state.active_window_enabled != null ||
-      state.active_window_start != null ||
-      state.active_window_end != null);
+  const hadOverride = hasScheduleOverrides(state);
 
   db.prepare(
     `UPDATE world_state
@@ -269,6 +272,84 @@ export function clearScheduleOverrides(db: Database.Database, guildId: string): 
          active_window_enabled = NULL,
          active_window_start = NULL,
          active_window_end = NULL,
+         updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(nowIso(), guildId);
+
+  return hadOverride;
+}
+
+function hasScheduleOverrides(state: WorldState | null): boolean {
+  return (
+    state !== null &&
+    (state.update_min_minutes != null ||
+      state.update_max_minutes != null ||
+      state.active_window_enabled != null ||
+      state.active_window_start != null ||
+      state.active_window_end != null)
+  );
+}
+
+function hasCooldownOverrides(state: WorldState | null): boolean {
+  return (
+    state !== null &&
+    (state.cooldown_enabled != null ||
+      state.cooldown_after_severity != null ||
+      state.cooldown_max_next_severity != null)
+  );
+}
+
+/**
+ * Patch per-guild cooldown overrides. Only provided keys are written;
+ * omitted keys keep their current DB value (null = inherit content).
+ */
+export function setCooldownOverrides(
+  db: Database.Database,
+  guildId: string,
+  patch: {
+    enabled?: boolean;
+    afterSeverity?: number;
+    maxNextSeverity?: number;
+  },
+): void {
+  ensureGuild(db, guildId);
+  const state = getWorldState(db, guildId);
+  const enabled =
+    patch.enabled !== undefined
+      ? patch.enabled
+        ? 1
+        : 0
+      : (state?.cooldown_enabled ?? null);
+  const afterSeverity =
+    patch.afterSeverity !== undefined
+      ? patch.afterSeverity
+      : (state?.cooldown_after_severity ?? null);
+  const maxNextSeverity =
+    patch.maxNextSeverity !== undefined
+      ? patch.maxNextSeverity
+      : (state?.cooldown_max_next_severity ?? null);
+
+  db.prepare(
+    `UPDATE world_state
+     SET cooldown_enabled = ?,
+         cooldown_after_severity = ?,
+         cooldown_max_next_severity = ?,
+         updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(enabled, afterSeverity, maxNextSeverity, nowIso(), guildId);
+}
+
+/** Clears guild cooldown overrides → fall back to `weather-rules.json`. */
+export function clearCooldownOverrides(db: Database.Database, guildId: string): boolean {
+  ensureGuild(db, guildId);
+  const state = getWorldState(db, guildId);
+  const hadOverride = hasCooldownOverrides(state);
+
+  db.prepare(
+    `UPDATE world_state
+     SET cooldown_enabled = NULL,
+         cooldown_after_severity = NULL,
+         cooldown_max_next_severity = NULL,
          updated_at = ?
      WHERE guild_id = ?`,
   ).run(nowIso(), guildId);

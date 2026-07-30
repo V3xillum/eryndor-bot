@@ -430,6 +430,8 @@
 
     .btn {
       appearance: none;
+      display: inline-block;
+      text-decoration: none;
       border: 1px solid rgba(201, 168, 106, 0.5);
       background: rgba(201, 168, 106, 0.16);
       color: #f6ecd7;
@@ -548,11 +550,9 @@
       <h2 style="margin-top:1.5rem">Zwaarte (1–5)</h2>
       <p class="lead">
         Elk weertype heeft een cijfer van mild (1) tot catastrofaal (5).
-        Zwaar weer is <strong>4 of hoger</strong>.
-        Daarna kiest de volgende automatische dobbelsteen of <code>/weather roll</code> eerst iets milders:
-        hoogstens zwaarte <strong>2</strong>.
-        Zo blijven zware stormen niet achter elkaar hangen. <code>/weather set</code> negeert die regel.
-        De zwaarte-draaiknop beperkt tijdelijk welk bereik nog mag vallen.
+        Zwaar weer is standaard <strong>4 of hoger</strong>; daarna volgt eerst weer tot hoogstens zwaarte <strong>2</strong>.
+        <code>/weather set</code> negeert die regel. De zwaarte-draaiknop beperkt tijdelijk welk bereik mag vallen.
+        Aanpassen: <code>/weather settings cooldown</code>.
       </p>
       <div class="severity-scale" aria-label="Zwaarte schaal">
         <div class="sev" data-n="1"><strong>1</strong>Mild</div>
@@ -574,10 +574,10 @@
         Automatische berichten alleen tussen <strong>06:00 en 23:00</strong> (Nederlandse tijd). Daarbuiten wacht de bot.
         Handmatig dobbelen of zetten werkt altijd. Aanpassen: <code>/weather settings window</code>.</p>
         <p style="margin:0 0 0.75rem"><strong>Terugzetten &amp; checken</strong><br />
-        Terug naar standaard: <code>/weather settings clear</code>. <br>
+        Terug naar standaard: <code>/weather settings clear</code> (kies ritme/venster, afkoeling, of alles).
         Wat geldt er nu?: <code>/weather settings show</code> of <code>/weather status</code>.</p>
         <p style="margin:0"><strong>Afkoeling</strong><br />
-        Zie <strong>Zwaarte</strong> hierboven: na 4+ volgt eerst weer tot zwaarte 2. <code>/weather set</code> negeert dat.</p>
+        Zie <strong>Zwaarte</strong> hierboven (standaard: na 4+ eerst max 2). Aanpassen of uitzetten: <code>/weather settings cooldown</code>.</p>
       </div>
     </section>
 
@@ -633,8 +633,8 @@
           <p><code>/weather magical set</code> op <strong>only</strong> — of <strong>none</strong> voor juist geen magisch weer.</p>
         </article>
         <article class="tile">
-          <h3>Ritme of venster</h3>
-          <p><code>/weather settings interval</code> (minuten) of <code>/weather settings window</code>. Voorbeeld testen: interval 1–5. Terug naar standaard: <code>/weather settings clear</code>.</p>
+          <h3>Ritme, venster of afkoeling</h3>
+          <p><code>/weather settings interval</code>, <code>window</code> of <code>cooldown</code>. Terugzetten: <code>/weather settings clear</code> (scope kiezen).</p>
         </article>
         <article class="tile">
           <h3>Even checken</h3>
@@ -655,7 +655,7 @@
         </article>
         <article class="tile">
           <h3>2. Plaatje</h3>
-          <p>De Discord-weerkaart. Hier zit de sfeer: wat spelers zien, staat op de afbeelding. Lever een PNG (of vergelijkbaar) aan.</p>
+          <p>De Discord-weerkaart. Bestandsnaam het liefst gelijk aan het <code>image</code>-veld (bijv. <code>ashen_fog.png</code>). Hier zit de sfeer.</p>
         </article>
         <article class="tile">
           <h3>3. Zwaarte (1–5)</h3>
@@ -667,16 +667,36 @@
         </article>
         <article class="tile">
           <h3>5. Kans op de d100</h3>
-          <p>Hoe vaak mag het vallen? Bijv. “zeldzaam”, “ongeveer 5%”, of “vlak na storm”. Wordt omgezet naar een min–max bereik op de tabel.</p>
+          <p>Hoe vaak mag het vallen? Wordt <code>min</code>–<code>max</code> op de tabel (samen met de rest moet 1–100 sluitend blijven).</p>
         </article>
         <article class="tile">
           <h3>6. Duur (optioneel)</h3>
-          <p>Hoe lang dit weer ongeveer mag blijven (min–max uren). Laat je dit leeg, dan geldt het <strong>standaard ritme</strong> (nu 6–18 uur). Handig voor kort, intens weer.</p>
+          <p>Min/max uren dat dit weer mag blijven. Weglaten = standaard ritme (nu 6–18 uur).</p>
         </article>
       </div>
 
+      <h2 style="margin-top:1.5rem">Voorbeeld (voor nette aanlevering)</h2>
+      <p class="lead">Eén nieuw type ziet er zo uit. Kopieer dit, vul in, en stuur het mee met het plaatje.</p>
+      <pre class="output" id="jsonSnippet">{
+  "min": 87,
+  "max": 90,
+  "type": "ashen_fog",
+  "image": "ashen_fog.png",
+  "severity": 3,
+  "magical": false,
+  "durationMinHours": 2,
+  "durationMaxHours": 4
+}</pre>
+      <p class="note" style="margin-top:0.85rem">
+        <code>durationMinHours</code> / <code>durationMaxHours</code> zijn optioneel (beide of geen).
+        Geen sfeertekst-veld: dat zit in het plaatje.
+      </p>
+      <div class="actions" style="margin-top:0.85rem">
+        <a class="btn" href="weather-table.json" download="weather-table.json">Download huidige tabel</a>
+      </div>
       <p class="note">
-        Geen sfeertekst aanleveren: die zit voorlopig in het plaatje. Extra beschrijvingstekst in Discord zou later ontwikkeling kosten.
+        De download is ter <strong>referentie</strong> (bestaande namen, ranges, plaatjes).
+        Stuur wijzigingen + nieuwe afbeeldingen terug naar wie de bot-content beheert — gooi de live tabel niet zelf om zonder check op sluitende d100 (1–100).
       </p>
     </section>
 
@@ -713,6 +733,13 @@
         when: "Even checken zonder de tafel te storen.",
       },
       {
+        cmd: "/weather help",
+        who: "everyone",
+        cat: "bekijken",
+        what: "Korte cheat-sheet van de belangrijkste commands, plus link naar deze handout.",
+        when: "Snel terugvinden wat er kan, of de handout openen vanuit Discord.",
+      },
+      {
         cmd: "/world today",
         who: "everyone",
         cat: "bekijken",
@@ -737,8 +764,8 @@
         cmd: "/weather settings show",
         who: "dm",
         cat: "instellingen",
-        what: "Toont welk ritme (interval) en berichtenvenster nu gelden voor deze server.",
-        when: "Even checken of je eigen waarden of de standaard gebruikt.",
+        what: "Toont welk ritme, berichtenvenster en afkoeling nu gelden voor deze server (eigen waarden of standaard).",
+        when: "Even checken wat er actief is.",
       },
       {
         cmd: "/weather settings interval",
@@ -755,11 +782,18 @@
         when: "Kortere dagen, of 24/7 automatisch weer (venster uit).",
       },
       {
+        cmd: "/weather settings cooldown",
+        who: "dm",
+        cat: "instellingen",
+        what: "Afkoeling voor deze server: aan/uit, drempel “zwaar” (after) en max zwaarte daarna (max_next). Laat velden weg om ze te houden. /weather set negeert afkoeling altijd.",
+        when: "Storm-arc zonder afkoeling (uit), of mildere/strengere wereld (andere drempels).",
+      },
+      {
         cmd: "/weather settings clear",
         who: "dm",
         cat: "instellingen",
-        what: "Wis jouw server-aanpassingen voor ritme en venster → terug naar de standaard. Plant opnieuw.",
-        when: "Klaar met testen, of terug naar de normale campagne-instellingen.",
+        what: "Wis server-aanpassingen terug naar de standaard. Kies scope: schedule (ritme/venster), cooldown (afkoeling), of all (alles). Plant opnieuw als ritme/venster wijzigt.",
+        when: "Klaar met testen, of terug naar de normale campagne-instellingen — zonder per ongeluk alles te wissen.",
       },
       {
         cmd: "/weather roll",

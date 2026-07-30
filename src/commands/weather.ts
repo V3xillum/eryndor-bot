@@ -1,5 +1,6 @@
 import {
   ChannelType,
+  EmbedBuilder,
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
 } from 'discord.js';
@@ -39,6 +40,11 @@ export function buildWeatherCommand(_weatherTypes: string[]) {
     )
     .addSubcommand((sub) =>
       sub.setName('current').setDescription('Show the current weather (private reply)'),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('help')
+        .setDescription('Short command cheat-sheet and link to the DM handout'),
     )
     .addSubcommand((sub) =>
       sub
@@ -112,11 +118,11 @@ export function buildWeatherCommand(_weatherTypes: string[]) {
     .addSubcommandGroup((group) =>
       group
         .setName('settings')
-        .setDescription('Per-guild schedule: interval and active posting window')
+        .setDescription('Per-guild schedule and cooldown settings')
         .addSubcommand((sub) =>
           sub
             .setName('show')
-            .setDescription('Show effective interval and active window for this server'),
+            .setDescription('Show effective interval, window, and cooldown for this server'),
         )
         .addSubcommand((sub) =>
           sub
@@ -162,8 +168,44 @@ export function buildWeatherCommand(_weatherTypes: string[]) {
         )
         .addSubcommand((sub) =>
           sub
+            .setName('cooldown')
+            .setDescription('Set guild severity cooldown (omit fields to keep current / inherit)')
+            .addBooleanOption((opt) =>
+              opt
+                .setName('enabled')
+                .setDescription('Whether severity cooldown applies after heavy weather')
+                .setRequired(false),
+            )
+            .addIntegerOption((opt) =>
+              opt
+                .setName('after')
+                .setDescription('Severity threshold that triggers cooldown (inclusive)')
+                .setRequired(false)
+                .setMinValue(1),
+            )
+            .addIntegerOption((opt) =>
+              opt
+                .setName('max_next')
+                .setDescription('Max severity allowed on the next roll after cooldown')
+                .setRequired(false)
+                .setMinValue(1),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
             .setName('clear')
-            .setDescription('Clear guild schedule overrides (back to .env defaults)'),
+            .setDescription('Clear guild settings overrides by scope')
+            .addStringOption((opt) =>
+              opt
+                .setName('scope')
+                .setDescription('Which overrides to clear')
+                .setRequired(true)
+                .addChoices(
+                  { name: 'schedule (interval + window)', value: 'schedule' },
+                  { name: 'cooldown', value: 'cooldown' },
+                  { name: 'all', value: 'all' },
+                ),
+            ),
         ),
     )
     .addSubcommand((sub) =>
@@ -301,6 +343,10 @@ export async function handleWeatherCommand(
       await handleSettingsWindow(interaction, weather);
       return;
     }
+    if (sub === 'cooldown') {
+      await handleSettingsCooldown(interaction, weather);
+      return;
+    }
     if (sub === 'clear') {
       await handleSettingsClear(interaction, weather);
       return;
@@ -315,6 +361,9 @@ export async function handleWeatherCommand(
       return;
     case 'current':
       await handleCurrent(interaction, weather);
+      return;
+    case 'help':
+      await handleHelp(interaction, weather, config);
       return;
     case 'status':
       await handleStatus(interaction, weather);
@@ -380,6 +429,33 @@ async function handleCurrent(
 
   await interaction.reply({
     ...buildWeatherCard(result),
+    ephemeral: true,
+  });
+}
+
+async function handleHelp(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+  config: AppConfig,
+): Promise<void> {
+  const url = config.handoutUrl;
+  const embed = new EmbedBuilder()
+    .setTitle(weather.messages.helpEmbedTitle)
+    .setURL(url)
+    .setDescription(formatTemplate(weather.messages.helpEmbedDescription, { url }))
+    .addFields(
+      {
+        name: weather.messages.helpFieldEveryone,
+        value: weather.messages.helpEveryoneBody,
+      },
+      {
+        name: weather.messages.helpFieldDm,
+        value: weather.messages.helpDmBody,
+      },
+    );
+
+  await interaction.reply({
+    embeds: [embed],
     ephemeral: true,
   });
 }
@@ -561,6 +637,7 @@ async function handleSettingsShow(
   weather: WeatherService,
 ): Promise<void> {
   const settings = weather.getScheduleSettings(interaction.guildId!);
+  const cooldown = weather.getCooldownSettings(interaction.guildId!);
   const lines = [
     formatTemplate(weather.messages.statusInterval, {
       min: settings.updateMinMinutes,
@@ -583,6 +660,22 @@ async function handleSettingsShow(
     );
   } else {
     lines.push(weather.messages.statusWindowOff);
+  }
+
+  if (cooldown.enabled) {
+    lines.push(
+      formatTemplate(weather.messages.statusCooldownRulesOn, {
+        after: cooldown.afterSeverity,
+        max: cooldown.maxNextSeverity,
+        source: cooldown.fromGuild ? 'guild' : 'content',
+      }),
+    );
+  } else {
+    lines.push(
+      formatTemplate(weather.messages.statusCooldownRulesOff, {
+        source: cooldown.fromGuild ? 'guild' : 'content',
+      }),
+    );
   }
 
   await interaction.reply({
@@ -668,16 +761,91 @@ async function handleSettingsWindow(
   }
 }
 
+async function handleSettingsCooldown(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const enabledOpt = interaction.options.getBoolean('enabled');
+  const afterOpt = interaction.options.getInteger('after');
+  const maxNextOpt = interaction.options.getInteger('max_next');
+
+  const patch: {
+    enabled?: boolean;
+    afterSeverity?: number;
+    maxNextSeverity?: number;
+  } = {};
+  if (enabledOpt !== null) patch.enabled = enabledOpt;
+  if (afterOpt !== null) patch.afterSeverity = afterOpt;
+  if (maxNextOpt !== null) patch.maxNextSeverity = maxNextOpt;
+
+  try {
+    const { settings, warnings } = weather.setCooldownSettings(interaction.guildId!, patch);
+    const lines: string[] = [];
+    if (!settings.enabled) {
+      lines.push(weather.messages.settingsCooldownDisabledSuccess);
+    } else {
+      lines.push(
+        formatTemplate(weather.messages.settingsCooldownSuccess, {
+          after: settings.afterSeverity,
+          max: settings.maxNextSeverity,
+        }),
+      );
+    }
+    lines.push(...warnings);
+
+    await interaction.reply({
+      content: lines.join('\n'),
+      ephemeral: true,
+    });
+  } catch (error) {
+    if (!(error instanceof Error)) throw error;
+    if (error.message === 'COOLDOWN_NOTHING_SET') {
+      await interaction.reply({
+        content: weather.messages.settingsCooldownNothingSet,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (error.message === 'INVALID_COOLDOWN_THRESHOLD') {
+      await interaction.reply({
+        content: weather.messages.invalidCooldownThreshold,
+        ephemeral: true,
+      });
+      return;
+    }
+    throw error;
+  }
+}
+
 async function handleSettingsClear(
   interaction: ChatInputCommandInteraction,
   weather: WeatherService,
 ): Promise<void> {
-  const { hadOverride, next } = weather.clearScheduleOverrides(interaction.guildId!);
-  await interaction.reply({
-    content: formatTemplate(
+  const scope = interaction.options.getString('scope', true) as 'schedule' | 'cooldown' | 'all';
+  const { hadOverride, next } = weather.clearSettingsOverrides(interaction.guildId!, scope);
+  const unix = next ? Math.floor(next.getTime() / 1000) : null;
+
+  let content: string;
+  if (scope === 'schedule') {
+    content = formatTemplate(
       hadOverride ? weather.messages.settingsClearSuccess : weather.messages.settingsClearNone,
-      { unix: Math.floor(next.getTime() / 1000) },
-    ),
+      { unix: unix ?? 0 },
+    );
+  } else if (scope === 'cooldown') {
+    content = hadOverride
+      ? weather.messages.settingsClearCooldownSuccess
+      : weather.messages.settingsClearCooldownNone;
+  } else {
+    content = formatTemplate(
+      hadOverride
+        ? weather.messages.settingsClearAllSuccess
+        : weather.messages.settingsClearAllNone,
+      { unix: unix ?? 0 },
+    );
+  }
+
+  await interaction.reply({
+    content,
     ephemeral: true,
   });
 }

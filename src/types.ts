@@ -50,6 +50,13 @@ export interface WorldState {
   active_window_enabled: number | null;
   active_window_start: string | null;
   active_window_end: string | null;
+  /**
+   * Optional per-guild severity cooldown. `null` = inherit `weather-rules.json`;
+   * `0` = disabled; `1` = enabled. Thresholds null = inherit content defaults.
+   */
+  cooldown_enabled: number | null;
+  cooldown_after_severity: number | null;
+  cooldown_max_next_severity: number | null;
 }
 
 export interface WeatherResult {
@@ -98,13 +105,24 @@ export interface Messages {
   settingsIntervalSuccess: string;
   settingsWindowSuccess: string;
   settingsWindowDisabledSuccess: string;
+  settingsCooldownSuccess: string;
+  settingsCooldownDisabledSuccess: string;
+  settingsCooldownWarnMaxNext: string;
+  settingsCooldownWarnEmptyStartPool: string;
   settingsClearSuccess: string;
   settingsClearNone: string;
+  settingsClearCooldownSuccess: string;
+  settingsClearCooldownNone: string;
+  settingsClearAllSuccess: string;
+  settingsClearAllNone: string;
+  settingsCooldownNothingSet: string;
   invalidUpdateInterval: string;
   invalidActiveWindow: string;
   invalidTimeOfDay: string;
+  invalidCooldownThreshold: string;
+  statusCooldownRulesOn: string;
+  statusCooldownRulesOff: string;
   statusCooldownOn: string;
-  statusCooldownOff: string;
   statusDialOn: string;
   statusDialOff: string;
   statusMagical: string;
@@ -137,6 +155,12 @@ export interface Messages {
   calendarNoEvents: string;
   calendarFullMoonTitle: string;
   calendarFullMoonWhen: string;
+  helpEmbedTitle: string;
+  helpEmbedDescription: string;
+  helpFieldEveryone: string;
+  helpEveryoneBody: string;
+  helpFieldDm: string;
+  helpDmBody: string;
 }
 
 export type CalendarEvent =

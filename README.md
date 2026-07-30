@@ -2,7 +2,7 @@
 
 Discord bot for the Eryndor (West Marches) D&D server: atmospheric weather updates plus calendar commands. The bot posts weather automatically on a random interval (defaults in `.env`, overridable per guild via `/weather settings`) and gives allowlisted users slash-command control during sessions.
 
-DM handout (GitHub Pages, from `/docs`): [`docs/handout/`](./docs/handout/).
+DM handout (GitHub Pages, from `/docs`): [`docs/handout/`](./docs/handout/). Agent rules for that handout: [`docs/handout-agent.md`](./docs/handout-agent.md).
 
 ## Requirements
 
@@ -57,15 +57,17 @@ Global slash commands can take up to about an hour to appear after registration.
 | Command | Who | Effect |
 |---|---|---|
 | `/weather current` | everyone | Private status check (does not post to the weather channel) |
+| `/weather help` | everyone | Short cheat-sheet + link to the DM handout (`HANDOUT_URL`) |
 | `/weather status` | allowlist | Admin detail: severity, magical, remaining time, duration, interval/window, cooldown, dials |
 | `/weather severity set` | allowlist | Tijdelijke severity-band (`min`/`max`/`duration`) voor rolls |
 | `/weather severity clear` | allowlist | Severity dial uitzetten → default gedrag |
 | `/weather magical set` | allowlist | Tijdelijk alleen magisch (`only`) of juist niet (`none`) voor rolls |
 | `/weather magical clear` | allowlist | Magical dial uitzetten → default gedrag |
-| `/weather settings show` | allowlist | Effectief interval + postvenster (guild of `.env`) |
+| `/weather settings show` | allowlist | Effectief interval + postvenster + afkoeling (guild of default) |
 | `/weather settings interval` | allowlist | Guild-fallback interval in minuten (reschedule) |
 | `/weather settings window` | allowlist | Guild actief postvenster aan/uit + `HH:mm` (reschedule) |
-| `/weather settings clear` | allowlist | Guild schedule-overrides wissen → `.env` |
+| `/weather settings cooldown` | allowlist | Guild afkoeling aan/uit + drempels (geen reschedule) |
+| `/weather settings clear` | allowlist | Overrides wissen per scope: `schedule` / `cooldown` / `all` |
 | `/weather next` | allowlist | When the next automatic update is due (ephemeral) |
 | `/weather setup <channel> [thread]` | allowlist | Where automated/`roll`/`set` posts go |
 | `/weather roll` | allowlist | d100 roll, update state, post to channel/thread |
@@ -96,7 +98,7 @@ Edit without touching TypeScript:
 - `content/messages.json` — bot reply strings (errors / confirmations only)
 - `content/images/` — one image per `image` field (DM weather cards)
 
-After severity ≥ `cooldownAfterSeverity`, the next auto-roll / `/weather roll` only picks milder types (up to `cooldownMaxNextSeverity`, escalating if that pool is empty). `/weather set` bypasses filters. Temporary dials: **severity** (`/weather severity set`) and **magical** (`/weather magical set only|none`) further limit the roll pool until they expire; setting either dial rejects empty pools and empty intersections. Channel posts stay image-only.
+After severity ≥ `cooldownAfterSeverity`, the next auto-roll / `/weather roll` only picks milder types (up to `cooldownMaxNextSeverity`, escalating if that pool is empty). Defaults live in `content/weather-rules.json`; per-guild overrides via `/weather settings cooldown` (null = inherit). `/weather set` bypasses filters. Temporary dials: **severity** (`/weather severity set`) and **magical** (`/weather magical set only|none`) further limit the roll pool until they expire; setting either dial rejects empty pools and empty intersections. Channel posts stay image-only.
 
 ## Data
 

@@ -13,6 +13,7 @@ const DEFAULT_ACTIVE_END = '23:00';
 const DEFAULT_TIMEZONE = 'Europe/Amsterdam';
 const DEFAULT_ERYNDOR_BASE_URL = 'https://v3xillum.github.io/eryndor';
 const DEFAULT_ERYNDOR_FALLBACK_URL = 'https://raw.githubusercontent.com/V3xillum/eryndor/main';
+const DEFAULT_HANDOUT_URL = 'https://v3xillum.github.io/eryndor-bot/handout/';
 
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim();
@@ -101,6 +102,10 @@ export function loadConfig() {
   }
 
   const calendarTimeZone = loadTimezone('WEATHER_TIMEZONE', DEFAULT_TIMEZONE);
+  const handoutUrl = normalizeBaseUrl(process.env.HANDOUT_URL || DEFAULT_HANDOUT_URL);
+  if (!/^https?:\/\//i.test(handoutUrl)) {
+    throw new Error(`HANDOUT_URL must be an http(s) URL, got: ${handoutUrl}`);
+  }
 
   return {
     token: requireEnv('DISCORD_TOKEN'),
@@ -109,6 +114,7 @@ export function loadConfig() {
     updateMinMinutes,
     updateMaxMinutes,
     activeWindow: loadActiveWindow(),
+    handoutUrl,
     eryndorCalendar: {
       baseUrl: normalizeBaseUrl(
         process.env.ERYNDOR_CALENDAR_BASE_URL || DEFAULT_ERYNDOR_BASE_URL,

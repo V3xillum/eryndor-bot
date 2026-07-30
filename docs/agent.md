@@ -3,6 +3,8 @@
 ## Project Goal
 Build **Eryndor bot** — a Discord bot for the Eryndor (West Marches) D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), gives authorized users full manual control during sessions through slash commands, and exposes Eryndor calendar info (`/world today`, `/world fullmoon`) from the static Calendar of Eryndor JSON API.
 
+**DM handout:** static site under [`docs/handout/`](./handout/). Style and update rules for agents: [`handout-agent.md`](./handout-agent.md). Bot behaviour remains defined in **this** file.
+
 ## Tech Stack
 - Node.js
 - TypeScript (strict mode)
@@ -46,6 +48,9 @@ WEATHER_TIMEZONE=Europe/Amsterdam
 # DOY for “today” uses WEATHER_TIMEZONE (default Europe/Amsterdam).
 ERYNDOR_CALENDAR_BASE_URL=https://v3xillum.github.io/eryndor
 ERYNDOR_CALENDAR_FALLBACK_URL=https://raw.githubusercontent.com/V3xillum/eryndor/main
+
+# DM handout (GitHub Pages). Linked from /weather help.
+HANDOUT_URL=https://v3xillum.github.io/eryndor-bot/handout/
 ```
 
 **Active window behaviour:** the scheduler never auto-posts outside the **effective** window for that guild (guild override, else `.env`). If `next_update_at` falls overnight, it waits until the next window start. When scheduling the next update, candidates outside the window are clamped to the next window start. Half-open interval: `[start, end)` in `WEATHER_TIMEZONE`.
@@ -179,7 +184,7 @@ Each entry has a numeric **`severity`** (1 = mild … 5 = catastrophic), a boole
 }
 ```
 
-After current weather with `severity >= cooldownAfterSeverity`, the next scheduler/`/weather roll` filters to `severity <= cooldownMaxNextSeverity`. If that pool is empty (e.g. an all-evil table), the ceiling rises (3, 4, …) until at least one entry matches. `/weather set` bypasses the filter. See [`feature-weather-severity-duration.md`](./feature-weather-severity-duration.md).
+After current weather with `severity >= cooldownAfterSeverity`, the next scheduler/`/weather roll` filters to `severity <= cooldownMaxNextSeverity`. If that pool is empty (e.g. an all-evil table), the ceiling rises (3, 4, …) until at least one entry matches. `/weather set` bypasses the filter. Per-guild overrides via `/weather settings cooldown` (null columns inherit these content defaults; guild can also disable cooldown). See [`feature-weather-severity-duration.md`](./feature-weather-severity-duration.md) and [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
 
 **Roll pool order:** severity dial → magical dial → severity cooldown (within that intersection) → one weighted pick. Setting either dial rejects empty pools and empty **intersections** with the other active dial (no silent fallback). See [`feature-weather-magical-dial.md`](./feature-weather-magical-dial.md).
 
@@ -192,11 +197,12 @@ Ship a sensible starter table with placeholder images; real art can be swapped l
 Expose a small service interface that commands and the scheduler both call into:
 
 - `getCurrentWeather(guildId)`
-- `getAdminStatus(guildId)` — severity, magical flag, schedule, cooldown, severity/magical dials, duration source, effective interval/window (for `/weather status`)
+- `getAdminStatus(guildId)` — severity, magical flag, schedule, cooldown rules + next-roll filter, severity/magical dials, duration source, effective interval/window (for `/weather status`)
 - `getScheduleSettings(guildId)` — effective interval + active window (guild override or `.env`)
+- `getCooldownSettings(guildId)` — effective cooldown enabled/thresholds (guild override or `weather-rules.json`)
 - `setSeverityDial` / `clearSeverityDial` — temporary min/max band for rolls
 - `setMagicalDial` / `clearMagicalDial` — temporary `only` / `none` magical filter for rolls
-- `setUpdateInterval` / `setActiveWindow` / `clearScheduleOverrides` — per-guild schedule settings; reschedule immediately
+- `setUpdateInterval` / `setActiveWindow` / `setCooldownSettings` / `clearSettingsOverrides` — per-guild settings; schedule changes reschedule immediately; cooldown changes apply on the next roll
 - `rollWeather(guildId)` — weighted pick (severity dial + magical dial + severity cooldown when applicable), updates state, returns the result
 - `setWeather(guildId, type)` / `setFromInput` — forces a type or physical d100; marks `forced` for type sets; **bypasses** dials/cooldown
 - `scheduleNextUpdate(guildId)` — per-type duration range if present, else guild/env minute range; stores `next_update_at`
@@ -222,6 +228,7 @@ UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec de
 ## Permissions
 
 - `/weather current` — available to everyone in the guild.
+- `/weather help` — available to everyone in the guild (cheat-sheet + handout link).
 - All other `/weather` subcommands (including `status`, `next`, `settings`) — only users whose Discord user ID appears in `ALLOWED_USER_IDS`.
 - `/world today` and `/world fullmoon` — available to everyone in the guild (world info; no weather-timer spoilers).
 
@@ -236,15 +243,17 @@ There is **no** `/weather post`. Anything that changes weather also broadcasts t
 ### Weather
 - `/weather setup <channel> [thread]` — configure where weather updates are sent (scheduler, `roll`, and `set`). `thread` is optional. Uses the current guild’s `guildId` from the interaction.
 - `/weather current` — show the current weather **to the invoking user** (ephemeral or command reply). Does **not** post to the weather channel — if the bot is working, the latest update is already visible there; this is a quiet status check (e.g. DM mid-session without spamming the channel).
-- `/weather status` — allowlist-only admin view: type, severity, magical flag, forced flag, since-when, remaining/next update, duration source (per-type vs guild/env fallback), effective interval + active window, severity dial, magical dial, and whether severity cooldown applies to the next roll. Ephemeral; does not post to the channel.
+- `/weather help` — short ephemeral cheat-sheet (everyone + DM commands) plus link to the DM handout (`HANDOUT_URL`, default GitHub Pages). Available to everyone. Does not post to the channel.
+- `/weather status` — allowlist-only admin view: type, severity, magical flag, forced flag, since-when, remaining/next update, duration source (per-type vs guild/env fallback), effective interval + active window, severity dial, magical dial, cooldown rules (guild or content) and whether the next roll is filtered. Ephemeral; does not post to the channel.
 - `/weather severity set <min> <max> <duration>` — temporary severity band for auto-roll / `/weather roll` (e.g. min 1, max 4, `1d`). Lazy-expires; then default table + cooldown. Rejects empty bands and empty intersection with an active magical dial. Allowlist only. Does not change current weather or post.
 - `/weather severity clear` — clear the dial early. Allowlist only.
 - `/weather magical set <only|none> <duration>` — temporary magical filter for auto-roll / `/weather roll` (`only` = magical types only; `none` = non-magical only). Lazy-expires. Rejects empty pools and empty intersection with an active severity dial. Allowlist only. Does not change current weather or post.
 - `/weather magical clear` — clear the magical dial early. Allowlist only.
-- `/weather settings show` — show effective auto-update interval and active posting window (guild override or `.env`). Allowlist only.
+- `/weather settings show` — show effective auto-update interval, active posting window, and cooldown (guild override or defaults). Allowlist only.
 - `/weather settings interval <min> <max>` — set per-guild fallback interval in minutes (when the current type has no `duration*Hours`). Reschedules immediately. Allowlist only.
 - `/weather settings window <enabled> [start] [end]` — set per-guild active posting window (`HH:mm`, same-day). Timezone stays in `.env`. Reschedules immediately. Allowlist only.
-- `/weather settings clear` — clear guild interval + window overrides → `.env` defaults; reschedules. Allowlist only.
+- `/weather settings cooldown [enabled] [after] [max_next]` — per-guild severity cooldown overrides (field-level; null = inherit `weather-rules.json`). At least one option required. Does not reschedule. Soft-warns if `max_next >= after` or start pool would be empty. Allowlist only.
+- `/weather settings clear <scope>` — clear guild overrides by scope: `schedule` (→ `.env`), `cooldown` (→ content), or `all`. Schedule clears reschedule. Allowlist only.
 - `/weather next` — show when the next **automatic** update is scheduled (ephemeral). Also reports pause state and when an update is due but waiting for the active posting window. **Allowlist only** (players should not see when weather will change). Does not post to the weather channel.
 - `/weather roll` — roll against the table (with severity dial + magical dial + cooldown when applicable), set that as current weather, **and** post the update to the configured channel/thread. Also reply to the invoker with the result (roll value + type).
 - `/weather set <value> [duration]` — set weather by **type** (`storm`) or **physical d100** (`81`), then post. Type → `forced = true`; numeric 1–100 → table lookup, `forced = false` (external die). Optional `duration` as before. Bypasses dials and cooldown.
@@ -315,16 +324,19 @@ Architecture should allow these without major refactoring, but **none should be 
 Each weather type may define `durationMinHours` / `durationMaxHours`. When present, that range schedules the next auto-update after the type becomes current; otherwise the guild `/weather settings interval` applies when set, else the global `.env` interval. Explicit DM duration (`/weather set … duration`, `/weather schedule`) always wins.
 
 ### Guild schedule settings — implemented
-`/weather settings` stores optional per-guild overrides on `world_state`: `update_min_minutes` / `update_max_minutes`, `active_window_enabled` / `active_window_start` / `active_window_end`. Null = inherit `.env`. Timezone stays in `.env` (`WEATHER_TIMEZONE`). Changing settings reschedules `next_update_at` immediately. Visible on `/weather status` and `/weather settings show`.
+`/weather settings` stores optional per-guild overrides on `world_state`: `update_min_minutes` / `update_max_minutes`, `active_window_enabled` / `active_window_start` / `active_window_end`. Null = inherit `.env`. Timezone stays in `.env` (`WEATHER_TIMEZONE`). Changing settings reschedules `next_update_at` immediately. Visible on `/weather status` and `/weather settings show`. Clear via `/weather settings clear scope:schedule|all`.
 
 ### Severity & transition rules — implemented
-Each entry has numeric **severity**. After weather at or above `cooldownAfterSeverity`, the next auto-roll / `/weather roll` must resolve to `severity <= cooldownMaxNextSeverity` (filter + one weighted pick; empty pools escalate the ceiling). Thresholds live in `content/weather-rules.json`. `/weather set` bypasses the filter.
+Each entry has numeric **severity**. After weather at or above `cooldownAfterSeverity`, the next auto-roll / `/weather roll` must resolve to `severity <= cooldownMaxNextSeverity` (filter + one weighted pick; empty pools escalate the ceiling). Thresholds live in `content/weather-rules.json`. `/weather set` bypasses the filter. Per-guild overrides: see guild cooldown settings below.
 
 ### DM severity dial — implemented
 `/weather severity set <min> <max> <duration>` stores a temporary inclusive band on `world_state` (`severity_min` / `severity_max` / `severity_override_until`). Auto-roll and `/weather roll` filter to that band first, then apply magical dial (if any) and cooldown within the intersection. Lazy expiry (checked at roll time). `/weather severity clear` removes it early. Visible on `/weather status`. `/weather set` still bypasses filters. Setting rejects empty bands and empty intersection with an active magical dial.
 
 ### DM magical dial — implemented
 Each weather entry has boolean **`magical`**. `/weather magical set <only|none> <duration>` stores a temporary filter on `world_state` (`magical_mode` / `magical_override_until`). Roll order: severity dial → magical dial → cooldown → weighted pick. Lazy expiry. `/weather magical clear` removes it early. Visible on `/weather status`. `/weather set` bypasses. Setting rejects empty magical pools and empty intersection with an active severity dial (no silent fallback / escalate on magical).
+
+### Guild cooldown settings — implemented
+Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / default on; `0`/`1` = off/on), `cooldown_after_severity`, `cooldown_max_next_severity` (null = inherit `content/weather-rules.json`). Field-level merge. `/weather settings cooldown` patches provided fields; soft-warns when `max_next >= after` or the start pool would be empty (escalate still applies). `/weather settings clear scope:cooldown|all` clears overrides. Visible on `/weather status` and `settings show` with source label `guild` | `content`. Does not reschedule. See [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
 
 ## Non-Goals
 Do not introduce:

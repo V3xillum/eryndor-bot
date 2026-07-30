@@ -60,8 +60,10 @@ export interface WeatherAdminStatus {
   windowFromGuild: boolean;
   cooldownActive: boolean;
   effectiveMaxNextSeverity: number | null;
+  cooldownEnabled: boolean;
   cooldownAfterSeverity: number;
   cooldownMaxNextSeverity: number;
+  cooldownFromGuild: boolean;
   dialActive: boolean;
   dialMin: number | null;
   dialMax: number | null;
@@ -81,6 +83,16 @@ export interface GuildScheduleSettings {
   windowStart: string | null;
   windowEnd: string | null;
 }
+
+export interface GuildCooldownSettings {
+  enabled: boolean;
+  afterSeverity: number;
+  maxNextSeverity: number;
+  /** True when any cooldown column is overridden on the guild. */
+  fromGuild: boolean;
+}
+
+export type SettingsClearScope = 'schedule' | 'cooldown' | 'all';
 
 export class WeatherService {
   private readonly table: WeatherTableEntry[];
@@ -125,6 +137,12 @@ export class WeatherService {
   getScheduleSettings(guildId: string): GuildScheduleSettings {
     const state = dbQueries.getWorldState(this.db, guildId);
     return this.resolveScheduleSettings(state);
+  }
+
+  /** Effective cooldown rules for a guild (DB override, else `weather-rules.json`). */
+  getCooldownSettings(guildId: string): GuildCooldownSettings {
+    const state = dbQueries.getWorldState(this.db, guildId);
+    return this.resolveCooldownSettings(state);
   }
 
   private resolveScheduleSettings(state: WorldState | null | undefined): GuildScheduleSettings {
@@ -177,6 +195,38 @@ export class WeatherService {
       windowFromGuild,
       windowStart,
       windowEnd,
+    };
+  }
+
+  private resolveCooldownSettings(state: WorldState | null | undefined): GuildCooldownSettings {
+    const fromGuild =
+      state?.cooldown_enabled != null ||
+      state?.cooldown_after_severity != null ||
+      state?.cooldown_max_next_severity != null;
+
+    const enabled =
+      state?.cooldown_enabled != null ? state.cooldown_enabled === 1 : true;
+    const afterSeverity =
+      state?.cooldown_after_severity != null
+        ? state.cooldown_after_severity
+        : this.rules.cooldownAfterSeverity;
+    const maxNextSeverity =
+      state?.cooldown_max_next_severity != null
+        ? state.cooldown_max_next_severity
+        : this.rules.cooldownMaxNextSeverity;
+
+    return {
+      enabled,
+      afterSeverity,
+      maxNextSeverity,
+      fromGuild,
+    };
+  }
+
+  private toRollRules(cooldown: GuildCooldownSettings): WeatherRules {
+    return {
+      cooldownAfterSeverity: cooldown.afterSeverity,
+      cooldownMaxNextSeverity: cooldown.maxNextSeverity,
     };
   }
 
@@ -267,6 +317,7 @@ export class WeatherService {
 
     const schedule = this.getScheduleStatus(guildId, now);
     const log = entry ? dbQueries.getLatestWeatherLog(this.db, guildId) : null;
+    const cooldown = this.resolveCooldownSettings(state);
     let poolInfo: {
       cooldownActive: boolean;
       effectiveMaxSeverity: number | null;
@@ -275,9 +326,10 @@ export class WeatherService {
       poolInfo = resolveRollPool(
         this.table,
         entry?.severity ?? null,
-        this.rules,
+        this.toRollRules(cooldown),
         dial ? { min: dial.min, max: dial.max } : null,
         magicalDial?.mode ?? null,
+        cooldown.enabled,
       );
     } catch (error) {
       // Content changed after dials were set — still show dial state without cooldown detail.
@@ -311,8 +363,10 @@ export class WeatherService {
       windowFromGuild: scheduleSettings.windowFromGuild,
       cooldownActive: poolInfo.cooldownActive,
       effectiveMaxNextSeverity: poolInfo.effectiveMaxSeverity,
-      cooldownAfterSeverity: this.rules.cooldownAfterSeverity,
-      cooldownMaxNextSeverity: this.rules.cooldownMaxNextSeverity,
+      cooldownEnabled: cooldown.enabled,
+      cooldownAfterSeverity: cooldown.afterSeverity,
+      cooldownMaxNextSeverity: cooldown.maxNextSeverity,
+      cooldownFromGuild: cooldown.fromGuild,
       dialActive: dial !== null,
       dialMin: dial?.min ?? null,
       dialMax: dial?.max ?? null,
@@ -449,15 +503,28 @@ export class WeatherService {
     } else {
       rulesLines.push(this.messages.statusMagicalDialOff);
     }
-    if (status.cooldownActive && status.effectiveMaxNextSeverity !== null) {
+    if (status.cooldownEnabled) {
       rulesLines.push(
-        formatTemplate(this.messages.statusCooldownOn, {
-          maxSeverity: status.effectiveMaxNextSeverity,
-          defaultMax: status.cooldownMaxNextSeverity,
+        formatTemplate(this.messages.statusCooldownRulesOn, {
+          after: status.cooldownAfterSeverity,
+          max: status.cooldownMaxNextSeverity,
+          source: status.cooldownFromGuild ? 'guild' : 'content',
         }),
       );
+      if (status.cooldownActive && status.effectiveMaxNextSeverity !== null) {
+        rulesLines.push(
+          formatTemplate(this.messages.statusCooldownOn, {
+            maxSeverity: status.effectiveMaxNextSeverity,
+            defaultMax: status.cooldownMaxNextSeverity,
+          }),
+        );
+      }
     } else {
-      rulesLines.push(this.messages.statusCooldownOff);
+      rulesLines.push(
+        formatTemplate(this.messages.statusCooldownRulesOff, {
+          source: status.cooldownFromGuild ? 'guild' : 'content',
+        }),
+      );
     }
 
     return new EmbedBuilder()
@@ -622,6 +689,86 @@ export class WeatherService {
     return { hadOverride, next };
   }
 
+  /**
+   * Per-guild severity cooldown overrides (field-level merge; omitted keys keep current DB).
+   * Does not change current weather or reschedule — applies on the next roll.
+   */
+  setCooldownSettings(
+    guildId: string,
+    patch: {
+      enabled?: boolean;
+      afterSeverity?: number;
+      maxNextSeverity?: number;
+    },
+  ): { settings: GuildCooldownSettings; warnings: string[] } {
+    if (
+      patch.enabled === undefined &&
+      patch.afterSeverity === undefined &&
+      patch.maxNextSeverity === undefined
+    ) {
+      throw new Error('COOLDOWN_NOTHING_SET');
+    }
+
+    if (
+      (patch.afterSeverity !== undefined &&
+        (!Number.isInteger(patch.afterSeverity) || patch.afterSeverity < 1)) ||
+      (patch.maxNextSeverity !== undefined &&
+        (!Number.isInteger(patch.maxNextSeverity) || patch.maxNextSeverity < 1))
+    ) {
+      throw new Error('INVALID_COOLDOWN_THRESHOLD');
+    }
+
+    dbQueries.setCooldownOverrides(this.db, guildId, patch);
+    const settings = this.getCooldownSettings(guildId);
+    const warnings: string[] = [];
+
+    if (settings.enabled && settings.maxNextSeverity >= settings.afterSeverity) {
+      warnings.push(
+        formatTemplate(this.messages.settingsCooldownWarnMaxNext, {
+          max: settings.maxNextSeverity,
+          after: settings.afterSeverity,
+        }),
+      );
+    }
+
+    if (
+      settings.enabled &&
+      this.table.every((e) => e.severity > settings.maxNextSeverity)
+    ) {
+      warnings.push(
+        formatTemplate(this.messages.settingsCooldownWarnEmptyStartPool, {
+          max: settings.maxNextSeverity,
+        }),
+      );
+    }
+
+    return { settings, warnings };
+  }
+
+  /**
+   * Clear guild settings by scope. Schedule clears reschedule; cooldown-only does not.
+   */
+  clearSettingsOverrides(
+    guildId: string,
+    scope: SettingsClearScope,
+  ): { hadOverride: boolean; next: Date | null } {
+    let hadOverride = false;
+    let next: Date | null = null;
+
+    if (scope === 'schedule' || scope === 'all') {
+      const cleared = dbQueries.clearScheduleOverrides(this.db, guildId);
+      hadOverride = hadOverride || cleared;
+      next = this.scheduleNextUpdate(guildId);
+    }
+
+    if (scope === 'cooldown' || scope === 'all') {
+      const cleared = dbQueries.clearCooldownOverrides(this.db, guildId);
+      hadOverride = hadOverride || cleared;
+    }
+
+    return { hadOverride, next };
+  }
+
   rollWeather(guildId: string): WeatherResult {
     const state = dbQueries.getWorldState(this.db, guildId);
     const currentEntry = state?.current_weather_type
@@ -631,13 +778,15 @@ export class WeatherService {
     const now = new Date();
     const dial = this.readActiveDial(state, now);
     const magicalDial = this.readActiveMagicalDial(state, now);
+    const cooldown = this.resolveCooldownSettings(state);
 
     const { pool } = resolveRollPool(
       this.table,
       currentSeverity,
-      this.rules,
+      this.toRollRules(cooldown),
       dial ? { min: dial.min, max: dial.max } : null,
       magicalDial?.mode ?? null,
+      cooldown.enabled,
     );
     const { entry, roll } = pickWeightedFromPool(pool);
 

@@ -134,6 +134,7 @@ export function filterDialIntersection(
  * 2) Optional DM magical dial (only / none)
  * 3) After high severity, only milder entries within that base; if empty, raise the
  *    ceiling until at least one entry matches (within the base set).
+ *    Skipped entirely when `cooldownEnabled` is false.
  */
 export function resolveRollPool(
   table: WeatherTableEntry[],
@@ -141,6 +142,7 @@ export function resolveRollPool(
   rules: WeatherRules,
   dial: { min: number; max: number } | null = null,
   magicalMode: MagicalMode | null = null,
+  cooldownEnabled = true,
 ): { pool: WeatherTableEntry[]; cooldownActive: boolean; effectiveMaxSeverity: number | null } {
   const base = filterDialIntersection(table, dial, magicalMode);
 
@@ -148,7 +150,11 @@ export function resolveRollPool(
     throw new Error('EMPTY_DIAL_POOL');
   }
 
-  if (currentSeverity === null || currentSeverity < rules.cooldownAfterSeverity) {
+  if (
+    !cooldownEnabled ||
+    currentSeverity === null ||
+    currentSeverity < rules.cooldownAfterSeverity
+  ) {
     return { pool: base, cooldownActive: false, effectiveMaxSeverity: null };
   }
 

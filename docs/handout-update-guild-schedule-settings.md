@@ -23,7 +23,7 @@ Allowlist only (zelfde als andere admin weather-commands).
 | `/weather settings show` | Toont effectief interval + postvenster (guild of `.env`) |
 | `/weather settings interval <min> <max>` | Guild-fallback interval in **minuten** (als het current type geen `duration*Hours` heeft). Plant meteen opnieuw. |
 | `/weather settings window <enabled> [start] [end]` | Actief postvenster aan/uit; optioneel `HH:mm` start/eind (zelfde dag). Timezone blijft `WEATHER_TIMEZONE` uit `.env`. Plant meteen opnieuw. |
-| `/weather settings clear` | Wis guild-overrides → terug naar `.env`-defaults; plant opnieuw |
+| `/weather settings clear scope:schedule\|cooldown\|all` | Wis guild-overrides per scope → terug naar defaults; schedule/all plant opnieuw |
 
 Voorbeelden:
 
@@ -31,6 +31,7 @@ Voorbeelden:
 - Productie-achtig: `/weather settings interval min:360 max:1080`
 - Venster: `/weather settings window enabled:True start:06:00 end:23:00`
 - 24/7: `/weather settings window enabled:False`
+- Alles resetten: `/weather settings clear scope:all` (of alleen schedule: `scope:schedule`)
 
 ---
 
