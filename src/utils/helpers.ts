@@ -113,6 +113,45 @@ export function formatTemplate(
   });
 }
 
+/** Single duration in Dutch: 90 → "90 minuten", 360 → "6 uur", 1440 → "1 dag". */
+export function formatMinutesNl(minutes: number): string {
+  if (!Number.isFinite(minutes) || minutes < 0) return String(minutes);
+
+  const days = minutes / (24 * 60);
+  if (Number.isInteger(days) && days >= 1) {
+    return days === 1 ? '1 dag' : `${days} dagen`;
+  }
+
+  const hours = minutes / 60;
+  if (Number.isInteger(hours) && hours >= 1) {
+    return hours === 1 ? '1 uur' : `${hours} uur`;
+  }
+
+  return minutes === 1 ? '1 minuut' : `${minutes} minuten`;
+}
+
+/** Range in Dutch: 360–1080 → "6–18 uur", 1–5 → "1–5 minuten". */
+export function formatMinutesRangeNl(min: number, max: number): string {
+  if (min === max) return formatMinutesNl(min);
+
+  const bothWholeDays =
+    min >= 24 * 60 && max >= 24 * 60 && min % (24 * 60) === 0 && max % (24 * 60) === 0;
+  if (bothWholeDays) {
+    return `${min / (24 * 60)}–${max / (24 * 60)} dagen`;
+  }
+
+  const bothWholeHours = min >= 60 && max >= 60 && min % 60 === 0 && max % 60 === 0;
+  if (bothWholeHours) {
+    return `${min / 60}–${max / 60} uur`;
+  }
+
+  if (min < 60 && max < 60) {
+    return `${min}–${max} minuten`;
+  }
+
+  return `${formatMinutesNl(min)} – ${formatMinutesNl(max)}`;
+}
+
 /** Formats a YYYY-MM-DD Gregorian date for Dutch display, e.g. "29 juli 2026". */
 export function formatGregorianNl(isoDate: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate.trim());
@@ -130,6 +169,13 @@ export function formatGregorianNl(isoDate: string): string {
     year: 'numeric',
     timeZone: 'UTC',
   }).format(date);
+}
+
+/** Dutch label for Discord magical dial mode (`only` / `none`). */
+export function formatMagicalModeNl(mode: string): string {
+  if (mode === 'only') return 'alleen magisch';
+  if (mode === 'none') return 'geen magisch';
+  return mode;
 }
 
 export function isPaused(pausedUntil: string | null, now = new Date()): boolean {

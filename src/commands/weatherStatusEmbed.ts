@@ -5,7 +5,7 @@ import type {
   GuildScheduleSettings,
   WeatherAdminStatus,
 } from '../services/WeatherService.js';
-import { formatTemplate } from '../utils/helpers.js';
+import { formatMinutesRangeNl, formatMagicalModeNl, formatTemplate } from '../utils/helpers.js';
 
 export interface ScheduleDisplayInput {
   updateMinMinutes: number;
@@ -18,6 +18,10 @@ export interface ScheduleDisplayInput {
   windowEnd: string | null;
 }
 
+function sourceLabel(fromGuild: boolean): string {
+  return fromGuild ? 'deze server' : 'standaard';
+}
+
 /** Interval + active window lines shared by `/weather status` and `/weather settings show`. */
 export function formatScheduleSettingLines(
   messages: Messages,
@@ -25,9 +29,8 @@ export function formatScheduleSettingLines(
 ): string[] {
   const lines = [
     formatTemplate(messages.statusInterval, {
-      min: settings.updateMinMinutes,
-      max: settings.updateMaxMinutes,
-      source: settings.intervalFromGuild ? 'guild' : '.env',
+      range: formatMinutesRangeNl(settings.updateMinMinutes, settings.updateMaxMinutes),
+      source: sourceLabel(settings.intervalFromGuild),
     }),
   ];
 
@@ -36,13 +39,15 @@ export function formatScheduleSettingLines(
       formatTemplate(messages.statusWindowOn, {
         start: settings.windowStart,
         end: settings.windowEnd,
+        source: sourceLabel(settings.windowFromGuild),
       }),
     );
-    lines.push(
-      settings.windowFromGuild ? messages.statusWindowOverride : messages.statusWindowDefault,
-    );
   } else {
-    lines.push(messages.statusWindowOff);
+    lines.push(
+      formatTemplate(messages.statusWindowOff, {
+        source: sourceLabel(settings.windowFromGuild),
+      }),
+    );
   }
 
   return lines;
@@ -70,13 +75,13 @@ export function formatCooldownSettingLines(
       formatTemplate(messages.statusCooldownRulesOn, {
         after: cooldown.afterSeverity,
         max: cooldown.maxNextSeverity,
-        source: cooldown.fromGuild ? 'guild' : 'content',
+        source: sourceLabel(cooldown.fromGuild),
       }),
     ];
   }
   return [
     formatTemplate(messages.statusCooldownRulesOff, {
-      source: cooldown.fromGuild ? 'guild' : 'content',
+      source: sourceLabel(cooldown.fromGuild),
     }),
   ];
 }
@@ -116,16 +121,19 @@ export function buildStatusEmbed(messages: Messages, status: WeatherAdminStatus)
         formatTemplate(
           status.intervalFromGuild ? messages.statusDurationGuild : messages.statusDurationEnv,
           {
-            min: status.updateMinMinutes,
-            max: status.updateMaxMinutes,
+            range: formatMinutesRangeNl(status.updateMinMinutes, status.updateMaxMinutes),
           },
         ),
       );
     } else if (status.usesEnvDuration === false) {
+      const min = status.durationMinMinutes;
+      const max = status.durationMaxMinutes;
       currentLines.push(
         formatTemplate(messages.statusDurationType, {
-          min: status.durationMinMinutes ?? '?',
-          max: status.durationMaxMinutes ?? '?',
+          range:
+            min != null && max != null
+              ? formatMinutesRangeNl(min, max)
+              : `${min ?? '?'}–${max ?? '?'}`,
         }),
       );
     }
@@ -185,7 +193,7 @@ export function buildStatusEmbed(messages: Messages, status: WeatherAdminStatus)
   ) {
     rulesLines.push(
       formatTemplate(messages.statusMagicalDialOn, {
-        mode: status.magicalDialMode,
+        mode: formatMagicalModeNl(status.magicalDialMode),
         unix: Math.floor(status.magicalDialUntil.getTime() / 1000),
       }),
     );

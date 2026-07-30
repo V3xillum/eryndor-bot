@@ -110,8 +110,6 @@ export interface Messages {
   statusInterval: string;
   statusWindowOn: string;
   statusWindowOff: string;
-  statusWindowOverride: string;
-  statusWindowDefault: string;
   settingsShowTitle: string;
   settingsIntervalSuccess: string;
   settingsWindowSuccess: string;

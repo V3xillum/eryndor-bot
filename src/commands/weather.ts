@@ -9,7 +9,7 @@ import type { SchedulerService } from '../services/SchedulerService.js';
 import { buildWeatherCard } from '../services/SchedulerService.js';
 import type { WeatherService } from '../services/WeatherService.js';
 import { parseMagicalMode } from '../content/loader.js';
-import { formatTemplate, parseDuration } from '../utils/helpers.js';
+import { formatMagicalModeNl, formatMinutesRangeNl, formatTemplate, parseDuration } from '../utils/helpers.js';
 import {
   buildStatusEmbed,
   formatCooldownSettingLines,
@@ -587,7 +587,7 @@ async function handleMagicalSet(
     const until = weather.setMagicalDial(interaction.guildId!, mode, ms);
     await interaction.reply({
       content: formatTemplate(weather.messages.magicalSetSuccess, {
-        mode,
+        mode: formatMagicalModeNl(mode),
         unix: Math.floor(until.getTime() / 1000),
       }),
       ephemeral: true,
@@ -667,8 +667,7 @@ async function handleSettingsInterval(
     const next = weather.setUpdateInterval(interaction.guildId!, min, max);
     await interaction.reply({
       content: formatTemplate(weather.messages.settingsIntervalSuccess, {
-        min,
-        max,
+        range: formatMinutesRangeNl(min, max),
         unix: Math.floor(next.getTime() / 1000),
       }),
       ephemeral: true,
