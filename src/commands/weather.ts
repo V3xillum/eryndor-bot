@@ -13,7 +13,7 @@ import { formatTemplate, parseDuration } from '../utils/helpers.js';
 export function buildWeatherCommand(_weatherTypes: string[]) {
   return new SlashCommandBuilder()
     .setName('weather')
-    .setDescription('West Marches weather controls')
+    .setDescription('Eryndor bot weather controls')
     .addSubcommand((sub) =>
       sub
         .setName('setup')

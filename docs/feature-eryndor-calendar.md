@@ -1,6 +1,6 @@
 # Feature: Eryndor calendar commands
 
-Feature-spec voor een AI-agent die dit in **deze** Discord-bot (weather-bot) implementeert.
+Feature-spec voor een AI-agent die dit in **Eryndor bot** (deze Discord-bot) implementeert.
 
 **Status:** klaar om op te pakken in een verse agent-sessie.
 

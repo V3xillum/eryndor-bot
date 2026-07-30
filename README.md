@@ -1,6 +1,8 @@
-# Discord Weather Bot — West Marches
+# Eryndor bot
 
-Atmospheric weather updates for a West Marches D&D Discord server. The bot posts automatically on a random interval (configurable in minutes via `.env`, default 6–18h) and gives allowlisted users slash-command control during sessions.
+Discord bot for the Eryndor (West Marches) D&D server: atmospheric weather updates plus calendar commands. The bot posts weather automatically on a random interval (configurable in minutes via `.env`, default 6–18h) and gives allowlisted users slash-command control during sessions.
+
+DM handout (GitHub Pages, from `/docs`): [`docs/handout/`](./docs/handout/).
 
 ## Requirements
 

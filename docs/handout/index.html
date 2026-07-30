@@ -3,27 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Eryndor Weer — DM-handout</title>
-  <meta name="description" content="Handleiding voor Dungeon Masters: weercommando's en hoe je nieuwe weertypes aanlevert." />
+  <title>Eryndor bot — DM-handout</title>
+  <meta name="description" content="Handleiding voor Dungeon Masters: weer- en wereldcommando's van Eryndor bot, en hoe je nieuwe weertypes aanlevert." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --ink: #0c1218;
-      --ink-2: #15202b;
-      --panel: rgba(22, 34, 46, 0.72);
-      --line: rgba(180, 210, 220, 0.14);
-      --mist: #9eb6c4;
-      --text: #e7eef3;
-      --muted: #9aacb8;
+      --ink: #0b0f14;
+      --panel: rgba(20, 28, 36, 0.78);
+      --line: rgba(210, 190, 150, 0.16);
+      --mist: #a8b7c2;
+      --text: #eef2f5;
+      --muted: #8f9eaa;
       --accent: #6db3a0;
-      --accent-2: #d4b16a;
-      --danger: #d4836a;
-      --ok: #7ec48a;
-      --radius: 14px;
-      --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
-      --font-display: "Fraunces", Georgia, serif;
+      --parchment: #c9a86a;
+      --parchment-soft: rgba(201, 168, 106, 0.14);
+      --radius: 16px;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
+      --font-display: "Cinzel", Georgia, serif;
       --font-body: "Figtree", system-ui, sans-serif;
     }
 
@@ -35,9 +33,9 @@
       font-family: var(--font-body);
       color: var(--text);
       background:
-        radial-gradient(1200px 600px at 12% -10%, rgba(109, 179, 160, 0.18), transparent 55%),
-        radial-gradient(900px 500px at 90% 0%, rgba(212, 177, 106, 0.12), transparent 50%),
-        linear-gradient(180deg, #0a1016 0%, #101820 40%, #0c1218 100%);
+        radial-gradient(900px 520px at 50% -8%, rgba(201, 168, 106, 0.16), transparent 55%),
+        radial-gradient(1000px 480px at 8% 18%, rgba(109, 179, 160, 0.12), transparent 50%),
+        linear-gradient(180deg, #080c11 0%, #101820 45%, #0b0f14 100%);
       line-height: 1.55;
     }
 
@@ -46,57 +44,87 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      opacity: 0.35;
+      opacity: 0.28;
       background-image:
         repeating-linear-gradient(
-          -12deg,
+          -14deg,
           transparent 0,
-          transparent 11px,
-          rgba(255, 255, 255, 0.012) 11px,
-          rgba(255, 255, 255, 0.012) 12px
+          transparent 12px,
+          rgba(255, 255, 255, 0.012) 12px,
+          rgba(255, 255, 255, 0.012) 13px
         );
-      animation: drift 28s linear infinite;
+      animation: drift 32s linear infinite;
     }
 
     @keyframes drift {
       from { transform: translateY(0); }
-      to { transform: translateY(-24px); }
+      to { transform: translateY(-28px); }
     }
 
     @keyframes rise {
-      from { opacity: 0; transform: translateY(12px); }
+      from { opacity: 0; transform: translateY(14px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes softGlow {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(201, 168, 106, 0.35), 0 18px 40px rgba(0, 0, 0, 0.35); }
+      50% { box-shadow: 0 0 0 1px rgba(201, 168, 106, 0.55), 0 22px 48px rgba(201, 168, 106, 0.12); }
     }
 
     .wrap {
       width: min(980px, calc(100% - 2rem));
       margin: 0 auto;
-      padding: 2.5rem 0 4rem;
+      padding: 2rem 0 4rem;
       position: relative;
       z-index: 1;
     }
 
     .hero {
       text-align: center;
-      padding: 2.4rem 1rem 2rem;
+      padding: 1.5rem 1rem 1.6rem;
       animation: rise 0.7s ease both;
+    }
+
+    .logo-frame {
+      width: min(220px, 46vw);
+      aspect-ratio: 1;
+      margin: 0 auto 1.15rem;
+      border-radius: 18px;
+      overflow: hidden;
+      animation: softGlow 5.5s ease-in-out infinite;
+      transform: translateZ(0);
+    }
+
+    .logo-frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .hero-brand {
       font-family: var(--font-display);
-      font-size: clamp(2.4rem, 6vw, 3.6rem);
+      font-size: clamp(2rem, 5.2vw, 3rem);
       font-weight: 700;
-      letter-spacing: -0.02em;
+      letter-spacing: 0.04em;
       margin: 0;
-      background: linear-gradient(120deg, #eef6f8 10%, var(--accent) 55%, var(--accent-2) 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      color: #f3e7cf;
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+    }
+
+    .hero-brand span {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.42em;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      color: var(--parchment);
+      text-transform: uppercase;
     }
 
     .hero p {
-      margin: 0.85rem auto 0;
-      max-width: 34rem;
+      margin: 0.9rem auto 0;
+      max-width: 36rem;
       color: var(--mist);
       font-size: 1.05rem;
     }
@@ -106,14 +134,14 @@
       flex-wrap: wrap;
       gap: 0.5rem;
       justify-content: center;
-      margin: 1.75rem 0 1.5rem;
-      animation: rise 0.8s ease both;
+      margin: 1.5rem 0 1.35rem;
+      animation: rise 0.85s ease both;
     }
 
     .nav button {
       appearance: none;
       border: 1px solid var(--line);
-      background: rgba(16, 24, 34, 0.7);
+      background: rgba(14, 20, 28, 0.75);
       color: var(--mist);
       font: 600 0.92rem var(--font-body);
       padding: 0.65rem 1rem;
@@ -122,11 +150,15 @@
       transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
     }
 
-    .nav button:hover { color: var(--text); border-color: rgba(109, 179, 160, 0.45); }
+    .nav button:hover {
+      color: var(--text);
+      border-color: rgba(201, 168, 106, 0.45);
+    }
+
     .nav button[aria-selected="true"] {
-      background: rgba(109, 179, 160, 0.18);
-      color: #dff7ef;
-      border-color: rgba(109, 179, 160, 0.55);
+      background: var(--parchment-soft);
+      color: #f6ecd7;
+      border-color: rgba(201, 168, 106, 0.55);
       transform: translateY(-1px);
     }
 
@@ -136,8 +168,8 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 1.35rem 1.25rem 1.5rem;
-      backdrop-filter: blur(10px);
+      padding: 1.4rem 1.3rem 1.55rem;
+      backdrop-filter: blur(12px);
       animation: rise 0.45s ease both;
     }
 
@@ -145,9 +177,11 @@
 
     h2 {
       font-family: var(--font-display);
-      font-size: 1.55rem;
+      font-size: 1.4rem;
+      letter-spacing: 0.03em;
       margin: 0 0 0.35rem;
       font-weight: 700;
+      color: #f0e4cc;
     }
 
     .lead {
@@ -165,13 +199,19 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 1rem;
-      background: rgba(8, 14, 20, 0.35);
+      background: rgba(8, 12, 18, 0.4);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .tile:hover {
+      border-color: rgba(201, 168, 106, 0.35);
+      transform: translateY(-2px);
     }
 
     .tile h3 {
       margin: 0 0 0.4rem;
       font-size: 1rem;
-      color: var(--accent);
+      color: var(--parchment);
     }
 
     .tile p { margin: 0; color: var(--mist); font-size: 0.95rem; }
@@ -190,7 +230,7 @@
     .form-grid textarea {
       width: 100%;
       border: 1px solid var(--line);
-      background: rgba(8, 14, 20, 0.55);
+      background: rgba(8, 12, 18, 0.55);
       color: var(--text);
       border-radius: 10px;
       padding: 0.7rem 0.85rem;
@@ -205,11 +245,15 @@
       border-radius: 12px;
       padding: 0.95rem 1rem;
       margin-bottom: 0.65rem;
-      background: rgba(8, 14, 20, 0.28);
+      background: rgba(8, 12, 18, 0.3);
       transition: border-color 0.2s, background 0.2s;
     }
 
-    .cmd:hover { border-color: rgba(109, 179, 160, 0.35); background: rgba(8, 14, 20, 0.42); }
+    .cmd:hover {
+      border-color: rgba(201, 168, 106, 0.35);
+      background: rgba(8, 12, 18, 0.45);
+    }
+
     .cmd.hidden { display: none; }
 
     .cmd-top {
@@ -220,13 +264,16 @@
       justify-content: space-between;
     }
 
-    .cmd code {
+    .cmd code,
+    .tile code,
+    .note code,
+    footer code {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 0.92rem;
-      color: #dff4ec;
-      background: rgba(109, 179, 160, 0.12);
-      border: 1px solid rgba(109, 179, 160, 0.25);
-      padding: 0.18rem 0.45rem;
+      font-size: 0.9rem;
+      color: #f3e7cf;
+      background: var(--parchment-soft);
+      border: 1px solid rgba(201, 168, 106, 0.28);
+      padding: 0.16rem 0.42rem;
       border-radius: 7px;
     }
 
@@ -242,14 +289,14 @@
     }
 
     .badge.everyone { color: #b7e0c8; border-color: rgba(126, 196, 138, 0.35); }
-    .badge.dm { color: #efd7a4; border-color: rgba(212, 177, 106, 0.4); }
+    .badge.dm { color: #efd7a4; border-color: rgba(201, 168, 106, 0.45); }
 
     .cmd p { margin: 0.55rem 0 0; color: var(--mist); }
 
     .when {
       margin-top: 0.35rem;
       font-size: 0.9rem;
-      color: var(--accent-2);
+      color: var(--parchment);
     }
 
     .severity-scale {
@@ -266,7 +313,7 @@
       border: 1px solid var(--line);
       font-size: 0.82rem;
       color: var(--mist);
-      background: rgba(8, 14, 20, 0.35);
+      background: rgba(8, 12, 18, 0.35);
     }
 
     .sev strong {
@@ -278,7 +325,7 @@
 
     .sev[data-n="1"] { border-color: rgba(126, 196, 138, 0.35); }
     .sev[data-n="2"] { border-color: rgba(109, 179, 160, 0.4); }
-    .sev[data-n="3"] { border-color: rgba(212, 177, 106, 0.4); }
+    .sev[data-n="3"] { border-color: rgba(201, 168, 106, 0.4); }
     .sev[data-n="4"] { border-color: rgba(212, 131, 106, 0.45); }
     .sev[data-n="5"] { border-color: rgba(212, 106, 106, 0.5); background: rgba(80, 28, 28, 0.2); }
 
@@ -293,7 +340,7 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 0.85rem;
-      background: rgba(8, 14, 20, 0.35);
+      background: rgba(8, 12, 18, 0.35);
     }
 
     .type-card .name {
@@ -354,9 +401,9 @@
 
     .btn {
       appearance: none;
-      border: 1px solid rgba(109, 179, 160, 0.45);
-      background: rgba(109, 179, 160, 0.18);
-      color: #e8fff7;
+      border: 1px solid rgba(201, 168, 106, 0.5);
+      background: rgba(201, 168, 106, 0.16);
+      color: #f6ecd7;
       font: 700 0.95rem var(--font-body);
       padding: 0.7rem 1rem;
       border-radius: 10px;
@@ -364,7 +411,7 @@
       transition: transform 0.15s, background 0.2s;
     }
 
-    .btn:hover { background: rgba(109, 179, 160, 0.28); transform: translateY(-1px); }
+    .btn:hover { background: rgba(201, 168, 106, 0.28); transform: translateY(-1px); }
     .btn.secondary {
       background: transparent;
       border-color: var(--line);
@@ -374,10 +421,10 @@
 
     .output {
       margin-top: 1rem;
-      border: 1px dashed rgba(212, 177, 106, 0.4);
+      border: 1px dashed rgba(201, 168, 106, 0.4);
       border-radius: 12px;
       padding: 1rem;
-      background: rgba(8, 14, 20, 0.45);
+      background: rgba(8, 12, 18, 0.45);
       white-space: pre-wrap;
       font-size: 0.95rem;
       color: #f0e6c8;
@@ -389,9 +436,9 @@
       left: 50%;
       bottom: 1.25rem;
       transform: translateX(-50%) translateY(120%);
-      background: #163229;
-      color: #dff7ef;
-      border: 1px solid rgba(109, 179, 160, 0.5);
+      background: #2a2318;
+      color: #f6ecd7;
+      border: 1px solid rgba(201, 168, 106, 0.5);
       padding: 0.7rem 1rem;
       border-radius: 999px;
       font-weight: 600;
@@ -408,8 +455,8 @@
     .note {
       margin-top: 1rem;
       padding: 0.85rem 1rem;
-      border-left: 3px solid var(--accent);
-      background: rgba(109, 179, 160, 0.08);
+      border-left: 3px solid var(--parchment);
+      background: var(--parchment-soft);
       color: var(--mist);
       border-radius: 0 10px 10px 0;
       font-size: 0.92rem;
@@ -425,14 +472,18 @@
     @media (max-width: 560px) {
       .severity-scale { grid-template-columns: repeat(2, 1fr); }
       .wrap { width: min(980px, calc(100% - 1.25rem)); }
+      .logo-frame { width: min(180px, 52vw); }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header class="hero">
-      <h1 class="hero-brand">Eryndor Weer</h1>
-      <p>DM-handout: hoe de Discord-weerbot werkt, welke slash-commands je gebruikt, en wat je moet aanleveren voor een nieuw weertype.</p>
+      <div class="logo-frame">
+        <img src="eryndor-logo.jpg" alt="Eryndor Campaign" width="220" height="220" />
+      </div>
+      <h1 class="hero-brand">Eryndor bot<span>DM-handout</span></h1>
+      <p>Hoe de Discord-bot werkt: slash-commands voor weer en kalender, en wat je moet aanleveren voor een nieuw weertype.</p>
     </header>
 
     <nav class="nav" role="tablist" aria-label="Handout secties">
@@ -444,16 +495,16 @@
 
     <section id="overzicht" class="panel active" role="tabpanel">
       <h2>Wat doet de bot?</h2>
-      <p class="lead">De bot post automatisch weerkaarten (alleen een plaatje) in jullie weerkanaal. Tussen updates door dobbelt hij zelf — jij grijpt in wanneer de sessie dat vraagt.</p>
+      <p class="lead">Eryndor bot post automatisch weerkaarten (alleen een plaatje) in jullie weerkanaal. Tussen updates door dobbelt hij zelf — jij grijpt in wanneer de sessie dat vraagt.</p>
 
       <div class="grid-2">
         <article class="tile">
           <h3>Automatisch</h3>
-          <p>Op een willekeurig interval verschijnt nieuw weer. Zwaar weer blijft meestal korter. Na een zware storm volgt eerst milder weer (afkoeling).</p>
+          <p>De bot dobbelt zelf nieuw weer volgens het standaard ritme (zie hieronder). Zwaar weer blijft meestal korter als daar een eigen duur voor staat. Na een zware storm volgt eerst milder weer (afkoeling).</p>
         </article>
         <article class="tile">
           <h3>Jij als DM</h3>
-          <p>Dobbel handmatig, forceer een type, pauzeer updates, of zet tijdelijk een “draaiknop” zodat alleen gevaarlijk of alleen magisch weer kan vallen.</p>
+          <p>Dobbel handmatig, forceer een type, pauzeer updates, of zet tijdelijk een “draaiknop”: alleen zwaar of juist mild weer, en/of alleen magisch of juist géén magisch weer.</p>
         </article>
         <article class="tile">
           <h3>Spelers</h3>
@@ -478,7 +529,13 @@
       <h2>Huidige weertypes</h2>
       <p class="lead">Wat er nu in de tabel staat (d100-kans, zwaarte, magisch, optionele duur).</p>
       <div class="types" id="typeGrid"></div>
-      <p class="note">Duur in uren geldt alleen als die is ingevuld. Anders gebruikt de bot het globale ritme. Jouw handmatige duur (bij set/schedule) wint altijd.</p>
+      <div class="note">
+        <p style="margin:0 0 0.75rem"><strong>Standaard ritme</strong><br />
+        Hoe lang het duurt tot de bot zelf opnieuw dobbelt. Nu staat dat op een willekeurige tijd tussen <strong>6 en 18 uur</strong>. Heb je bij set of schedule zelf een duur gekozen, of heeft dit weertype een eigen duur in de tabel? Dan geldt die — niet dit ritme.</p>
+        <p style="margin:0 0 0.75rem"><strong>Berichtenvenster</strong><br />
+        Automatische posts gebeuren alleen tussen <strong>06:00 en 23:00</strong> (Nederlandse tijd). Valt de geplande update daarbuiten, dan wacht de bot tot het venster weer open is. Handmatige commands (roll, set) werken altijd.</p>
+        <p style="margin:0">Beide kun je <strong>op verzoek</strong> laten aanpassen — zeg het even tegen wie de bot beheert.</p>
+      </div>
     </section>
 
     <section id="commands" class="panel" role="tabpanel" hidden>
@@ -505,7 +562,7 @@
         </article>
         <article class="tile">
           <h3>Nu dit weer</h3>
-          <p><code>/weather set storm</code> of een d100-waarde. Optioneel: <code>duration: 2h</code> zodat het zo lang blijft.</p>
+          <p><code>/weather set storm</code> — of vul je eigen d100 in. Optioneel: <code>duration: 2h</code>. Ideaal als jij de dobbelsteen wilt, of dit weer gewoon bij de scene past.</p>
         </article>
         <article class="tile">
           <h3>Dobbel live</h3>
@@ -514,6 +571,10 @@
         <article class="tile">
           <h3>Gevaarlijke avond</h3>
           <p><code>/weather severity set</code> min 4 max 5 duration 3h — rolls blijven zwaar tot de dial verloopt.</p>
+        </article>
+        <article class="tile">
+          <h3>Rustige trek</h3>
+          <p><code>/weather severity set</code> min 1 max 2 — alleen mild weer. Of magical <strong>none</strong> voor géén magisch weer.</p>
         </article>
         <article class="tile">
           <h3>Alleen magie</h3>
@@ -529,77 +590,42 @@
 
     <section id="aanleveren" class="panel" role="tabpanel" hidden>
       <h2>Nieuw weertype aanleveren</h2>
-      <p class="lead">Vul dit in en stuur het naar wie de content bijwerkt. Geen code nodig — wel duidelijke keuzes.</p>
+      <p class="lead">Wil je een nieuw weertype in de bot? Lever onderstaande keuzes + plaatje aan bij wie de content bijwerkt. Discord toont alleen de weerkaart — geen aparte tekst.</p>
 
-      <form id="briefForm" class="form-grid" autocomplete="off">
-        <div class="field">
-          <label for="wName">Naam van het weer</label>
-          <input id="wName" name="name" required placeholder="bijv. Ashen Fog" />
-        </div>
-        <div class="field">
-          <label for="wSev">Zwaarte (1–5)</label>
-          <select id="wSev" name="severity">
-            <option value="1">1 — Mild</option>
-            <option value="2" selected>2 — Merkbaar</option>
-            <option value="3">3 — Lastig</option>
-            <option value="4">4 — Gevaarlijk</option>
-            <option value="5">5 — Catastrofaal</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="wMagic">Magisch?</label>
-          <select id="wMagic" name="magical">
-            <option value="false">Nee — gewoon weer</option>
-            <option value="true">Ja — magisch / arcane / clockwork</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="wChance">Hoe vaak mag het vallen?</label>
-          <input id="wChance" name="chance" placeholder="bijv. zeldzaam, ~5% op d100, of ‘tussen storm en arcane’" />
-        </div>
-        <div class="field">
-          <label for="wDurMin">Min. duur (uren, optioneel)</label>
-          <input id="wDurMin" name="durMin" type="number" min="1" step="1" placeholder="leeg = globaal ritme" />
-        </div>
-        <div class="field">
-          <label for="wDurMax">Max. duur (uren, optioneel)</label>
-          <input id="wDurMax" name="durMax" type="number" min="1" step="1" placeholder="leeg = globaal ritme" />
-        </div>
-        <div class="field full">
-          <label for="wImage">Plaatje</label>
-          <input id="wImage" name="image" placeholder="bestandsnaam of link, bijv. ashen_fog.png — kaart voor Discord" />
-        </div>
-        <div class="field full">
-          <label for="wFlavor">Sfeer / wat merken spelers?</label>
-          <textarea id="wFlavor" name="flavor" rows="3" placeholder="Korte beschrijving voor de tafel (niet voor Discord — Discord toont alleen het plaatje)."></textarea>
-        </div>
-        <div class="field full">
-          <span class="label-like" style="font-size:0.85rem;color:var(--mist);font-weight:600">Checklist</span>
-          <div class="checks">
-            <label><input type="checkbox" name="hasArt" /> Kunst/plaatje klaar</label>
-            <label><input type="checkbox" name="hasSev" /> Zwaarte gekozen</label>
-            <label><input type="checkbox" name="hasChance" /> Kans / plek op d100 besproken</label>
-            <label><input type="checkbox" name="hasDur" /> Duur bewust gekozen of “standaard ok”</label>
-          </div>
-        </div>
-      </form>
-
-      <div class="actions">
-        <button type="button" class="btn" id="genBrief">Maak briefing</button>
-        <button type="button" class="btn secondary" id="copyBrief">Kopieer</button>
-        <button type="button" class="btn secondary" id="resetBrief">Reset</button>
+      <div class="grid-2">
+        <article class="tile">
+          <h3>1. Naam</h3>
+          <p>Hoe het type heet in de bot (bijv. <code>storm</code> of <code>Clockwork clouds</code>). Dit zie je terug in status en bij <code>/weather set</code>.</p>
+        </article>
+        <article class="tile">
+          <h3>2. Plaatje</h3>
+          <p>De Discord-weerkaart. Hier zit de sfeer: wat spelers zien, staat op de afbeelding. Lever een PNG (of vergelijkbaar) aan.</p>
+        </article>
+        <article class="tile">
+          <h3>3. Zwaarte (1–5)</h3>
+          <p>Hoe heftig is dit weer? Bepaalt afkoeling na zwaar weer en of severity-draaiknoppen het kunnen selecteren.</p>
+        </article>
+        <article class="tile">
+          <h3>4. Magisch?</h3>
+          <p>Ja of nee. Nodig voor de magical-draaiknop (alleen magisch / juist géén magisch).</p>
+        </article>
+        <article class="tile">
+          <h3>5. Kans op de d100</h3>
+          <p>Hoe vaak mag het vallen? Bijv. “zeldzaam”, “ongeveer 5%”, of “vlak na storm”. Wordt omgezet naar een min–max bereik op de tabel.</p>
+        </article>
+        <article class="tile">
+          <h3>6. Duur (optioneel)</h3>
+          <p>Hoe lang dit weer ongeveer mag blijven (min–max uren). Laat je dit leeg, dan geldt het <strong>standaard ritme</strong> (nu 6–18 uur). Handig voor kort, intens weer.</p>
+        </article>
       </div>
-      <pre class="output" id="briefOut" aria-live="polite">Vul het formulier in en klik op “Maak briefing”.</pre>
+
       <p class="note">
-        Wat er onder de motorkap nodig is (voor de content-persoon): naam, d100-bereik (min–max), plaatje, zwaarte, magisch ja/nee,
-        en optioneel min/max uren duur. Jij levert de keuzes; iemand anders zet het in de weather-tabel.
+        Geen sfeertekst aanleveren: die zit voorlopig in het plaatje. Extra beschrijvingstekst in Discord zou later ontwikkeling kosten.
       </p>
     </section>
 
-    <footer>Eryndor Weer · DM-handout · bereikbaar via GitHub Pages op <code>/handout/</code></footer>
+    <footer>Eryndor bot · DM-handout · GitHub Pages: <code>/handout/</code></footer>
   </div>
-
-  <div class="toast" id="toast" role="status">Gekopieerd</div>
 
   <script>
     const WEATHER_TYPES = [
@@ -659,8 +685,8 @@
       {
         cmd: "/weather set",
         who: "dm",
-        what: "Zet weer op een type of d100-waarde (1–100) en post. Optionele duration (30m, 2h, 1d). Slaat filters over.",
-        when: "Story-gestuurd weer forceren.",
+        what: "Kies zelf het weer voor de sessie: typ een weertype (bijv. storm) of gooi zelf een d100 en vul die score in. Optioneel hoe lang het blijft (30m, 2h, 1d). Bypass’t severity- en magical-draaiknoppen — jij hebt het laatste woord.",
+        when: "Als je zelf wilt dobbelen, of gewoon dit weer wilt omdat het bij de scene past.",
       },
       {
         cmd: "/weather schedule",
@@ -683,7 +709,7 @@
       {
         cmd: "/weather severity set",
         who: "dm",
-        what: "Tijdelijke draaiknop: rolls alleen binnen min–max zwaarte, voor een duur.",
+        what: "Tijdelijke draaiknop: rolls alleen binnen min–max zwaarte (mild tot catastrofaal), voor een duur.",
         when: "Escalatie-avond of juist een rustige trek.",
       },
       {
@@ -708,14 +734,6 @@
 
     const panels = document.querySelectorAll(".panel");
     const tabs = document.querySelectorAll(".nav button");
-    const toast = document.getElementById("toast");
-
-    function showToast(msg) {
-      toast.textContent = msg;
-      toast.classList.add("show");
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => toast.classList.remove("show"), 1600);
-    }
 
     tabs.forEach((tab) => {
       tab.addEventListener("click", () => {
@@ -734,7 +752,7 @@
       const dur =
         t.durationMinHours != null
           ? `${t.durationMinHours}–${t.durationMaxHours}u`
-          : "standaard ritme";
+          : "standaard (6–18u)";
       return `
         <article class="type-card">
           <div class="name">${t.type}</div>
@@ -771,56 +789,6 @@
     document.getElementById("cmdSearch").addEventListener("input", renderCommands);
     document.getElementById("cmdWho").addEventListener("change", renderCommands);
     renderCommands();
-
-    function buildBrief() {
-      const f = document.getElementById("briefForm");
-      const data = Object.fromEntries(new FormData(f).entries());
-      const checks = [...f.querySelectorAll('input[type="checkbox"]')]
-        .map((c) => `${c.checked ? "✓" : "○"} ${c.parentElement.textContent.trim()}`)
-        .join("\n");
-      const magical = data.magical === "true" ? "ja" : "nee";
-      const dur =
-        data.durMin || data.durMax
-          ? `${data.durMin || "?"}–${data.durMax || "?"} uur`
-          : "standaard ritme (geen speciale duur)";
-      return [
-        "Weertype-briefing (Eryndor Weer)",
-        "===============================",
-        `Naam: ${data.name || "(nog leeg)"}`,
-        `Zwaarte: ${data.severity}`,
-        `Magisch: ${magical}`,
-        `Kans / plek op d100: ${data.chance || "(nog invullen)"}`,
-        `Duur: ${dur}`,
-        `Plaatje: ${data.image || "(nog aanleveren)"}`,
-        "",
-        "Sfeer:",
-        data.flavor || "(nog geen beschrijving)",
-        "",
-        "Checklist:",
-        checks,
-      ].join("\n");
-    }
-
-    document.getElementById("genBrief").addEventListener("click", () => {
-      document.getElementById("briefOut").textContent = buildBrief();
-      showToast("Briefing gemaakt");
-    });
-
-    document.getElementById("copyBrief").addEventListener("click", async () => {
-      const text = document.getElementById("briefOut").textContent;
-      try {
-        await navigator.clipboard.writeText(text);
-        showToast("Gekopieerd");
-      } catch {
-        showToast("Kopiëren mislukt — selecteer handmatig");
-      }
-    });
-
-    document.getElementById("resetBrief").addEventListener("click", () => {
-      document.getElementById("briefForm").reset();
-      document.getElementById("briefOut").textContent =
-        'Vul het formulier in en klik op “Maak briefing”.';
-    });
   </script>
 </body>
 </html>

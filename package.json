@@ -1,7 +1,7 @@
 {
   "name": "weather-bot",
   "version": "1.0.0",
-  "description": "Discord weather bot for a West Marches D&D server",
+  "description": "Eryndor bot — Discord weather & calendar for a West Marches D&D server",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
