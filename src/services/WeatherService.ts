@@ -1,5 +1,4 @@
 import type Database from 'better-sqlite3';
-import { EmbedBuilder } from 'discord.js';
 import {
   countEntriesInSeverityRange,
   countEntriesWithMagicalMode,
@@ -376,175 +375,6 @@ export class WeatherService {
     };
   }
 
-  buildStatusEmbed(status: WeatherAdminStatus): EmbedBuilder {
-    const title =
-      status.type !== null
-        ? formatTemplate(this.messages.statusEmbedTitleWithType, { type: status.type })
-        : this.messages.statusEmbedTitle;
-
-    const currentLines: string[] = [];
-    if (status.type !== null && status.severity !== null) {
-      currentLines.push(
-        formatTemplate(this.messages.statusSeverity, { severity: status.severity }),
-      );
-      if (status.magical !== null) {
-        currentLines.push(
-          formatTemplate(this.messages.statusMagical, {
-            magical: status.magical ? 'ja' : 'nee',
-          }),
-        );
-      }
-      currentLines.push(
-        formatTemplate(this.messages.statusForced, {
-          forced: status.forced ? 'ja' : 'nee',
-        }),
-      );
-      if (status.rolledAt) {
-        currentLines.push(
-          formatTemplate(this.messages.statusRolledAt, {
-            unix: Math.floor(status.rolledAt.getTime() / 1000),
-          }),
-        );
-      }
-      if (status.usesEnvDuration === true) {
-        currentLines.push(
-          formatTemplate(
-            status.intervalFromGuild
-              ? this.messages.statusDurationGuild
-              : this.messages.statusDurationEnv,
-            {
-              min: status.updateMinMinutes,
-              max: status.updateMaxMinutes,
-            },
-          ),
-        );
-      } else if (status.usesEnvDuration === false) {
-        currentLines.push(
-          formatTemplate(this.messages.statusDurationType, {
-            min: status.durationMinMinutes ?? '?',
-            max: status.durationMaxMinutes ?? '?',
-          }),
-        );
-      }
-    } else {
-      currentLines.push(this.messages.noWeatherYet);
-    }
-
-    const scheduleLines: string[] = [];
-    scheduleLines.push(
-      formatTemplate(this.messages.statusInterval, {
-        min: status.updateMinMinutes,
-        max: status.updateMaxMinutes,
-        source: status.intervalFromGuild ? 'guild' : '.env',
-      }),
-    );
-    if (status.activeWindowEnabled && status.activeWindowStart && status.activeWindowEnd) {
-      scheduleLines.push(
-        formatTemplate(this.messages.statusWindowOn, {
-          start: status.activeWindowStart,
-          end: status.activeWindowEnd,
-        }),
-      );
-      scheduleLines.push(
-        status.windowFromGuild
-          ? this.messages.statusWindowOverride
-          : this.messages.statusWindowDefault,
-      );
-    } else {
-      scheduleLines.push(this.messages.statusWindowOff);
-    }
-    if (status.pausedUntil) {
-      scheduleLines.push(
-        formatTemplate(this.messages.statusPaused, {
-          unix: Math.floor(status.pausedUntil.getTime() / 1000),
-        }),
-      );
-    }
-    if (status.dueButWaitingForWindow) {
-      scheduleLines.push(this.messages.statusWaitingWindow);
-    }
-    if (status.nextUpdateAt) {
-      scheduleLines.push(
-        formatTemplate(this.messages.statusNext, {
-          unix: Math.floor(status.nextUpdateAt.getTime() / 1000),
-        }),
-      );
-    } else if (status.type !== null) {
-      scheduleLines.push(this.messages.statusNextNone);
-    }
-    if (scheduleLines.length === 0) {
-      scheduleLines.push(this.messages.statusNextNone);
-    }
-
-    const rulesLines: string[] = [];
-    if (status.dialActive && status.dialUntil && status.dialMin !== null && status.dialMax !== null) {
-      rulesLines.push(
-        formatTemplate(this.messages.statusDialOn, {
-          min: status.dialMin,
-          max: status.dialMax,
-          unix: Math.floor(status.dialUntil.getTime() / 1000),
-        }),
-      );
-    } else {
-      rulesLines.push(this.messages.statusDialOff);
-    }
-    if (
-      status.magicalDialActive &&
-      status.magicalDialUntil &&
-      status.magicalDialMode !== null
-    ) {
-      rulesLines.push(
-        formatTemplate(this.messages.statusMagicalDialOn, {
-          mode: status.magicalDialMode,
-          unix: Math.floor(status.magicalDialUntil.getTime() / 1000),
-        }),
-      );
-    } else {
-      rulesLines.push(this.messages.statusMagicalDialOff);
-    }
-    if (status.cooldownEnabled) {
-      rulesLines.push(
-        formatTemplate(this.messages.statusCooldownRulesOn, {
-          after: status.cooldownAfterSeverity,
-          max: status.cooldownMaxNextSeverity,
-          source: status.cooldownFromGuild ? 'guild' : 'content',
-        }),
-      );
-      if (status.cooldownActive && status.effectiveMaxNextSeverity !== null) {
-        rulesLines.push(
-          formatTemplate(this.messages.statusCooldownOn, {
-            maxSeverity: status.effectiveMaxNextSeverity,
-            defaultMax: status.cooldownMaxNextSeverity,
-          }),
-        );
-      }
-    } else {
-      rulesLines.push(
-        formatTemplate(this.messages.statusCooldownRulesOff, {
-          source: status.cooldownFromGuild ? 'guild' : 'content',
-        }),
-      );
-    }
-
-    return new EmbedBuilder()
-      .setColor(severityEmbedColor(status.severity))
-      .setTitle(title)
-      .addFields(
-        {
-          name: this.messages.statusFieldCurrent,
-          value: currentLines.join('\n'),
-        },
-        {
-          name: this.messages.statusFieldSchedule,
-          value: scheduleLines.join('\n'),
-        },
-        {
-          name: this.messages.statusFieldRules,
-          value: rulesLines.join('\n'),
-        },
-      );
-  }
-
   /**
    * Temporary severity band for auto-rolls / `/weather roll`.
    * Does not change current weather; expires at `until`.
@@ -679,13 +509,6 @@ export class WeatherService {
 
     dbQueries.setActiveWindowOverride(this.db, guildId, enabled, start, end);
     return this.scheduleNextUpdate(guildId);
-  }
-
-  /** Clears guild interval + window overrides → `.env` defaults. Reschedules. */
-  clearScheduleOverrides(guildId: string): { hadOverride: boolean; next: Date } {
-    const hadOverride = dbQueries.clearScheduleOverrides(this.db, guildId);
-    const next = this.scheduleNextUpdate(guildId);
-    return { hadOverride, next };
   }
 
   /**
@@ -842,11 +665,6 @@ export class WeatherService {
     };
   }
 
-  /** @deprecated Prefer setFromInput — kept name for clarity at call sites that only force types. */
-  setWeather(guildId: string, type: string, durationMs?: number): WeatherResult {
-    return this.setFromInput(guildId, type, durationMs);
-  }
-
   private applySchedule(guildId: string, durationMs?: number): void {
     if (durationMs !== undefined) {
       this.scheduleIn(guildId, durationMs);
@@ -950,13 +768,4 @@ export class WeatherService {
       return true;
     });
   }
-}
-
-function severityEmbedColor(severity: number | null): number {
-  if (severity === null) return 0x607d8b;
-  if (severity <= 1) return 0x7cb342;
-  if (severity === 2) return 0xc0ca33;
-  if (severity === 3) return 0xffb300;
-  if (severity === 4) return 0xfb8c00;
-  return 0xe53935;
 }

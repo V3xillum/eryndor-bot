@@ -18,7 +18,7 @@ Allowlist only (aangewezen DM’s).
 | `/announce list` | Toont openstaande geplande berichten (id, kanaal, tijd). | Berichten | DM |
 | `/announce cancel` | Annuleer een openstaand bericht op id. | Berichten | DM |
 
-`when`: `30m` / `2h` / `1d`, of `YYYY-MM-DD HH:mm` (Nederlandse tijd / server-tijdzone). Geen `.env`-keys in de handout.
+`when`: `30m` / `2h` / `1d`, of `DD-MM-YYYY HH:mm` (Nederlandse tijd / server-tijdzone). Geen `.env`-keys in de handout.
 
 ---
 

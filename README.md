@@ -84,7 +84,7 @@ Allowlist only. Posts go to the channel you pick — independent of `/weather se
 
 | Command | Effect |
 |---|---|
-| `/announce schedule <channel> <when>` | Opens a modal for the text; posts later (`30m`/`2h`/`1d` or `YYYY-MM-DD HH:mm` in `WEATHER_TIMEZONE`) |
+| `/announce schedule <channel> <when>` | Opens a modal for the text; posts later (`30m`/`2h`/`1d` or `DD-MM-YYYY HH:mm` in `WEATHER_TIMEZONE`) |
 | `/announce list` | Pending posts (ephemeral) |
 | `/announce cancel <id>` | Cancel a pending post |
 

@@ -19,7 +19,7 @@ Zie ook: [`agent.md`](./agent.md), Discord [slash commands](https://discord.com/
 | `/announce cancel id` | Verwijder pending post |
 
 - Allowlist only (`ALLOWED_USER_IDS`), guild-only.
-- `when`: relatief `30m` / `2h` / `1d`, of absoluut `YYYY-MM-DD HH:mm` in `WEATHER_TIMEZONE`.
+- `when`: relatief `30m` / `2h` / `1d`, of absoluut `DD-MM-YYYY HH:mm` in `WEATHER_TIMEZONE` (ISO `YYYY-MM-DD HH:mm` blijft ook werken).
 - Body: Discord modal paragraph, max **2000** tekens (Discord message limit).
 - Post is plain text (geen embed); newlines blijven behouden.
 - **Geen** weer-actief-venster en **geen** weather-pause — dit is een bewuste DM-deadline.
@@ -70,4 +70,4 @@ Geen wijziging aan `world_state`. Geen Database:Refresh.
 2. `/announce schedule` → kanaal ≠ weerkanaal, `when:2m`, plak lore-tekst in modal.
 3. Wacht ≤ ~2,5 min → tekst verschijnt in dat kanaal.
 4. `/announce list` / `cancel` voor een tweede pending post.
-5. Absoluut: `when:2026-07-31 08:00` (toekomst in `WEATHER_TIMEZONE`).
+5. Absoluut: `when:31-07-2026 08:00` (toekomst in `WEATHER_TIMEZONE`).

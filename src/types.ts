@@ -92,7 +92,6 @@ export interface Messages {
   nextScheduled: string;
   nextPaused: string;
   nextWaitingWindow: string;
-  statusTitle: string;
   statusEmbedTitle: string;
   statusEmbedTitleWithType: string;
   statusFieldCurrent: string;

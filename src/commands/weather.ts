@@ -10,8 +10,14 @@ import { buildWeatherCard } from '../services/SchedulerService.js';
 import type { WeatherService } from '../services/WeatherService.js';
 import { parseMagicalMode } from '../content/loader.js';
 import { formatTemplate, parseDuration } from '../utils/helpers.js';
+import {
+  buildStatusEmbed,
+  formatCooldownSettingLines,
+  formatScheduleSettingLines,
+  scheduleDisplayFromSettings,
+} from './weatherStatusEmbed.js';
 
-export function buildWeatherCommand(_weatherTypes: string[]) {
+export function buildWeatherCommand() {
   return new SlashCommandBuilder()
     .setName('weather')
     .setDescription('Eryndor bot weather controls')
@@ -475,7 +481,7 @@ async function handleStatus(
   }
 
   await interaction.reply({
-    embeds: [weather.buildStatusEmbed(status)],
+    embeds: [buildStatusEmbed(weather.messages, status)],
     ephemeral: true,
   });
 }
@@ -640,44 +646,9 @@ async function handleSettingsShow(
   const settings = weather.getScheduleSettings(interaction.guildId!);
   const cooldown = weather.getCooldownSettings(interaction.guildId!);
   const lines = [
-    formatTemplate(weather.messages.statusInterval, {
-      min: settings.updateMinMinutes,
-      max: settings.updateMaxMinutes,
-      source: settings.intervalFromGuild ? 'guild' : '.env',
-    }),
+    ...formatScheduleSettingLines(weather.messages, scheduleDisplayFromSettings(settings)),
+    ...formatCooldownSettingLines(weather.messages, cooldown),
   ];
-
-  if (settings.activeWindow && settings.windowStart && settings.windowEnd) {
-    lines.push(
-      formatTemplate(weather.messages.statusWindowOn, {
-        start: settings.windowStart,
-        end: settings.windowEnd,
-      }),
-    );
-    lines.push(
-      settings.windowFromGuild
-        ? weather.messages.statusWindowOverride
-        : weather.messages.statusWindowDefault,
-    );
-  } else {
-    lines.push(weather.messages.statusWindowOff);
-  }
-
-  if (cooldown.enabled) {
-    lines.push(
-      formatTemplate(weather.messages.statusCooldownRulesOn, {
-        after: cooldown.afterSeverity,
-        max: cooldown.maxNextSeverity,
-        source: cooldown.fromGuild ? 'guild' : 'content',
-      }),
-    );
-  } else {
-    lines.push(
-      formatTemplate(weather.messages.statusCooldownRulesOff, {
-        source: cooldown.fromGuild ? 'guild' : 'content',
-      }),
-    );
-  }
 
   await interaction.reply({
     content: `**${weather.messages.settingsShowTitle}**\n${lines.join('\n')}`,

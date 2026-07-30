@@ -70,9 +70,9 @@ HANDOUT_URL=https://v3xillum.github.io/eryndor-bot/handout/
 ## Project Structure
 ```text
 src/
-  commands/       # thin slash command handlers (weather.ts, world.ts)
+  commands/       # thin slash command handlers (weather.ts, announce.ts, world.ts)
   events/         # discord.js event listeners (ready, interactionCreate, etc.)
-  services/       # WeatherService, SchedulerService, EryndorCalendarService
+  services/       # WeatherService, SchedulerService, AnnounceService, EryndorCalendarService
   utils/          # helpers, activeWindow, harptos DOY helpers
   db/             # SQLite connection + queries
   content/        # loaders for JSON content and images
@@ -217,7 +217,7 @@ Expose a small service interface that commands and the scheduler both call into:
 - `setMagicalDial` / `clearMagicalDial` — temporary `only` / `none` magical filter for rolls
 - `setUpdateInterval` / `setActiveWindow` / `setCooldownSettings` / `clearSettingsOverrides` — per-guild settings; schedule changes reschedule immediately; cooldown changes apply on the next roll
 - `rollWeather(guildId)` — weighted pick (severity dial + magical dial + severity cooldown when applicable), updates state, returns the result
-- `setWeather(guildId, type)` / `setFromInput` — forces a type or physical d100; marks `forced` for type sets; **bypasses** dials/cooldown
+- `setFromInput(guildId, value)` — forces a type or physical d100; marks `forced` for type sets; **bypasses** dials/cooldown
 - `scheduleNextUpdate(guildId)` — per-type duration range if present, else guild/env minute range; stores `next_update_at`
 - `pause(guildId, until)`
 - `resume(guildId)` — clears the pause and recalculates `next_update_at`
@@ -278,7 +278,7 @@ There is **no** `/weather post`. Anything that changes weather also broadcasts t
 - `/world fullmoon` — next exact Full Moon from `full-moons.json` (embed). Everyone.
 
 ### Announcements (DM-scheduled text)
-- `/announce schedule <channel> <when>` — open a modal for body text; store for later. `when`: `30m`/`2h`/`1d` or `YYYY-MM-DD HH:mm` in `WEATHER_TIMEZONE`. Allowlist only. Destination is independent of `/weather setup`.
+- `/announce schedule <channel> <when>` — open a modal for body text; store for later. `when`: `30m`/`2h`/`1d` or `DD-MM-YYYY HH:mm` (also accepts `YYYY-MM-DD`) in `WEATHER_TIMEZONE`. Allowlist only. Destination is independent of `/weather setup`.
 - `/announce list` — pending posts (ephemeral). Allowlist only.
 - `/announce cancel <id>` — cancel a pending post. Allowlist only.
 

@@ -1,3 +1,5 @@
+import { zonedCivilToUtc } from './activeWindow.js';
+
 /**
  * Parses durations like 30m, 2h, 1d into milliseconds.
  * Returns null when the input is invalid.
@@ -20,19 +22,16 @@ export function parseDuration(input: string): number | null {
 }
 
 /**
- * Parses wall-clock `YYYY-MM-DD HH:mm` (or `T` separator) in `timeZone` to a UTC Date.
- * Returns null when the input is invalid or the local time does not exist.
+ * Parses wall-clock datetime in `timeZone` to a UTC Date.
+ * Accepts Dutch `DD-MM-YYYY HH:mm` (or `/` separators) and ISO `YYYY-MM-DD HH:mm`
+ * (`T` separator also allowed). Returns null when invalid or the local time does not exist.
  */
 export function parseZonedDateTime(input: string, timeZone: string): Date | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$/.exec(input.trim());
-  if (!match) return null;
+  const trimmed = input.trim();
+  const parsed = parseCivilDateTimeParts(trimmed);
+  if (!parsed) return null;
 
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const hour = Number(match[4]);
-  const minute = Number(match[5]);
-
+  const { year, month, day, hour, minute } = parsed;
   if (
     month < 1 ||
     month > 12 ||
@@ -44,40 +43,42 @@ export function parseZonedDateTime(input: string, timeZone: string): Date | null
     return null;
   }
 
-  // Guess UTC, then correct so the zoned wall-clock matches (handles DST).
-  let utcMs = Date.UTC(year, month - 1, day, hour, minute);
-  for (let i = 0; i < 3; i++) {
-    const parts = getZonedParts(new Date(utcMs), timeZone);
-    if (!parts) return null;
-    const asIfUtc = Date.UTC(
-      parts.year,
-      parts.month - 1,
-      parts.day,
-      parts.hour,
-      parts.minute,
-    );
-    const desired = Date.UTC(year, month - 1, day, hour, minute);
-    utcMs += desired - asIfUtc;
+  return zonedCivilToUtc(year, month, day, hour, minute, timeZone);
+}
+
+function parseCivilDateTimeParts(
+  input: string,
+): { year: number; month: number; day: number; hour: number; minute: number } | null {
+  // Dutch-first: 31-07-2026 08:00 or 31/07/2026 08:00
+  const dutch = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})[ T](\d{1,2}):(\d{2})$/.exec(input);
+  if (dutch) {
+    return {
+      day: Number(dutch[1]),
+      month: Number(dutch[2]),
+      year: Number(dutch[3]),
+      hour: Number(dutch[4]),
+      minute: Number(dutch[5]),
+    };
   }
 
-  const verified = getZonedParts(new Date(utcMs), timeZone);
-  if (
-    !verified ||
-    verified.year !== year ||
-    verified.month !== month ||
-    verified.day !== day ||
-    verified.hour !== hour ||
-    verified.minute !== minute
-  ) {
-    return null;
+  // ISO: 2026-07-31 08:00
+  const iso = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$/.exec(input);
+  if (iso) {
+    return {
+      year: Number(iso[1]),
+      month: Number(iso[2]),
+      day: Number(iso[3]),
+      hour: Number(iso[4]),
+      minute: Number(iso[5]),
+    };
   }
 
-  return new Date(utcMs);
+  return null;
 }
 
 /**
- * Parses a schedule "when": relative `30m`/`2h`/`1d`, or absolute `YYYY-MM-DD HH:mm`
- * in `timeZone`. Must be strictly in the future.
+ * Parses a schedule "when": relative `30m`/`2h`/`1d`, or absolute
+ * `DD-MM-YYYY HH:mm` / `YYYY-MM-DD HH:mm` in `timeZone`. Must be strictly in the future.
  */
 export function parseScheduleWhen(
   input: string,
@@ -96,56 +97,10 @@ export function parseScheduleWhen(
   return absolute;
 }
 
-function getZonedParts(
-  date: Date,
-  timeZone: string,
-): { year: number; month: number; day: number; hour: number; minute: number } | null {
-  try {
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23',
-    }).formatToParts(date);
-
-    const read = (type: Intl.DateTimeFormatPartTypes): number | null => {
-      const value = parts.find((p) => p.type === type)?.value;
-      if (value === undefined) return null;
-      const n = Number(value);
-      return Number.isFinite(n) ? n : null;
-    };
-
-    const year = read('year');
-    const month = read('month');
-    const day = read('day');
-    const hour = read('hour');
-    const minute = read('minute');
-    if (
-      year === null ||
-      month === null ||
-      day === null ||
-      hour === null ||
-      minute === null
-    ) {
-      return null;
-    }
-    return { year, month, day, hour, minute };
-  } catch {
-    return null;
-  }
-}
-
 export function randomIntervalMs(minMinutes: number, maxMinutes: number): number {
   const minMs = minMinutes * 60_000;
   const maxMs = maxMinutes * 60_000;
   return minMs + Math.floor(Math.random() * (maxMs - minMs + 1));
-}
-
-export function rollD100(): number {
-  return Math.floor(Math.random() * 100) + 1;
 }
 
 export function formatTemplate(

@@ -61,7 +61,8 @@ export function zonedParts(
 
 /**
  * Instant for a civil date/time in `timeZone`.
- * Uses a short UTC guess + offset correction (good enough for scheduling).
+ * Iterative UTC guess + offset correction (handles DST).
+ * Returns null when the local time does not exist or the timezone is invalid.
  */
 export function zonedCivilToUtc(
   year: number,
@@ -70,13 +71,36 @@ export function zonedCivilToUtc(
   hours: number,
   minutes: number,
   timeZone: string,
-): Date {
-  const utcGuess = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0));
-  const asZoned = zonedParts(utcGuess, timeZone);
-  const wantedMinutes = hours * 60 + minutes;
-  const actualMinutes = asZoned.hours * 60 + asZoned.minutes;
-  const deltaMinutes = wantedMinutes - actualMinutes;
-  return new Date(utcGuess.getTime() + deltaMinutes * 60_000);
+): Date | null {
+  let utcMs = Date.UTC(year, month - 1, day, hours, minutes);
+  try {
+    for (let i = 0; i < 3; i++) {
+      const parts = zonedParts(new Date(utcMs), timeZone);
+      const asIfUtc = Date.UTC(
+        parts.year,
+        parts.month - 1,
+        parts.day,
+        parts.hours,
+        parts.minutes,
+      );
+      const desired = Date.UTC(year, month - 1, day, hours, minutes);
+      utcMs += desired - asIfUtc;
+    }
+
+    const verified = zonedParts(new Date(utcMs), timeZone);
+    if (
+      verified.year !== year ||
+      verified.month !== month ||
+      verified.day !== day ||
+      verified.hours !== hours ||
+      verified.minutes !== minutes
+    ) {
+      return null;
+    }
+    return new Date(utcMs);
+  } catch {
+    return null;
+  }
 }
 
 /** Half-open window: active if start <= now < end in the given timezone. */
@@ -99,6 +123,9 @@ export function nextWindowStart(now: Date, window: ActiveWindow): Date {
     window.start.minutes,
     window.timeZone,
   );
+  if (!startToday) {
+    throw new Error(`Failed to resolve window start for timezone ${window.timeZone}`);
+  }
 
   if (now.getTime() < startToday.getTime()) {
     return startToday;
@@ -106,7 +133,7 @@ export function nextWindowStart(now: Date, window: ActiveWindow): Date {
 
   const tomorrow = new Date(startToday.getTime() + 24 * 60 * 60 * 1000);
   const tParts = zonedParts(tomorrow, window.timeZone);
-  return zonedCivilToUtc(
+  const next = zonedCivilToUtc(
     tParts.year,
     tParts.month,
     tParts.day,
@@ -114,6 +141,10 @@ export function nextWindowStart(now: Date, window: ActiveWindow): Date {
     window.start.minutes,
     window.timeZone,
   );
+  if (!next) {
+    throw new Error(`Failed to resolve next window start for timezone ${window.timeZone}`);
+  }
+  return next;
 }
 
 /**

@@ -34,7 +34,7 @@ export function buildAnnounceCommand() {
         .addStringOption((opt) =>
           opt
             .setName('when')
-            .setDescription('30m / 2h / 1d, or YYYY-MM-DD HH:mm (server timezone)')
+            .setDescription('30m / 2h / 1d, or DD-MM-YYYY HH:mm (server timezone)')
             .setRequired(true),
         ),
     )
