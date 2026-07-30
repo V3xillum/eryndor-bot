@@ -57,6 +57,10 @@ export interface WorldState {
   cooldown_enabled: number | null;
   cooldown_after_severity: number | null;
   cooldown_max_next_severity: number | null;
+  /** Channel for daily calendar-event posts (null = disabled). Separate from weather destination. */
+  calendar_channel_id: string | null;
+  /** Local calendar date (YYYY-MM-DD in WEATHER_TIMEZONE) already handled for event auto-post. */
+  calendar_events_last_handled_date: string | null;
 }
 
 export interface WeatherResult {
@@ -164,6 +168,9 @@ export interface Messages {
   calendarNoEvents: string;
   calendarFullMoonTitle: string;
   calendarFullMoonWhen: string;
+  calendarSetupSuccess: string;
+  calendarClearSuccess: string;
+  calendarClearNone: string;
   helpEmbedTitle: string;
   helpEmbedDescription: string;
   helpFieldEveryone: string;

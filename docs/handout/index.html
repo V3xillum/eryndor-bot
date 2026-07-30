@@ -526,7 +526,7 @@
 
     <section id="overzicht" class="panel active" role="tabpanel">
       <h2>Wat doet de bot?</h2>
-      <p class="lead">Eryndor bot houdt de wereld levend tussen sessies: hij post weerkaarten in jullie weerkanaal, geeft op verzoek de Eryndor-datum en maan, en kan een tekstbericht klaarzetten voor later. Tussendoor dobbelt hij zelf — jij grijpt in wanneer de tafel dat vraagt.</p>
+      <p class="lead">Eryndor bot houdt de wereld levend tussen sessies: hij post weerkaarten in jullie weerkanaal, geeft op verzoek de Eryndor-datum en maan, kan ’s ochtends kalender-events posten (alleen als er die dag iets speelt), en kan een tekstbericht klaarzetten voor later. Tussendoor dobbelt hij zelf — jij grijpt in wanneer de tafel dat vraagt.</p>
 
       <div class="grid-2">
         <article class="tile">
@@ -535,7 +535,7 @@
         </article>
         <article class="tile">
           <h3>Jij als DM</h3>
-          <p>Weer vastzetten of laten dobbelen, automatische updates pauzeren tijdens de sessie, tijdelijk zwaarder of milder weer forceren, ritme aanpassen, of een wereldbericht klaarzetten voor later.</p>
+          <p>Weer vastzetten of laten dobbelen, automatische updates pauzeren tijdens de sessie, tijdelijk zwaarder of milder weer forceren, ritme aanpassen, kalender-events naar een kanaal sturen, of een wereldbericht klaarzetten voor later.</p>
         </article>
         <article class="tile">
           <h3>Spelers</h3>
@@ -543,7 +543,7 @@
         </article>
         <article class="tile">
           <h3>Kalender</h3>
-          <p><code>/world today</code> en <code>/world fullmoon</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — zonder te verklappen wanneer het weer wisselt.</p>
+          <p><code>/world today</code> en <code>/world fullmoon</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — zonder te verklappen wanneer het weer wisselt. Optioneel post de bot ’s ochtends (rond 08:30) hetzelfde “vandaag”-bericht naar een apart kanaal, <strong>alleen als er events zijn</strong>. Inrichten: <code>/world setup</code>.</p>
         </article>
         <article class="tile">
           <h3>Geplande berichten</h3>
@@ -646,11 +646,15 @@
           <p>Wereldgebeurtenis klaarzetten terwijl jij slaapt. <code>/announce schedule</code> — kies kanaal en wanneer, vul de tekst in. Checken of schrappen: <code>/announce list</code> / <code>/announce cancel</code>.</p>
         </article>
         <article class="tile">
+          <h3>Kalender-events kanaal</h3>
+          <p>Wil je dat verjaardagen en feestdagen ’s ochtends in Discord verschijnen (alleen op dagen mét events)? Eenmalig: <code>/world setup</code> — kies een ander kanaal dan het weer. Uit zetten: <code>/world clear</code>.</p>
+        </article>
+        <article class="tile">
           <h3>Even checken</h3>
           <p>Wat speelt er nu? <code>/weather status</code> — weer, planning, ritme, venster, afkoeling, limieten. Alleen de volgende update: <code>/weather next</code>.</p>
         </article>
       </div>
-      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code> naar het kanaal dat jij kiest.</p>
+      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code> naar het kanaal dat jij kiest. Kalender-ochtendposts (alleen bij events) gaan via <code>/world setup</code> naar hun eigen kanaal.</p>
     </section>
 
     <section id="aanleveren" class="panel" role="tabpanel" hidden>
@@ -755,6 +759,20 @@
         cat: "inrichten",
         what: "Kies in welk kanaal (en optioneel thread) weerupdates verschijnen.",
         when: "Eenmalig bij start, of als het kanaal wijzigt.",
+      },
+      {
+        cmd: "/world setup",
+        who: "dm",
+        cat: "inrichten",
+        what: "Kies in welk kanaal ochtend-kalenderposts komen. De bot post rond 08:30 @everyone plus hetzelfde bericht als /world today — maar alleen op dagen mét events. Los van het weerkanaal.",
+        when: "Eenmalig als je feestdagen/verjaardagen automatisch wilt laten zien.",
+      },
+      {
+        cmd: "/world clear",
+        who: "dm",
+        cat: "inrichten",
+        what: "Zet automatische ochtend-kalenderposts uit.",
+        when: "Geen automatische event-berichten meer in dat kanaal.",
       },
       {
         cmd: "/weather settings show",

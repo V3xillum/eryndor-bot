@@ -90,14 +90,16 @@ Allowlist only. Posts go to the channel you pick — independent of `/weather se
 
 ### Calendar (Eryndor)
 
-Data comes from the static [Calendar of Eryndor](https://v3xillum.github.io/eryndor/) JSON API. Everyone in the guild may use these (world info, no weather-timer spoilers). Replies are in Dutch.
+Data comes from the static [Calendar of Eryndor](https://v3xillum.github.io/eryndor/) JSON API. Everyone in the guild may use the info commands (world info, no weather-timer spoilers). Replies are in Dutch.
 
 | Command | Who | Effect |
 |---|---|---|
 | `/world today` | everyone | Current Harptos day, moon phase, and events |
 | `/world fullmoon` | everyone | Next exact Full Moon (from `full-moons.json`) |
+| `/world setup <channel>` | allowlist | Where morning calendar-event posts go (only days with events) |
+| `/world clear` | allowlist | Disable automatic morning calendar-event posts |
 
-Optional env: `ERYNDOR_CALENDAR_BASE_URL` / `ERYNDOR_CALENDAR_FALLBACK_URL` (see `.env.example`). Timezone for “today” follows `WEATHER_TIMEZONE` (default `Europe/Amsterdam`).
+Optional env: `ERYNDOR_CALENDAR_BASE_URL` / `ERYNDOR_CALENDAR_FALLBACK_URL` / `CALENDAR_EVENTS_POST_TIME` (default `08:30`, see `.env.example`). Timezone for “today” and the morning post follows `WEATHER_TIMEZONE` (default `Europe/Amsterdam`).
 
 ## Content
 

@@ -31,12 +31,26 @@ async function main(): Promise<void> {
     console.log('Active window: disabled (24/7 auto-updates)');
   }
   console.log(`Eryndor calendar: ${config.eryndorCalendar.baseUrl}`);
+  {
+    const t = config.calendarEventsPostTime;
+    const fmt = `${String(t.hours).padStart(2, '0')}:${String(t.minutes).padStart(2, '0')}`;
+    console.log(
+      `Calendar events post: ${fmt} (${config.eryndorCalendar.timeZone}), only when events exist`,
+    );
+  }
 
   const client = new Client({
     intents: [GatewayIntentBits.Guilds],
   });
 
-  const scheduler = new SchedulerService(client, weather, announce);
+  const scheduler = new SchedulerService(
+    client,
+    weather,
+    announce,
+    calendar,
+    config.calendarEventsPostTime,
+    config.eryndorCalendar.timeZone,
+  );
 
   registerReadyHandler(client, scheduler);
   registerInteractionHandler(client, { weather, scheduler, calendar, announce, config });

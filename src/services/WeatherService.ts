@@ -724,6 +724,21 @@ export class WeatherService {
     dbQueries.updateSetup(this.db, guildId, channelId, threadId);
   }
 
+  setupCalendarChannel(guildId: string, channelId: string): void {
+    dbQueries.updateCalendarSetup(this.db, guildId, channelId);
+  }
+
+  clearCalendarChannel(guildId: string): boolean {
+    const state = dbQueries.getWorldState(this.db, guildId);
+    if (!state?.calendar_channel_id) return false;
+    dbQueries.updateCalendarSetup(this.db, guildId, null);
+    return true;
+  }
+
+  markCalendarEventsHandled(guildId: string, localDateIso: string): void {
+    dbQueries.setCalendarEventsLastHandledDate(this.db, guildId, localDateIso);
+  }
+
   isGuildPaused(guildId: string, now = new Date()): boolean {
     const state = dbQueries.getWorldState(this.db, guildId);
     return isPaused(state?.paused_until ?? null, now);

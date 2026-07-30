@@ -40,7 +40,11 @@ export function registerInteractionHandler(
           await handleWeatherCommand(interaction, deps);
           return;
         case 'world':
-          await handleWorldCommand(interaction, deps.calendar);
+          await handleWorldCommand(interaction, {
+            calendar: deps.calendar,
+            weather: deps.weather,
+            config: deps.config,
+          });
           return;
         case 'announce':
           await handleAnnounceCommand(interaction, {

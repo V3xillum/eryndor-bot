@@ -1,7 +1,7 @@
 # Eryndor bot
 
 ## Project Goal
-Build **Eryndor bot** — a Discord bot for the Eryndor (West Marches) D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), gives authorized users full manual control during sessions through slash commands, and exposes Eryndor calendar info (`/world today`, `/world fullmoon`) from the static Calendar of Eryndor JSON API.
+Build **Eryndor bot** — a Discord bot for the Eryndor (West Marches) D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), gives authorized users full manual control during sessions through slash commands, exposes Eryndor calendar info (`/world today`, `/world fullmoon`) from the static Calendar of Eryndor JSON API, and can post that same “today” embed each morning to a separate channel **only on days with calendar events** (`/world setup`).
 
 **DM handout:** static site under [`docs/handout/`](./handout/). Style and update rules for agents: [`handout-agent.md`](./handout-agent.md). Bot behaviour remains defined in **this** file.
 
@@ -48,6 +48,8 @@ WEATHER_TIMEZONE=Europe/Amsterdam
 # DOY for “today” uses WEATHER_TIMEZONE (default Europe/Amsterdam).
 ERYNDOR_CALENDAR_BASE_URL=https://v3xillum.github.io/eryndor
 ERYNDOR_CALENDAR_FALLBACK_URL=https://raw.githubusercontent.com/V3xillum/eryndor/main
+# Morning auto-post of /world today embed — only when events exist (local WEATHER_TIMEZONE).
+CALENDAR_EVENTS_POST_TIME=08:30
 
 # DM handout (GitHub Pages). Linked from /weather help.
 HANDOUT_URL=https://v3xillum.github.io/eryndor-bot/handout/
@@ -120,7 +122,9 @@ CREATE TABLE world_state (
   update_max_minutes INTEGER,
   active_window_enabled INTEGER,  -- NULL = inherit .env; 0 = off; 1 = on
   active_window_start TEXT,       -- HH:mm (nullable)
-  active_window_end TEXT          -- HH:mm (nullable)
+  active_window_end TEXT,         -- HH:mm (nullable)
+  calendar_channel_id TEXT,       -- /world setup; morning event posts (nullable)
+  calendar_events_last_handled_date TEXT  -- YYYY-MM-DD local; additive ALTER
 );
 
 CREATE TABLE weather_log (
@@ -148,6 +152,8 @@ On restart: if `next_update_at` is in the past and the guild isn't paused, post 
 Automated posts go to `thread_id` when set, otherwise to `channel_id`. If neither is configured, skip posting for that guild (log a warning) until `/weather setup` has been run.
 
 Pending rows in `scheduled_posts` with `post_at` in the past are posted on the next scheduler tick (same 30s loop). Announcements ignore the weather active window and pause.
+
+Morning calendar-event posts use `calendar_channel_id` (from `/world setup`), independent of the weather destination. Once per local day after `CALENDAR_EVENTS_POST_TIME` (default `08:30` in `WEATHER_TIMEZONE`): fetch today; post `@everyone` + the same embed as `/world today` **only if** `events.length > 0`; otherwise stay silent. `calendar_events_last_handled_date` prevents duplicates (and skips empty days). Missed morning after restart → catch-up on the next tick after the post time.
 
 ## Content Format
 
@@ -236,13 +242,14 @@ Fetch order: Pages base URL first; on persistent 404, optional raw.githubusercon
 
 Replies are Dutch Discord embeds (`content/messages.json` for labels/errors). Today embed: Harptos title, moon phase, NL-formatted Gregorian date under the moon, events list — **no** next-full-moon footer on today (full moon is only via `/world fullmoon`).
 
-UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec detail: [`docs/feature-eryndor-calendar.md`](./feature-eryndor-calendar.md).
+UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec detail: [`docs/feature-eryndor-calendar.md`](./feature-eryndor-calendar.md). Daily auto-post of events: [`docs/feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
 ## Permissions
 
 - `/weather current` — available to everyone in the guild.
 - All other `/weather` subcommands (including `help`, `status`, `next`, `settings`) — only users whose Discord user ID appears in `ALLOWED_USER_IDS`.
 - `/world today` and `/world fullmoon` — available to everyone in the guild (world info; no weather-timer spoilers).
+- `/world setup` and `/world clear` — allowlist only (calendar-event channel).
 
 Do **not** require Discord “Manage Server” or a DM role. The operator may not have those permissions; user-ID allowlist is the intended gate. Later this can be extended with role IDs; do not build role support now unless trivial.
 
@@ -276,6 +283,8 @@ There is **no** `/weather post`. Anything that changes weather also broadcasts t
 ### World / calendar
 - `/world today` — current Harptos day, moon phase, events (embed). Everyone.
 - `/world fullmoon` — next exact Full Moon from `full-moons.json` (embed). Everyone.
+- `/world setup <channel>` — where morning calendar-event posts go (separate from weather). Allowlist only.
+- `/world clear` — disable automatic morning calendar-event posts. Allowlist only.
 
 ### Announcements (DM-scheduled text)
 - `/announce schedule <channel> <when>` — open a modal for body text; store for later. `when`: `30m`/`2h`/`1d` or `DD-MM-YYYY HH:mm` (also accepts `YYYY-MM-DD`) in `WEATHER_TIMEZONE`. Allowlist only. Destination is independent of `/weather setup`.
@@ -300,8 +309,9 @@ Responsible for:
 - recalculating and storing the next `next_update_at` from the current type’s duration range when set, otherwise the guild override minute range, otherwise `.env` defaults
 - honouring each guild’s effective active posting window (guild override or `.env`)
 - posting due rows from `scheduled_posts` (DM announcements) to their own `channel_id` — independent of weather destination / pause / active window
+- once per day after `CALENDAR_EVENTS_POST_TIME`, posting the calendar today-embed to `calendar_channel_id` when that day has events — independent of weather destination / pause / active window
 
-Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/weather roll`, `/weather set`); the scheduler owns the recurring automatic updates and due announcements.
+Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/weather roll`, `/weather set`); the scheduler owns the recurring automatic updates, due announcements, and morning calendar-event posts.
 
 **Choice:** `.env` holds **defaults** (and timezone). Per-guild cadence and posting window can be overridden in SQLite via `/weather settings` so DMs can change them without host access or a restart. Empty/null guild columns mean “inherit `.env`”.
 
@@ -336,7 +346,6 @@ Architecture should allow these without major refactoring, but **none should be 
 - Role-based allowlists (in addition to user IDs)
 - Multiple Discord servers (the `guild_id` keying already supports this)
 - Structured `descriptions` (or similar) in `weather-table.json` — only if text outside the card image becomes useful later; v1 keeps posts image-only
-- Daily automatic channel post of calendar “today” (via existing scheduler) — optional; `/world` commands already cover on-demand use
 - Guild-scoped slash command registration for faster iteration on a single server
 
 ### Weather duration (per type) — implemented
@@ -359,6 +368,9 @@ Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / def
 
 ### Scheduled announcements — implemented
 `/announce schedule|list|cancel` stores free-text posts in `scheduled_posts` and posts them via the existing 30s scheduler to a chosen channel (not the weather destination). Relative or absolute `when` in `WEATHER_TIMEZONE`. Modal body max 2000 chars. Allowlist only. See [`feature-scheduled-announcements.md`](./feature-scheduled-announcements.md).
+
+### Calendar events channel — implemented
+`/world setup` stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/world today` embed **only when** `events.length > 0`. Empty days stay silent. `/world clear` disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
 ## Non-Goals
 Do not introduce:

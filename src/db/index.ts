@@ -89,6 +89,12 @@ function migrate(db: Database.Database): void {
   if (!names.has('cooldown_max_next_severity')) {
     db.exec(`ALTER TABLE world_state ADD COLUMN cooldown_max_next_severity INTEGER`);
   }
+  if (!names.has('calendar_channel_id')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN calendar_channel_id TEXT`);
+  }
+  if (!names.has('calendar_events_last_handled_date')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN calendar_events_last_handled_date TEXT`);
+  }
 }
 
 function nowIso(): string {
@@ -132,6 +138,33 @@ export function updateSetup(
      SET channel_id = ?, thread_id = ?, updated_at = ?
      WHERE guild_id = ?`,
   ).run(channelId, threadId, nowIso(), guildId);
+}
+
+export function updateCalendarSetup(
+  db: Database.Database,
+  guildId: string,
+  channelId: string | null,
+): void {
+  ensureGuild(db, guildId);
+  db.prepare(
+    `UPDATE world_state
+     SET calendar_channel_id = ?, updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(channelId, nowIso(), guildId);
+}
+
+/** Mark today's calendar-events check as done (posted or skipped empty). */
+export function setCalendarEventsLastHandledDate(
+  db: Database.Database,
+  guildId: string,
+  localDateIso: string,
+): void {
+  ensureGuild(db, guildId);
+  db.prepare(
+    `UPDATE world_state
+     SET calendar_events_last_handled_date = ?, updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(localDateIso, nowIso(), guildId);
 }
 
 export function updateWeather(

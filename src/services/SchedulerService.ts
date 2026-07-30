@@ -7,8 +7,17 @@ import {
 } from 'discord.js';
 import { resolveImagePath } from '../content/loader.js';
 import type { ScheduledPost, WeatherResult } from '../types.js';
+import {
+  timeOfDayToMinutes,
+  zonedParts,
+  type TimeOfDay,
+} from '../utils/activeWindow.js';
 import { formatTemplate } from '../utils/helpers.js';
 import type { AnnounceService } from './AnnounceService.js';
+import {
+  CalendarFetchError,
+  type EryndorCalendarService,
+} from './EryndorCalendarService.js';
 import type { WeatherService } from './WeatherService.js';
 
 const CHECK_INTERVAL_MS = 30 * 1000;
@@ -28,6 +37,9 @@ export class SchedulerService {
     private readonly client: Client,
     private readonly weather: WeatherService,
     private readonly announce: AnnounceService,
+    private readonly calendar: EryndorCalendarService,
+    private readonly calendarEventsPostTime: TimeOfDay,
+    private readonly calendarTimeZone: string,
   ) {}
 
   start(): void {
@@ -55,6 +67,7 @@ export class SchedulerService {
     }
 
     await this.tickAnnouncements();
+    await this.tickCalendarEvents();
   }
 
   private async tickAnnouncements(): Promise<void> {
@@ -93,6 +106,72 @@ export class SchedulerService {
           continue;
         }
         // Leave pending so the next tick can retry (e.g. transient Discord outage).
+      }
+    }
+  }
+
+  /**
+   * Once per local day after calendarEventsPostTime: fetch today; post the same
+   * embed as /world today only when events.length > 0. Empty days are silent.
+   */
+  private async tickCalendarEvents(now = new Date()): Promise<void> {
+    const localDate = localDateIso(now, this.calendarTimeZone);
+    if (!isAtOrAfterPostTime(now, this.calendarEventsPostTime, this.calendarTimeZone)) {
+      return;
+    }
+
+    for (const state of this.weather.listGuildStates()) {
+      if (!state.calendar_channel_id) continue;
+      if (state.calendar_events_last_handled_date === localDate) continue;
+
+      try {
+        const day = await this.calendar.getToday(now);
+        if (day.events.length > 0) {
+          const channel = await this.client.channels.fetch(state.calendar_channel_id);
+          if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+            console.warn(
+              `Calendar events ${state.guild_id}: destination ${state.calendar_channel_id} is not a text channel`,
+            );
+            this.weather.markCalendarEventsHandled(state.guild_id, localDate);
+            continue;
+          }
+
+          if (!('send' in channel)) {
+            console.warn(
+              `Calendar events ${state.guild_id}: channel does not support send`,
+            );
+            this.weather.markCalendarEventsHandled(state.guild_id, localDate);
+            continue;
+          }
+
+          if (!botCanSendInChannel(channel)) {
+            console.warn(
+              `Calendar events ${state.guild_id}: bot lacks View/Send in ${state.calendar_channel_id}`,
+            );
+            this.weather.markCalendarEventsHandled(state.guild_id, localDate);
+            continue;
+          }
+
+          await channel.send({
+            content: '@everyone',
+            embeds: [this.calendar.buildTodayEmbed(day)],
+            allowedMentions: { parse: ['everyone'] },
+          });
+        }
+
+        this.weather.markCalendarEventsHandled(state.guild_id, localDate);
+      } catch (error) {
+        if (error instanceof CalendarFetchError) {
+          console.warn(
+            `Calendar events ${state.guild_id}: could not load day data; will retry`,
+          );
+          continue;
+        }
+        console.error(`Calendar events failed for guild ${state.guild_id}:`, error);
+        if (isPermanentAnnounceError(error)) {
+          this.weather.markCalendarEventsHandled(state.guild_id, localDate);
+        }
+        // Transient Discord errors: leave unmarked so the next tick retries.
       }
     }
   }
@@ -207,4 +286,15 @@ function isPermanentAnnounceError(error: unknown): boolean {
   return (
     error instanceof DiscordAPIError && PERMANENT_ANNOUNCE_ERROR_CODES.has(Number(error.code))
   );
+}
+
+function localDateIso(date: Date, timeZone: string): string {
+  const parts = zonedParts(date, timeZone);
+  return `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
+}
+
+function isAtOrAfterPostTime(now: Date, postTime: TimeOfDay, timeZone: string): boolean {
+  const parts = zonedParts(now, timeZone);
+  const nowMinutes = parts.hours * 60 + parts.minutes;
+  return nowMinutes >= timeOfDayToMinutes(postTime);
 }
