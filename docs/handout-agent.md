@@ -23,12 +23,12 @@ Geen setup-gids, geen Node/Discord Developer Portal, geen SQLite, geen deploy.
 |---|---|
 | Nederlands voor uitleg | Engelse jargon in lopende tekst (`bypass`, `cooldown`, `dial`, `filter`, `force`) |
 | Slash-commands exact zoals Discord (`/weather set`) | Env-keys in de handout (`WEATHER_UPDATE_*`, `.env`) |
-| Begrippen: ritme, berichtenvenster, afkoeling, zwaarte, draaiknop, magisch | DB-kolommen, migraties, “content JSON schema” |
+| Begrippen: ritme, berichtenvenster, afkoeling, zwaarte, zwaarte-limiet, magie-filter, magisch | DB-kolommen, migraties, “content JSON schema” |
 | “Aangewezen DM’s” | Lange uitleg over allowlists / snowflakes |
 
 Engelse **keuzes in Discord** (`only` / `none`, option-namen) mag je noemen naast de Nederlandse zin — dat is wat ze in de UI zien.
 
-**Brug altijd Nederlands ↔ Discord:** schrijf eerst het begrip (ritme, berichtenvenster, afkoeling), dan pas de Discord-naam tussen haakjes of in een code-pill (`interval`, `window`, `cooldown`). Nooit alleen de Engelse optienaam zonder Nederlandse zin. Vermijd losse tech-woorden (`scope`, `plant opnieuw`, `filter`) — zeg wat de DM moet *kiezen* of *doen*.
+**Brug altijd Nederlands ↔ Discord:** schrijf eerst het begrip (ritme, berichtenvenster, afkoeling), dan pas de Discord-naam tussen haakjes of in een code-pill (`interval`, `window`, `cooldown`). Nooit alleen de Engelse optienaam zonder Nederlandse zin. Vermijd losse tech-woorden (`scope`, `plant opnieuw`, `dial`) — zeg wat de DM moet *kiezen* of *doen*. Gebruik **niet** “draaiknop”; zeg **zwaarte-limiet** / **magie-filter**.
 
 Lezers zijn DMs die D&D snappen, geen bot-developers. Als een zin “sorry, wat?” oproept bij iemand die Discord-slash-commands half kent: herschrijven.
 
@@ -56,7 +56,7 @@ Nieuwe tab alleen als er echt een nieuw *soort* content bij komt.
 
 ### Commando’s
 - Per command: **wat het doet** + **wanneer** — in DM-taal, daarna Discord-details.
-- Vriendelijk DM-taal, wel precies genoeg (bijv. set negeert afkoeling en draaiknoppen).
+- Vriendelijk DM-taal, wel precies genoeg (bijv. set negeert afkoeling en limieten).
 - Option-namen uit Discord (`after`, `max_next`, `schedule`/`all`) altijd met Nederlandse betekenis ernaast.
 - Houd de `COMMANDS`-array en `CATEGORIES` in de HTML in sync met de echte bot (`agent.md` / README).
 
@@ -82,7 +82,7 @@ Eerst op **wie**, daarna op **categorie**:
 | Wie | Categorieën |
 |---|---|
 | Iedereen | Bekijken |
-| DM | Inrichten · Instellingen · Acties · Draaiknoppen · Berichten · Info |
+| DM | Inrichten · Instellingen · Acties · Limieten · Berichten · Info |
 
 | Categorie | Voorbeelden |
 |---|---|
@@ -90,7 +90,7 @@ Eerst op **wie**, daarna op **categorie**:
 | Inrichten | `/weather setup` |
 | Instellingen | `/weather settings …` |
 | Acties | `roll`, `set`, `schedule`, `pause`, `resume` |
-| Draaiknoppen | `severity`, `magical` |
+| Limieten | `severity`, `magical` |
 | Berichten | `/announce schedule`, `/announce list`, `/announce cancel` |
 | Info | `help`, `status`, `next` |
 
@@ -106,7 +106,8 @@ Gebruik deze termen consistent:
 - **Berichtenvenster** — alleen automatische berichten binnen tijdsvenster (default 06:00–23:00 NL-tijd); handmatig altijd
 - **Zwaarte** — cijfer 1–5; **zwaar** = 4+; afkoeling daarna max zwaarte 2 (defaults uit content; zie bot)
 - **Afkoeling** — na zwaar weer mildere volgende roll; defaults na ≥4 → max 2; per server via `/weather settings cooldown`; `set` negeert
-- **Zwaarte- / magie-draaiknop** — tijdelijke beperking op rolls
+- **Tijdelijke zwaarte-limiet** — worpen alleen binnen min–max zwaarte, voor een duur (`/weather severity`)
+- **Tijdelijke magie-filter** — alleen magisch of juist geen magisch weer, voor een duur (`/weather magical`)
 - **Gepland bericht** — vrije tekst die de bot later post in een gekozen kanaal (los van het weerkanaal); via `/announce`
 - **Eryndor bot** — productnaam (repo/package mag `weather-bot` / `eryndor-bot` blijven)
 

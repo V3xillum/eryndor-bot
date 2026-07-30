@@ -601,7 +601,7 @@
           <option value="inrichten">Inrichten</option>
           <option value="instellingen">Instellingen</option>
           <option value="acties">Acties</option>
-          <option value="draaiknoppen">Draaiknoppen</option>
+          <option value="limieten">Limieten</option>
           <option value="berichten">Berichten</option>
           <option value="info">Info</option>
         </select>
@@ -623,7 +623,7 @@
         </article>
         <article class="tile">
           <h3>Dobbel live</h3>
-          <p>Laat de tafel meegenieten van een echte worp. <code>/weather roll</code> — de bot dobbelt (met afkoeling en eventuele draaiknoppen) en post meteen.</p>
+          <p>Laat de tafel meegenieten van een echte worp. <code>/weather roll</code> — de bot dobbelt (met afkoeling en eventuele limieten) en post meteen.</p>
         </article>
         <article class="tile">
           <h3>Gevaarlijke avond</h3>
@@ -647,7 +647,7 @@
         </article>
         <article class="tile">
           <h3>Even checken</h3>
-          <p>Wat speelt er nu? <code>/weather status</code> — weer, planning, ritme, venster, afkoeling, draaiknoppen. Alleen de volgende update: <code>/weather next</code>.</p>
+          <p>Wat speelt er nu? <code>/weather status</code> — weer, planning, ritme, venster, afkoeling, limieten. Alleen de volgende update: <code>/weather next</code>.</p>
         </article>
       </div>
       <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code> naar het kanaal dat jij kiest.</p>
@@ -668,7 +668,7 @@
         </article>
         <article class="tile">
           <h3>3. Zwaarte (1–5)</h3>
-          <p>Hoe heftig is dit weer? Bepaalt of er afkoeling volgt na zwaar weer, en of de zwaarte-draaiknop het kan kiezen.</p>
+          <p>Hoe heftig is dit weer? Bepaalt of er afkoeling volgt na zwaar weer, en of een tijdelijke zwaarte-limiet het kan kiezen.</p>
         </article>
         <article class="tile">
           <h3>4. Magisch?</h3>
@@ -722,7 +722,7 @@
       { id: "inrichten", label: "Inrichten" },
       { id: "instellingen", label: "Instellingen" },
       { id: "acties", label: "Acties" },
-      { id: "draaiknoppen", label: "Draaiknoppen" },
+      { id: "limieten", label: "Limieten" },
       { id: "berichten", label: "Berichten" },
       { id: "info", label: "Info" },
     ];
@@ -795,14 +795,14 @@
         cmd: "/weather roll",
         who: "dm",
         cat: "acties",
-        what: "Dobbel nieuw weer (met afkoeling en actieve draaiknoppen) en post meteen in het weerkanaal.",
+        what: "Dobbel nieuw weer (met afkoeling en actieve limieten) en post meteen in het weerkanaal.",
         when: "Live dobbelen tijdens de sessie.",
       },
       {
         cmd: "/weather set",
         who: "dm",
         cat: "acties",
-        what: "Kies zelf het weer: typ een weertype (bijv. storm) of gooi zelf een d100 en vul die score in. Optioneel hoe lang het blijft (30m, 2h, 1d). Negeert afkoeling en draaiknoppen — jij hebt het laatste woord.",
+        what: "Kies zelf het weer: typ een weertype (bijv. storm) of gooi zelf een d100 en vul die score in. Optioneel hoe lang het blijft (30m, 2h, 1d). Negeert afkoeling en limieten — jij hebt het laatste woord.",
         when: "Als je zelf wilt dobbelen, of gewoon dit weer wilt omdat het bij de scene past.",
       },
       {
@@ -850,37 +850,37 @@
       {
         cmd: "/weather severity set",
         who: "dm",
-        cat: "draaiknoppen",
-        what: "Tijdelijke zwaarte-draaiknop: nieuwe worpen alleen binnen min–max zwaarte (1 mild tot 5 catastrofaal), voor een duur.",
+        cat: "limieten",
+        what: "Tijdelijke zwaarte-limiet: nieuwe worpen alleen binnen min–max zwaarte (1 mild tot 5 catastrofaal), voor een duur.",
         when: "Escalatie-avond of juist een rustige trek.",
       },
       {
         cmd: "/weather severity clear",
         who: "dm",
-        cat: "draaiknoppen",
-        what: "Zet de zwaarte-draaiknop uit → weer normaal dobbelen.",
-        when: "Draaiknop niet meer nodig.",
+        cat: "limieten",
+        what: "Zet de zwaarte-limiet uit → weer normaal dobbelen.",
+        when: "Limiet niet meer nodig.",
       },
       {
         cmd: "/weather magical set",
         who: "dm",
-        cat: "draaiknoppen",
-        what: "Tijdelijke magie-draaiknop: alleen magisch weer (only) of juist geen magisch weer (none), voor een duur.",
+        cat: "limieten",
+        what: "Tijdelijke magie-filter: alleen magisch weer (only) of juist geen magisch weer (none), voor een duur.",
         when: "Arcane-thema of juist “gewone lucht”.",
       },
       {
         cmd: "/weather magical clear",
         who: "dm",
-        cat: "draaiknoppen",
-        what: "Zet de magie-draaiknop uit.",
-        when: "Draaiknop niet meer nodig.",
+        cat: "limieten",
+        what: "Zet de magie-filter uit.",
+        when: "Limiet niet meer nodig.",
       },
       {
         cmd: "/weather status",
         who: "dm",
         cat: "info",
-        what: "Overzicht: huidig weer, zwaarte, magisch, planning, ritme, berichtenvenster, afkoeling en actieve draaiknoppen.",
-        when: "Checken wat er speelt: planning, draaiknoppen, of welk ritme/venster geldt.",
+        what: "Overzicht: huidig weer, zwaarte, magisch, planning, ritme, berichtenvenster, afkoeling en actieve limieten.",
+        when: "Checken wat er speelt: planning, limieten, of welk ritme/venster geldt.",
       },
       {
         cmd: "/weather help",
