@@ -83,7 +83,7 @@ Eerst op **wie**, daarna op **categorie**:
 | Acties | `roll`, `set`, `schedule`, `pause`, `resume` |
 | Draaiknoppen | `severity`, `magical` |
 | Berichten | `/announce schedule`, `/announce list`, `/announce cancel` |
-| Info | `status`, `next` |
+| Info | `help`, `status`, `next` |
 
 Nieuwe commands in de juiste categorie + in de filters (`cmdCat`) houden.
 

@@ -241,8 +241,7 @@ UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec de
 ## Permissions
 
 - `/weather current` — available to everyone in the guild.
-- `/weather help` — available to everyone in the guild (cheat-sheet + handout link).
-- All other `/weather` subcommands (including `status`, `next`, `settings`) — only users whose Discord user ID appears in `ALLOWED_USER_IDS`.
+- All other `/weather` subcommands (including `help`, `status`, `next`, `settings`) — only users whose Discord user ID appears in `ALLOWED_USER_IDS`.
 - `/world today` and `/world fullmoon` — available to everyone in the guild (world info; no weather-timer spoilers).
 
 Do **not** require Discord “Manage Server” or a DM role. The operator may not have those permissions; user-ID allowlist is the intended gate. Later this can be extended with role IDs; do not build role support now unless trivial.
@@ -256,7 +255,7 @@ There is **no** `/weather post`. Anything that changes weather also broadcasts t
 ### Weather
 - `/weather setup <channel> [thread]` — configure where weather updates are sent (scheduler, `roll`, and `set`). `thread` is optional. Uses the current guild’s `guildId` from the interaction.
 - `/weather current` — show the current weather **to the invoking user** (ephemeral or command reply). Does **not** post to the weather channel — if the bot is working, the latest update is already visible there; this is a quiet status check (e.g. DM mid-session without spamming the channel).
-- `/weather help` — short ephemeral cheat-sheet (everyone + DM commands) plus link to the DM handout (`HANDOUT_URL`, default GitHub Pages). Available to everyone. Does not post to the channel.
+- `/weather help` — short ephemeral cheat-sheet (everyone + DM commands) plus link to the DM handout (`HANDOUT_URL`, default GitHub Pages). Allowlist only — the handout is DM material. Does not post to the channel.
 - `/weather status` — allowlist-only admin view: type, severity, magical flag, forced flag, since-when, remaining/next update, duration source (per-type vs guild/env fallback), effective interval + active window, severity dial, magical dial, cooldown rules (guild or content) and whether the next roll is filtered. Ephemeral; does not post to the channel.
 - `/weather severity set <min> <max> <duration>` — temporary severity band for auto-roll / `/weather roll` (e.g. min 1, max 4, `1d`). Lazy-expires; then default table + cooldown. Rejects empty bands and empty intersection with an active magical dial. Allowlist only. Does not change current weather or post.
 - `/weather severity clear` — clear the dial early. Allowlist only.

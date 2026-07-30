@@ -44,7 +44,7 @@ export function buildWeatherCommand(_weatherTypes: string[]) {
     .addSubcommand((sub) =>
       sub
         .setName('help')
-        .setDescription('Short command cheat-sheet and link to the DM handout'),
+        .setDescription('DM: short command cheat-sheet and link to the DM handout'),
     )
     .addSubcommand((sub) =>
       sub
@@ -262,6 +262,7 @@ export function buildWeatherCommand(_weatherTypes: string[]) {
 
 const ADMIN_SUBCOMMANDS = new Set([
   'setup',
+  'help',
   'status',
   'next',
   'roll',

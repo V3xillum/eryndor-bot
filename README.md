@@ -57,7 +57,7 @@ Global slash commands can take up to about an hour to appear after registration.
 | Command | Who | Effect |
 |---|---|---|
 | `/weather current` | everyone | Private status check (does not post to the weather channel) |
-| `/weather help` | everyone | Short cheat-sheet + link to the DM handout (`HANDOUT_URL`) |
+| `/weather help` | allowlist | Short cheat-sheet + link to the DM handout (`HANDOUT_URL`) |
 | `/weather status` | allowlist | Admin detail: severity, magical, remaining time, duration, interval/window, cooldown, dials |
 | `/weather severity set` | allowlist | Tijdelijke severity-band (`min`/`max`/`duration`) voor rolls |
 | `/weather severity clear` | allowlist | Severity dial uitzetten → default gedrag |
