@@ -1,6 +1,7 @@
 import {
   EmbedBuilder,
   SlashCommandBuilder,
+  SlashCommandSubcommandGroupBuilder,
   type ChatInputCommandInteraction,
   type GuildMember,
 } from 'discord.js';
@@ -17,48 +18,23 @@ import {
   startMaterialWizard,
 } from './buildingWizard.js';
 
-const ADMIN_SUBCOMMANDS = new Set(['create', 'cancel']);
-const ADMIN_GROUPS = new Set(['cost']);
-
 export function buildBuildingCommand() {
   return new SlashCommandBuilder()
     .setName('building')
     .setDescription('Guild building projects')
-    .addSubcommand((sub) =>
-      sub
-        .setName('create')
-        .setDescription('Create a building project (DM)')
-        .addStringOption((opt) =>
-          opt.setName('name').setDescription('Project name').setRequired(true),
-        ),
-    )
     .addSubcommandGroup((group) =>
       group
         .setName('cost')
-        .setDescription('Set project costs (DM)')
+        .setDescription('Project costs and progress')
         .addSubcommand((sub) =>
-          sub
-            .setName('add')
-            .setDescription('Add a material cost (menu → type + amount; can add more)'),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('buildtime')
-            .setDescription('Set build time for phase 2 (default 100; 1 unit = 1 GC)'),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('show')
-            .setDescription('Show costs and progress (menu)'),
+          sub.setName('show').setDescription('Show costs and progress (menu)'),
         ),
     )
     .addSubcommand((sub) =>
       sub.setName('list').setDescription('List building projects'),
     )
     .addSubcommand((sub) =>
-      sub
-        .setName('status')
-        .setDescription('Show project status (menu)'),
+      sub.setName('status').setDescription('Show project status (menu)'),
     )
     .addSubcommand((sub) =>
       sub
@@ -74,14 +50,44 @@ export function buildBuildingCommand() {
       sub
         .setName('contribute')
         .setDescription('Spend time on a building project (menu + amount, 1 GC per unit)'),
+    );
+}
+
+export function buildBuildingAdminSubcommands(
+  group: SlashCommandSubcommandGroupBuilder,
+): SlashCommandSubcommandGroupBuilder {
+  return group
+    .addSubcommand((sub) =>
+      sub
+        .setName('create')
+        .setDescription('Create a building project')
+        .addStringOption((opt) =>
+          opt.setName('name').setDescription('Project name').setRequired(true),
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName('cancel')
-        .setDescription('Cancel a project and return funded materials (DM)')
+        .setDescription('Cancel a project and return funded materials')
         .addStringOption((opt) =>
           opt.setName('name').setDescription('Project name').setRequired(true),
         ),
+    );
+}
+
+export function buildBuildingCostAdminSubcommands(
+  group: SlashCommandSubcommandGroupBuilder,
+): SlashCommandSubcommandGroupBuilder {
+  return group
+    .addSubcommand((sub) =>
+      sub
+        .setName('add')
+        .setDescription('Add a material cost (menu → type + amount; can add more)'),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('buildtime')
+        .setDescription('Set build time for phase 2 (default 100; 1 unit = 1 GC)'),
     );
 }
 
@@ -93,7 +99,7 @@ export async function handleBuildingCommand(
     config: AppConfig;
   },
 ): Promise<void> {
-  const { buildings, resources, config } = deps;
+  const { buildings, resources } = deps;
   const group = interaction.options.getSubcommandGroup(false);
   const sub = interaction.options.getSubcommand();
 
@@ -105,10 +111,63 @@ export async function handleBuildingCommand(
     return;
   }
 
-  const needsAdmin =
-    (group != null && ADMIN_GROUPS.has(group) && sub !== 'show') ||
-    ADMIN_SUBCOMMANDS.has(sub);
-  if (needsAdmin && !config.allowedUserIds.includes(interaction.user.id)) {
+  if (group === 'cost') {
+    if (sub === 'show') {
+      await startCostShowWizard(interaction, { buildings, resources });
+      return;
+    }
+    await interaction.reply({
+      content: buildings.messages.unknownSubcommand,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  switch (sub) {
+    case 'list':
+      await handleList(interaction, buildings);
+      return;
+    case 'status':
+      await startCostShowWizard(interaction, { buildings, resources });
+      return;
+    case 'fund':
+      await startMaterialWizard(interaction, { buildings, resources }, 'fund');
+      return;
+    case 'donate':
+      await startMaterialWizard(interaction, { buildings, resources }, 'donate');
+      return;
+    case 'contribute':
+      await startContributeWizard(interaction, { buildings, resources });
+      return;
+    default:
+      await interaction.reply({
+        content: buildings.messages.unknownSubcommand,
+        ephemeral: true,
+      });
+  }
+}
+
+export async function dispatchBuildingAdmin(
+  interaction: ChatInputCommandInteraction,
+  deps: {
+    buildings: BuildingService;
+    resources: ResourceService;
+    config: AppConfig;
+  },
+  route: { group: 'cost' | null; sub: string },
+): Promise<void> {
+  const { buildings, resources, config } = deps;
+  const { group, sub } = route;
+
+  if (!interaction.guildId) {
+    await interaction.reply({
+      content: buildings.messages.guildOnly,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (!config.allowedUserIds.includes(interaction.user.id)) {
     await interaction.reply({
       content: buildings.messages.unauthorized,
       ephemeral: true,
@@ -124,21 +183,6 @@ export async function handleBuildingCommand(
   switch (sub) {
     case 'create':
       await handleCreate(interaction, buildings);
-      return;
-    case 'list':
-      await handleList(interaction, buildings);
-      return;
-    case 'status':
-      await startCostShowWizard(interaction, { buildings, resources });
-      return;
-    case 'fund':
-      await startMaterialWizard(interaction, { buildings, resources }, 'fund');
-      return;
-    case 'donate':
-      await startMaterialWizard(interaction, { buildings, resources }, 'donate');
-      return;
-    case 'contribute':
-      await startContributeWizard(interaction, { buildings, resources });
       return;
     case 'cancel':
       await handleCancel(interaction, buildings);
@@ -188,9 +232,6 @@ async function handleCostGroup(
       return;
     case 'buildtime':
       await startCostTimeWizard(interaction, { buildings, resources });
-      return;
-    case 'show':
-      await startCostShowWizard(interaction, { buildings, resources });
       return;
     default:
       await interaction.reply({

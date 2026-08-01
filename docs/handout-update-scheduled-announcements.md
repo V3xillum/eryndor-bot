@@ -14,9 +14,9 @@ Allowlist only (aangewezen DM’s).
 
 | Command | Wat het doet (DM-taal) | Categorie | Wie |
 |---|---|---|---|
-| `/announce schedule` | Kies kanaal + wanneer; vul tekst in een venster. Bot post later. Los van weerkanaal. | Berichten | DM |
-| `/announce list` | Toont openstaande geplande berichten (id, kanaal, tijd). | Berichten | DM |
-| `/announce cancel` | Annuleer een openstaand bericht op id. | Berichten | DM |
+| `/dm announce schedule` | Kies kanaal + wanneer; vul tekst in een venster. Bot post later. Los van weerkanaal. | Berichten | DM |
+| `/dm announce list` | Toont openstaande geplande berichten (id, kanaal, tijd). | Berichten | DM |
+| `/dm announce cancel` | Annuleer een openstaand bericht op id. | Berichten | DM |
 
 `when`: `30m` / `2h` / `1d`, of `DD-MM-YYYY HH:mm` (Nederlandse tijd / server-tijdzone). Geen `.env`-keys in de handout.
 
@@ -25,7 +25,7 @@ Allowlist only (aangewezen DM’s).
 ## Wat Overzicht kort mag zeggen
 
 - Lead of tile: geplande **tekstberichten** naar een **ander kanaal** dan het weer.
-- Max één command: `` `/announce schedule` ``.
+- Max één command: `` `/dm announce schedule` ``.
 - Geen how-to (modal, list/cancel, tijdsformaten) op Overzicht.
 
 ---
@@ -33,7 +33,7 @@ Allowlist only (aangewezen DM’s).
 ## Wat Commando’s / Sessie moeten krijgen
 
 - Nieuwe categorie **Berichten** (filter + `CATEGORIES`).
-- Drie `/announce`-commands met what/when.
+- Drie `/dm announce`-commands met what/when.
 - Sessie-tile: bericht voor later klaarzetten.
 
 ---

@@ -1,6 +1,7 @@
 import {
   ChannelType,
   SlashCommandBuilder,
+  SlashCommandSubcommandGroupBuilder,
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import type { AppConfig } from '../config.js';
@@ -20,6 +21,15 @@ export function buildWeatherCommand() {
   return new SlashCommandBuilder()
     .setName('weather')
     .setDescription('Eryndor bot weather controls')
+    .addSubcommand((sub) =>
+      sub.setName('current').setDescription('Show the current weather (private reply)'),
+    );
+}
+
+export function buildWeatherAdminSubcommands(
+  group: SlashCommandSubcommandGroupBuilder,
+): SlashCommandSubcommandGroupBuilder {
+  return group
     .addSubcommand((sub) =>
       sub
         .setName('setup')
@@ -44,168 +54,10 @@ export function buildWeatherCommand() {
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName('current').setDescription('Show the current weather (private reply)'),
-    )
-    .addSubcommand((sub) =>
       sub
         .setName('status')
         .setDescription(
           'Admin: current weather details (severity, magical, schedule, cooldown, dials)',
-        ),
-    )
-    .addSubcommandGroup((group) =>
-      group
-        .setName('severity')
-        .setDescription('Temporary severity dial for auto-rolls')
-        .addSubcommand((sub) =>
-          sub
-            .setName('set')
-            .setDescription('Limit rolls to a severity range for a duration')
-            .addIntegerOption((opt) =>
-              opt
-                .setName('min')
-                .setDescription('Minimum severity (inclusive)')
-                .setRequired(true)
-                .setMinValue(1),
-            )
-            .addIntegerOption((opt) =>
-              opt
-                .setName('max')
-                .setDescription('Maximum severity (inclusive)')
-                .setRequired(true)
-                .setMinValue(1),
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName('duration')
-                .setDescription('How long the dial stays active (e.g. 2h, 1d)')
-                .setRequired(true),
-            ),
-        )
-        .addSubcommand((sub) =>
-          sub.setName('clear').setDescription('Clear the severity dial (back to default)'),
-        ),
-    )
-    .addSubcommandGroup((group) =>
-      group
-        .setName('magical')
-        .setDescription('Temporary magical dial for auto-rolls')
-        .addSubcommand((sub) =>
-          sub
-            .setName('set')
-            .setDescription('Limit rolls to magical or non-magical weather for a duration')
-            .addStringOption((opt) =>
-              opt
-                .setName('mode')
-                .setDescription('only = magical weather; none = non-magical only')
-                .setRequired(true)
-                .addChoices(
-                  { name: 'only (magical)', value: 'only' },
-                  { name: 'none (non-magical)', value: 'none' },
-                ),
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName('duration')
-                .setDescription('How long the dial stays active (e.g. 2h, 1d)')
-                .setRequired(true),
-            ),
-        )
-        .addSubcommand((sub) =>
-          sub.setName('clear').setDescription('Clear the magical dial (back to default)'),
-        ),
-    )
-    .addSubcommandGroup((group) =>
-      group
-        .setName('settings')
-        .setDescription('Per-guild schedule and cooldown settings')
-        .addSubcommand((sub) =>
-          sub
-            .setName('show')
-            .setDescription('Show effective interval, window, and cooldown for this server'),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('interval')
-            .setDescription('Set guild fallback auto-update interval (minutes)')
-            .addIntegerOption((opt) =>
-              opt
-                .setName('min')
-                .setDescription('Minimum minutes between auto-updates')
-                .setRequired(true)
-                .setMinValue(1),
-            )
-            .addIntegerOption((opt) =>
-              opt
-                .setName('max')
-                .setDescription('Maximum minutes between auto-updates')
-                .setRequired(true)
-                .setMinValue(1),
-            ),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('window')
-            .setDescription('Set guild active posting window (timezone from .env)')
-            .addBooleanOption((opt) =>
-              opt
-                .setName('enabled')
-                .setDescription('Whether automatic posts only run inside the window')
-                .setRequired(true),
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName('start')
-                .setDescription('Window start HH:mm (e.g. 06:00)')
-                .setRequired(false),
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName('end')
-                .setDescription('Window end HH:mm (e.g. 23:00)')
-                .setRequired(false),
-            ),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('cooldown')
-            .setDescription('Set guild severity cooldown (omit fields to keep current / inherit)')
-            .addBooleanOption((opt) =>
-              opt
-                .setName('enabled')
-                .setDescription('Whether severity cooldown applies after heavy weather')
-                .setRequired(false),
-            )
-            .addIntegerOption((opt) =>
-              opt
-                .setName('after')
-                .setDescription('Severity threshold that triggers cooldown (inclusive)')
-                .setRequired(false)
-                .setMinValue(1),
-            )
-            .addIntegerOption((opt) =>
-              opt
-                .setName('max_next')
-                .setDescription('Max severity allowed on the next roll after cooldown')
-                .setRequired(false)
-                .setMinValue(1),
-            ),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('clear')
-            .setDescription('Clear guild settings overrides by scope')
-            .addStringOption((opt) =>
-              opt
-                .setName('scope')
-                .setDescription('Which overrides to clear')
-                .setRequired(true)
-                .addChoices(
-                  { name: 'schedule (interval + window)', value: 'schedule' },
-                  { name: 'cooldown', value: 'cooldown' },
-                  { name: 'all', value: 'all' },
-                ),
-            ),
         ),
     )
     .addSubcommand((sub) =>
@@ -213,9 +65,7 @@ export function buildWeatherCommand() {
         .setName('next')
         .setDescription('Show when the next automatic weather update is scheduled'),
     )
-    .addSubcommand((sub) =>
-      sub.setName('roll').setDescription('Roll new weather and post it'),
-    )
+    .addSubcommand((sub) => sub.setName('roll').setDescription('Roll new weather and post it'))
     .addSubcommand((sub) =>
       sub
         .setName('set')
@@ -260,28 +110,168 @@ export function buildWeatherCommand() {
     );
 }
 
-const ADMIN_SUBCOMMANDS = new Set([
-  'setup',
-  'status',
-  'next',
-  'roll',
-  'set',
-  'schedule',
-  'pause',
-  'resume',
-]);
+export function buildWeatherSeveritySubcommands(
+  group: SlashCommandSubcommandGroupBuilder,
+): SlashCommandSubcommandGroupBuilder {
+  return group
+    .addSubcommand((sub) =>
+      sub
+        .setName('set')
+        .setDescription('Limit rolls to a severity range for a duration')
+        .addIntegerOption((opt) =>
+          opt
+            .setName('min')
+            .setDescription('Minimum severity (inclusive)')
+            .setRequired(true)
+            .setMinValue(1),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName('max')
+            .setDescription('Maximum severity (inclusive)')
+            .setRequired(true)
+            .setMinValue(1),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName('duration')
+            .setDescription('How long the dial stays active (e.g. 2h, 1d)')
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub.setName('clear').setDescription('Clear the severity dial (back to default)'),
+    );
+}
+
+export function buildWeatherMagicalSubcommands(
+  group: SlashCommandSubcommandGroupBuilder,
+): SlashCommandSubcommandGroupBuilder {
+  return group
+    .addSubcommand((sub) =>
+      sub
+        .setName('set')
+        .setDescription('Limit rolls to magical or non-magical weather for a duration')
+        .addStringOption((opt) =>
+          opt
+            .setName('mode')
+            .setDescription('only = magical weather; none = non-magical only')
+            .setRequired(true)
+            .addChoices(
+              { name: 'only (magical)', value: 'only' },
+              { name: 'none (non-magical)', value: 'none' },
+            ),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName('duration')
+            .setDescription('How long the dial stays active (e.g. 2h, 1d)')
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub.setName('clear').setDescription('Clear the magical dial (back to default)'),
+    );
+}
+
+export function buildWeatherSettingsSubcommands(
+  group: SlashCommandSubcommandGroupBuilder,
+): SlashCommandSubcommandGroupBuilder {
+  return group
+    .addSubcommand((sub) =>
+      sub
+        .setName('show')
+        .setDescription('Show effective interval, window, and cooldown for this server'),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('interval')
+        .setDescription('Set guild fallback auto-update interval (minutes)')
+        .addIntegerOption((opt) =>
+          opt
+            .setName('min')
+            .setDescription('Minimum minutes between auto-updates')
+            .setRequired(true)
+            .setMinValue(1),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName('max')
+            .setDescription('Maximum minutes between auto-updates')
+            .setRequired(true)
+            .setMinValue(1),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('window')
+        .setDescription('Set guild active posting window (timezone from .env)')
+        .addBooleanOption((opt) =>
+          opt
+            .setName('enabled')
+            .setDescription('Whether automatic posts only run inside the window')
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName('start')
+            .setDescription('Window start HH:mm (e.g. 06:00)')
+            .setRequired(false),
+        )
+        .addStringOption((opt) =>
+          opt.setName('end').setDescription('Window end HH:mm (e.g. 23:00)').setRequired(false),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('cooldown')
+        .setDescription('Set guild severity cooldown (omit fields to keep current / inherit)')
+        .addBooleanOption((opt) =>
+          opt
+            .setName('enabled')
+            .setDescription('Whether severity cooldown applies after heavy weather')
+            .setRequired(false),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName('after')
+            .setDescription('Severity threshold that triggers cooldown (inclusive)')
+            .setRequired(false)
+            .setMinValue(1),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName('max_next')
+            .setDescription('Max severity allowed on the next roll after cooldown')
+            .setRequired(false)
+            .setMinValue(1),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('clear')
+        .setDescription('Clear guild settings overrides by scope')
+        .addStringOption((opt) =>
+          opt
+            .setName('scope')
+            .setDescription('Which overrides to clear')
+            .setRequired(true)
+            .addChoices(
+              { name: 'schedule (interval + window)', value: 'schedule' },
+              { name: 'cooldown', value: 'cooldown' },
+              { name: 'all', value: 'all' },
+            ),
+        ),
+    );
+}
 
 export async function handleWeatherCommand(
   interaction: ChatInputCommandInteraction,
   deps: {
     weather: WeatherService;
-    scheduler: SchedulerService;
-    config: AppConfig;
   },
 ): Promise<void> {
-  const { weather, scheduler, config } = deps;
-  const group = interaction.options.getSubcommandGroup(false);
-  const sub = interaction.options.getSubcommand();
+  const { weather } = deps;
 
   if (!interaction.guildId) {
     await interaction.reply({
@@ -291,12 +281,30 @@ export async function handleWeatherCommand(
     return;
   }
 
-  const needsAllowlist =
-    group === 'severity' ||
-    group === 'magical' ||
-    group === 'settings' ||
-    ADMIN_SUBCOMMANDS.has(sub);
-  if (needsAllowlist && !config.allowedUserIds.includes(interaction.user.id)) {
+  await handleCurrent(interaction, weather);
+}
+
+export async function dispatchWeatherAdmin(
+  interaction: ChatInputCommandInteraction,
+  deps: {
+    weather: WeatherService;
+    scheduler: SchedulerService;
+    config: AppConfig;
+  },
+  route: { group: 'severity' | 'magical' | 'settings' | null; sub: string },
+): Promise<void> {
+  const { weather, scheduler, config } = deps;
+  const { group, sub } = route;
+
+  if (!interaction.guildId) {
+    await interaction.reply({
+      content: weather.messages.guildOnly,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (!config.allowedUserIds.includes(interaction.user.id)) {
     await interaction.reply({
       content: weather.messages.unauthorized,
       ephemeral: true,
@@ -358,9 +366,6 @@ export async function handleWeatherCommand(
   switch (sub) {
     case 'setup':
       await handleSetup(interaction, weather);
-      return;
-    case 'current':
-      await handleCurrent(interaction, weather);
       return;
     case 'status':
       await handleStatus(interaction, weather);

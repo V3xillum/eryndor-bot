@@ -1,9 +1,6 @@
 import type { Client, Interaction } from 'discord.js';
 import type { AppConfig } from '../config.js';
-import {
-  handleAnnounceCommand,
-  handleAnnounceModal,
-} from '../commands/announce.js';
+import { handleAnnounceModal } from '../commands/announce.js';
 import { handleBuildingCommand } from '../commands/building.js';
 import {
   BUILDING_WIZARD_PREFIX,
@@ -11,6 +8,7 @@ import {
   handleBuildingWizardModal,
   handleBuildingWizardSelect,
 } from '../commands/buildingWizard.js';
+import { handleDmCommand } from '../commands/dm.js';
 import { handleEryndorCommand } from '../commands/eryndor.js';
 import { handleProductionCommand } from '../commands/production.js';
 import {
@@ -20,7 +18,6 @@ import {
 } from '../commands/productionWizard.js';
 import { handleResourceCommand } from '../commands/resource.js';
 import { handleWeatherCommand } from '../commands/weather.js';
-import { handleWorldCommand } from '../commands/world.js';
 import type { ActivityLogService } from '../services/ActivityLogService.js';
 import type { AnnounceService } from '../services/AnnounceService.js';
 import type { BuildingService } from '../services/BuildingService.js';
@@ -108,6 +105,7 @@ export function registerInteractionHandler(
       switch (interaction.commandName) {
         case 'eryndor':
           await handleEryndorCommand(interaction, {
+            calendar: deps.calendar,
             weather: deps.weather,
             config: deps.config,
           });
@@ -117,20 +115,9 @@ export function registerInteractionHandler(
           await handleWeatherCommand(interaction, deps);
           deps.activity.ok('command', '/weather');
           return;
-        case 'world':
-          await handleWorldCommand(interaction, {
-            calendar: deps.calendar,
-            weather: deps.weather,
-            config: deps.config,
-          });
-          deps.activity.ok('command', '/world');
-          return;
-        case 'announce':
-          await handleAnnounceCommand(interaction, {
-            announce: deps.announce,
-            config: deps.config,
-          });
-          deps.activity.ok('command', '/announce');
+        case 'dm':
+          await handleDmCommand(interaction, deps);
+          deps.activity.ok('command', '/dm');
           return;
         case 'resource':
           await handleResourceCommand(interaction, {

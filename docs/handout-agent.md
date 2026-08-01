@@ -22,7 +22,7 @@ Geen setup-gids, geen Node/Discord Developer Portal, geen SQLite, geen deploy.
 | Wel | Niet |
 |---|---|
 | Nederlands voor uitleg | Engelse jargon in lopende tekst (`bypass`, `cooldown`, `dial`, `filter`, `force`) |
-| Slash-commands exact zoals Discord (`/weather set`) | Env-keys in de handout (`WEATHER_UPDATE_*`, `.env`) |
+| Slash-commands exact zoals Discord (`/dm weather set`) | Env-keys in de handout (`WEATHER_UPDATE_*`, `.env`) |
 | Begrippen: ritme, berichtenvenster, afkoeling, zwaarte, zwaarte-limiet, magie-filter, magisch | DB-kolommen, migraties, “content JSON schema” |
 | “Aangewezen DM’s” | Lange uitleg over allowlists / snowflakes |
 
@@ -50,7 +50,7 @@ Nieuwe tab alleen als er echt een nieuw *soort* content bij komt (zoals voorraad
 
 ### Overzicht
 - Leg uit **wat iets is** en wat de standaardwaarden zijn.
-- Maximaal **één command-verwijzing** om het aan te passen (`Aanpassen: \`/weather settings interval\``), met Nederlandse brug (“ritme (`interval`)”).
+- Maximaal **één command-verwijzing** om het aan te passen (`Aanpassen: \`/dm weather-settings interval\``), met Nederlandse brug (“ritme (`interval`)”).
 - Geen how-to van die commands hier (minuten vs uren, voorbeelden 1–5, enz.) → dat hoort op **Commando’s**.
 - Als hetzelfde concept twee keer dreigt (bijv. afkoeling onder Zwaarte én in de note): één keer uitleggen, elders kort terugverwijzen.
 - Duurcodes (`30m`, `2h`, `1d`) één keer kort uitleggen (sessie-tab of note), niet overal opnieuw.
@@ -87,16 +87,18 @@ Eerst op **wie**, daarna op **categorie**:
 
 | Categorie | Voorbeelden |
 |---|---|
-| Bekijken | `/weather current`, `/world today`, `/world fullmoon` |
-| Inrichten | `/weather setup`, `/world setup`, `/world clear`, `/resource setup` |
-| Instellingen | `/weather settings …` |
-| Acties | `roll`, `set`, `schedule`, `pause`, `resume` |
-| Limieten | `severity`, `magical` |
-| Berichten | `/announce schedule`, `/announce list`, `/announce cancel` |
-| Voorraad | `/resource donate`, `buy`, `stock`, `type …`, `cap`, `personal …` |
-| Bouwen | `/building create`, `cost add` / `buildtime` / `show`, `donate`, `fund`, `contribute` |
-| Productie | `/production add`, `list`, `workers`, `yield`, `remove` |
-| Info | `/eryndor help`, `status`, `next` |
+| Bekijken | `/weather current`, `/eryndor today`, `/eryndor fullmoon` |
+| Inrichten | `/dm weather setup`, `/dm calendar setup` / `clear`, `/dm resource setup` |
+| Instellingen | `/dm weather-settings …` |
+| Acties | `/dm weather` → `roll`, `set`, `schedule`, `pause`, `resume` |
+| Limieten | `/dm weather-severity`, `/dm weather-magical` |
+| Berichten | `/dm announce schedule` / `list` / `cancel` |
+| Voorraad | spelers: `/resource …`; DM: `/dm resource`, `/dm resource-type` |
+| Bouwen | spelers: `/building …`; DM: `/dm building`, `/dm building-cost` |
+| Productie | spelers: `/production list`; DM: `/dm production …` |
+| Info | `/eryndor help`; DM: `/dm weather status` / `next` |
+
+Alle DM-commands staan onder `/dm` (Discord verbergt die standaard voor gewone leden). Zichtbaarheid in de `/`-picker ≠ `ALLOWED_USER_IDS`: server-admins zien `/dm` altijd; andere DMs moeten hem via **Integraties → bot → `/dm`** krijgen. Runtime blijft allowlist.
 
 Nieuwe commands in de juiste categorie + in de filters (`cmdCat`) houden.
 
@@ -109,12 +111,12 @@ Gebruik deze termen consistent:
 - **Standaard ritme** — tijd tot automatische dobbelsteen (default 6–18 uur; per type of set/schedule kan eerder winnen)
 - **Berichtenvenster** — alleen automatische berichten binnen tijdsvenster (default 06:00–23:00 NL-tijd); handmatig altijd
 - **Zwaarte** — cijfer 1–5; **zwaar** = 4+; afkoeling daarna max zwaarte 2 (defaults uit content; zie bot)
-- **Afkoeling** — na zwaar weer mildere volgende roll; defaults na ≥4 → max 2; per server via `/weather settings cooldown`; `set` negeert
-- **Tijdelijke zwaarte-limiet** — worpen alleen binnen min–max zwaarte, voor een duur (`/weather severity`)
-- **Tijdelijke magie-filter** — alleen magisch of juist geen magisch weer, voor een duur (`/weather magical`)
-- **Gepland bericht** — vrije tekst die de bot later post in een gekozen kanaal (los van het weerkanaal); via `/announce`
-- **Kalender-events kanaal** — ochtendpost (`@everyone` + today-embed) alleen bij events; avondpost bij Full Moon (Rising) (stil) en exacte volle maan (`@everyone`); via `/world setup` (los van het weerkanaal)
-- **Guild-voorraad** — gedeelde grondstoffen per server; stille berichten in het voorraadkanaal (`/resource setup`)
+- **Afkoeling** — na zwaar weer mildere volgende roll; defaults na ≥4 → max 2; per server via `/dm weather-settings cooldown`; `set` negeert
+- **Tijdelijke zwaarte-limiet** — worpen alleen binnen min–max zwaarte, voor een duur (`/dm weather-severity`)
+- **Tijdelijke magie-filter** — alleen magisch of juist geen magisch weer, voor een duur (`/dm weather-magical`)
+- **Gepland bericht** — vrije tekst die de bot later post in een gekozen kanaal (los van het weerkanaal); via `/dm announce`
+- **Kalender-events kanaal** — ochtendpost (`@everyone` + today-embed) alleen bij events; avondpost bij Full Moon (Rising) (stil) en exacte volle maan (`@everyone`); via `/dm calendar setup` (los van het weerkanaal)
+- **Guild-voorraad** — gedeelde grondstoffen per server; stille berichten in het voorraadkanaal (`/dm resource setup`)
 - **Persoonlijke voorraad** — bak per speler, los van de guild
 - **Opslaglimiet** — max per grondstoftype (standaard 300); overflow bij spelers → persoonlijk; bij dagelijkse productie → verloren
 - **Bouwproject** — materialen verzamelen → bouwen (tijd) → voltooid; via `/building`

@@ -2,6 +2,7 @@ import {
   ChannelType,
   EmbedBuilder,
   SlashCommandBuilder,
+  SlashCommandSubcommandGroupBuilder,
   type ChatInputCommandInteraction,
   type GuildMember,
   type GuildTextBasedChannel,
@@ -18,99 +19,14 @@ import {
   postSilentEmbed,
 } from './resourceEmbeds.js';
 
-const ADMIN_SUBCOMMANDS = new Set(['setup', 'clear', 'adjust', 'cap']);
-const ADMIN_GROUPS = new Set(['type']);
-
 export function buildResourceCommand() {
   return new SlashCommandBuilder()
     .setName('resource')
     .setDescription('Guild resource stockpile')
-    .addSubcommand((sub) =>
-      sub
-        .setName('setup')
-        .setDescription('Configure the channel for public resource posts')
-        .addChannelOption((opt) =>
-          opt
-            .setName('channel')
-            .setDescription('Channel for silent donate/buy/personal/building posts')
-            .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub.setName('clear').setDescription('Clear the resource channel setup'),
-    )
     .addSubcommandGroup((group) =>
       group
         .setName('type')
-        .setDescription('Manage resource types (DM)')
-        .addSubcommand((sub) =>
-          sub
-            .setName('add')
-            .setDescription('Add a resource type (id is derived from the name)')
-            .addStringOption((opt) =>
-              opt
-                .setName('name')
-                .setDescription('Display name (e.g. Hout)')
-                .setRequired(true),
-            )
-            .addIntegerOption((opt) =>
-              opt
-                .setName('sell')
-                .setDescription('GC received when donating one unit')
-                .setRequired(true)
-                .setMinValue(0),
-            )
-            .addIntegerOption((opt) =>
-              opt
-                .setName('buy')
-                .setDescription('GC cost when buying (default 2× sell)')
-                .setRequired(false)
-                .setMinValue(0),
-            ),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('edit')
-            .setDescription('Edit a resource type (stable id stays the same)')
-            .addStringOption((opt) =>
-              opt
-                .setName('name')
-                .setDescription('Current name or id (e.g. Hout / hout)')
-                .setRequired(true),
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName('rename')
-                .setDescription('New display name (does not change the id)')
-                .setRequired(false),
-            )
-            .addIntegerOption((opt) =>
-              opt
-                .setName('sell')
-                .setDescription('New sell GC')
-                .setRequired(false)
-                .setMinValue(0),
-            )
-            .addIntegerOption((opt) =>
-              opt
-                .setName('buy')
-                .setDescription('New buy GC')
-                .setRequired(false)
-                .setMinValue(0),
-            ),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('remove')
-            .setDescription('Remove a resource type (stock must be 0)')
-            .addStringOption((opt) =>
-              opt
-                .setName('name')
-                .setDescription('Name or id to remove')
-                .setRequired(true),
-            ),
-        )
+        .setDescription('Resource types')
         .addSubcommand((sub) =>
           sub.setName('list').setDescription('List resource types'),
         ),
@@ -149,19 +65,6 @@ export function buildResourceCommand() {
     )
     .addSubcommand((sub) =>
       sub.setName('stock').setDescription('Show the guild stockpile'),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName('cap')
-        .setDescription('Show or set the per-type storage cap (DM)')
-        .addIntegerOption((opt) =>
-          opt
-            .setName('amount')
-            .setDescription('New cap (omit to show current)')
-            .setRequired(false)
-            .setMinValue(1)
-            .setMaxValue(999999),
-        ),
     )
     .addSubcommandGroup((group) =>
       group
@@ -202,11 +105,32 @@ export function buildResourceCommand() {
         .addSubcommand((sub) =>
           sub.setName('show').setDescription('Show your personal stash'),
         ),
+    );
+}
+
+export function buildResourceAdminSubcommands(
+  group: SlashCommandSubcommandGroupBuilder,
+): SlashCommandSubcommandGroupBuilder {
+  return group
+    .addSubcommand((sub) =>
+      sub
+        .setName('setup')
+        .setDescription('Configure the channel for public resource posts')
+        .addChannelOption((opt) =>
+          opt
+            .setName('channel')
+            .setDescription('Channel for silent donate/buy/personal/building posts')
+            .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub.setName('clear').setDescription('Clear the resource channel setup'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('adjust')
-        .setDescription('Adjust stock without GC (DM)')
+        .setDescription('Adjust stock without GC')
         .addStringOption((opt) =>
           opt.setName('type').setDescription('Resource name').setRequired(true),
         )
@@ -218,6 +142,92 @@ export function buildResourceCommand() {
             .setMinValue(-9999)
             .setMaxValue(9999),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('cap')
+        .setDescription('Show or set the per-type storage cap')
+        .addIntegerOption((opt) =>
+          opt
+            .setName('amount')
+            .setDescription('New cap (omit to show current)')
+            .setRequired(false)
+            .setMinValue(1)
+            .setMaxValue(999999),
+        ),
+    );
+}
+
+export function buildResourceTypeAdminSubcommands(
+  group: SlashCommandSubcommandGroupBuilder,
+): SlashCommandSubcommandGroupBuilder {
+  return group
+    .addSubcommand((sub) =>
+      sub
+        .setName('add')
+        .setDescription('Add a resource type (id is derived from the name)')
+        .addStringOption((opt) =>
+          opt
+            .setName('name')
+            .setDescription('Display name (e.g. Hout)')
+            .setRequired(true),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName('sell')
+            .setDescription('GC received when donating one unit')
+            .setRequired(true)
+            .setMinValue(0),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName('buy')
+            .setDescription('GC cost when buying (default 2× sell)')
+            .setRequired(false)
+            .setMinValue(0),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('edit')
+        .setDescription('Edit a resource type (stable id stays the same)')
+        .addStringOption((opt) =>
+          opt
+            .setName('name')
+            .setDescription('Current name or id (e.g. Hout / hout)')
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName('rename')
+            .setDescription('New display name (does not change the id)')
+            .setRequired(false),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName('sell')
+            .setDescription('New sell GC')
+            .setRequired(false)
+            .setMinValue(0),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName('buy')
+            .setDescription('New buy GC')
+            .setRequired(false)
+            .setMinValue(0),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('remove')
+        .setDescription('Remove a resource type (stock must be 0)')
+        .addStringOption((opt) =>
+          opt
+            .setName('name')
+            .setDescription('Name or id to remove')
+            .setRequired(true),
+        ),
     );
 }
 
@@ -228,25 +238,13 @@ export async function handleResourceCommand(
     config: AppConfig;
   },
 ): Promise<void> {
-  const { resources, config } = deps;
+  const { resources } = deps;
   const group = interaction.options.getSubcommandGroup(false);
   const sub = interaction.options.getSubcommand();
 
   if (!interaction.guildId) {
     await interaction.reply({
       content: resources.messages.guildOnly,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  const needsAdmin =
-    (group != null && ADMIN_GROUPS.has(group)) || ADMIN_SUBCOMMANDS.has(sub);
-  // type list is public
-  const isTypeList = group === 'type' && sub === 'list';
-  if (needsAdmin && !isTypeList && !config.allowedUserIds.includes(interaction.user.id)) {
-    await interaction.reply({
-      content: resources.messages.unauthorized,
       ephemeral: true,
     });
     return;
@@ -263,12 +261,6 @@ export async function handleResourceCommand(
   }
 
   switch (sub) {
-    case 'setup':
-      await handleSetup(interaction, resources);
-      return;
-    case 'clear':
-      await handleClear(interaction, resources);
-      return;
     case 'donate':
       await handleDonate(interaction, resources);
       return;
@@ -277,6 +269,53 @@ export async function handleResourceCommand(
       return;
     case 'stock':
       await handleStock(interaction, resources);
+      return;
+    default:
+      await interaction.reply({
+        content: resources.messages.unknownSubcommand,
+        ephemeral: true,
+      });
+  }
+}
+
+export async function dispatchResourceAdmin(
+  interaction: ChatInputCommandInteraction,
+  deps: {
+    resources: ResourceService;
+    config: AppConfig;
+  },
+  route: { group: 'type' | null; sub: string },
+): Promise<void> {
+  const { resources, config } = deps;
+  const { group, sub } = route;
+
+  if (!interaction.guildId) {
+    await interaction.reply({
+      content: resources.messages.guildOnly,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (!config.allowedUserIds.includes(interaction.user.id)) {
+    await interaction.reply({
+      content: resources.messages.unauthorized,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (group === 'type') {
+    await handleTypeGroup(interaction, resources);
+    return;
+  }
+
+  switch (sub) {
+    case 'setup':
+      await handleSetup(interaction, resources);
+      return;
+    case 'clear':
+      await handleClear(interaction, resources);
       return;
     case 'cap':
       await handleCap(interaction, resources);

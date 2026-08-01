@@ -1,7 +1,7 @@
 # Eryndor bot
 
 ## Project Goal
-Build **Eryndor bot** — a Discord bot for the Eryndor (West Marches) D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), gives authorized users full manual control during sessions through slash commands, exposes Eryndor calendar info (`/world today`, `/world fullmoon`) from the static Calendar of Eryndor JSON API, and can post that same “today” embed each morning to a separate channel **only on days with calendar events** (`/world setup`).
+Build **Eryndor bot** — a Discord bot for the Eryndor (West Marches) D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), gives authorized users full manual control during sessions through slash commands, exposes Eryndor calendar info (`/eryndor today`, `/eryndor fullmoon`) from the static Calendar of Eryndor JSON API, and can post that same “today” embed each morning to a separate channel **only on days with calendar events** (`/dm calendar setup`).
 
 **DM handout:** static site under [`docs/handout/`](./handout/). Style and update rules for agents: [`handout-agent.md`](./handout-agent.md). Bot behaviour remains defined in **this** file.
 
@@ -31,26 +31,26 @@ Optional:
 
 ```env
 # Default random delay between automatic updates, in minutes (defaults: 360–1080 = 6–18h).
-# Per-guild override via `/weather settings interval` (stored in SQLite; no restart).
+# Per-guild override via `/dm weather-settings interval` (stored in SQLite; no restart).
 WEATHER_UPDATE_MIN_MINUTES=360
 WEATHER_UPDATE_MAX_MINUTES=1080
 
 # Default automatic posts only inside this same-day window (defaults below).
-# Manual /weather roll and /weather set still work outside the window.
+# Manual /dm weather roll and `/dm weather set` still work outside the window.
 # Set WEATHER_ACTIVE_WINDOW_ENABLED=false for 24/7 auto-updates (useful overnight testing).
-# Per-guild override via `/weather settings window` (timezone always from WEATHER_TIMEZONE).
+# Per-guild override via `/dm weather-settings window` (timezone always from WEATHER_TIMEZONE).
 WEATHER_ACTIVE_WINDOW_ENABLED=true
 WEATHER_ACTIVE_START=06:00
 WEATHER_ACTIVE_END=23:00
 WEATHER_TIMEZONE=Europe/Amsterdam
 
-# Calendar of Eryndor static JSON (public). Used by /world today and /world fullmoon.
+# Calendar of Eryndor static JSON (public). Used by /eryndor today and /eryndor fullmoon.
 # DOY for “today” uses WEATHER_TIMEZONE (default Europe/Amsterdam).
 ERYNDOR_CALENDAR_BASE_URL=https://v3xillum.github.io/eryndor
 ERYNDOR_CALENDAR_FALLBACK_URL=https://raw.githubusercontent.com/V3xillum/eryndor/main
-# Morning auto-post of /world today embed — only when events exist (local WEATHER_TIMEZONE).
+# Morning auto-post of /eryndor today embed — only when events exist (local WEATHER_TIMEZONE).
 CALENDAR_EVENTS_POST_TIME=08:30
-# Evening Full Moon (Rising) + exact Full Moon posts to the same /world setup channel.
+# Evening Full Moon (Rising) + exact Full Moon posts to the same /dm calendar setup channel.
 CALENDAR_FULLMOON_POST_TIME=20:00
 
 # Daily guild production summary on the resource channel (silent). Local WEATHER_TIMEZONE.
@@ -68,7 +68,7 @@ STATUS_REPORT_CADENCE=daily
 
 **Active window behaviour:** the scheduler never auto-posts outside the **effective** window for that guild (guild override, else `.env`). If `next_update_at` falls overnight, it waits until the next window start. When scheduling the next update, candidates outside the window are clamped to the next window start. Half-open interval: `[start, end)` in `WEATHER_TIMEZONE`.
 
-`guild` destination is per server via `/weather setup`. Interval and active window **defaults** live in `.env` (restart required to change defaults). Per-guild overrides via `/weather settings` live in SQLite and take effect immediately (next update is rescheduled). Changing only `.env` does not rewrite existing `next_update_at` until weather is rolled/set/resumed/settings-changed.
+`guild` destination is per server via `/dm weather setup`. Interval and active window **defaults** live in `.env` (restart required to change defaults). Per-guild overrides via `/dm weather-settings` live in SQLite and take effect immediately (next update is rescheduled). Changing only `.env` does not rewrite existing `next_update_at` until weather is rolled/set/resumed/settings-changed.
 
 `guild_id` is a real Discord concept: a *guild* is a Discord server. Each server has a unique snowflake ID. The bot stores one weather state row per guild so the same bot can later run in multiple servers without a rewrite. Slash commands receive `interaction.guildId` from Discord — operators do not need to know or type it during setup.
 
@@ -83,7 +83,7 @@ STATUS_REPORT_CADENCE=daily
 ## Project Structure
 ```text
 src/
-  commands/       # thin slash command handlers (eryndor.ts, weather.ts, announce.ts, world.ts)
+  commands/       # thin slash command handlers (eryndor.ts, weather.ts, announce.ts, …)
   events/         # discord.js event listeners (ready, interactionCreate, etc.)
   services/       # WeatherService, SchedulerService, AnnounceService, EryndorCalendarService, ActivityLogService, StatusReportService, ResourceService, BuildingService, ProductionService
   utils/          # helpers, activeWindow, harptos DOY helpers, statusReportPeriod
@@ -116,7 +116,7 @@ One row per guild (`guild_id` = Discord server ID). Multi-server support later i
 ```sql
 CREATE TABLE world_state (
   guild_id TEXT PRIMARY KEY,
-  channel_id TEXT,                -- set via /weather setup
+  channel_id TEXT,                -- set via /dm weather setup
   thread_id TEXT,                 -- optional; NULL = post in channel
   current_weather_type TEXT,
   current_weather_rolled_at DATETIME,
@@ -134,7 +134,7 @@ CREATE TABLE world_state (
   active_window_enabled INTEGER,  -- NULL = inherit .env; 0 = off; 1 = on
   active_window_start TEXT,       -- HH:mm (nullable)
   active_window_end TEXT,         -- HH:mm (nullable)
-  calendar_channel_id TEXT,       -- /world setup; morning event + evening moon posts (nullable)
+  calendar_channel_id TEXT,       -- /eryndor setup; morning event + evening moon posts (nullable)
   calendar_events_last_handled_date TEXT,  -- YYYY-MM-DD local; additive ALTER
   calendar_fullmoon_last_handled_date TEXT -- YYYY-MM-DD local; additive ALTER
 );
@@ -144,7 +144,7 @@ CREATE TABLE weather_log (
   guild_id TEXT,
   weather_type TEXT,
   posted_at DATETIME,
-  forced BOOLEAN DEFAULT 0        -- true when set via /weather set, not a roll
+  forced BOOLEAN DEFAULT 0        -- true when set via /dm weather set, not a roll
 );
 
 CREATE TABLE scheduled_posts (
@@ -161,11 +161,11 @@ CREATE TABLE scheduled_posts (
 
 On restart: if `next_update_at` is in the past and the guild isn't paused, post immediately and reschedule. This means state never needs a separate "missed update" recovery path.
 
-Automated posts go to `thread_id` when set, otherwise to `channel_id`. If neither is configured, skip posting for that guild (log a warning) until `/weather setup` has been run.
+Automated posts go to `thread_id` when set, otherwise to `channel_id`. If neither is configured, skip posting for that guild (log a warning) until `/dm weather setup` has been run.
 
 Pending rows in `scheduled_posts` with `post_at` in the past are posted on the next scheduler tick (same 30s loop). Announcements ignore the weather active window and pause.
 
-Morning calendar-event posts use `calendar_channel_id` (from `/world setup`), independent of the weather destination. Once per local day after `CALENDAR_EVENTS_POST_TIME` (default `08:30` in `WEATHER_TIMEZONE`): fetch today; post `@everyone` + the same embed as `/world today` **only if** `events.length > 0`; otherwise stay silent. `calendar_events_last_handled_date` prevents duplicates (and skips empty days). Missed morning after restart → catch-up on the next tick after the post time.
+Morning calendar-event posts use `calendar_channel_id` (from `/dm calendar setup`), independent of the weather destination. Once per local day after `CALENDAR_EVENTS_POST_TIME` (default `08:30` in `WEATHER_TIMEZONE`): fetch today; post `@everyone` + the same embed as `/eryndor today` **only if** `events.length > 0`; otherwise stay silent. `calendar_events_last_handled_date` prevents duplicates (and skips empty days). Missed morning after restart → catch-up on the next tick after the post time.
 
 Evening full-moon posts use the **same** channel after `CALENDAR_FULLMOON_POST_TIME` (default `20:00`):
 - `moon.phase === "Full Moon (Rising)"` → moon-night embed, no `@everyone`, `MessageFlags.SuppressNotifications`
@@ -221,7 +221,7 @@ Each entry has a numeric **`severity`** (1 = mild … 5 = catastrophic), a boole
 }
 ```
 
-After current weather with `severity >= cooldownAfterSeverity`, the next scheduler/`/weather roll` filters to `severity <= cooldownMaxNextSeverity`. If that pool is empty (e.g. an all-evil table), the ceiling rises (3, 4, …) until at least one entry matches. `/weather set` bypasses the filter. Per-guild overrides via `/weather settings cooldown` (null columns inherit these content defaults; guild can also disable cooldown). See [`feature-weather-severity-duration.md`](./feature-weather-severity-duration.md) and [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
+After current weather with `severity >= cooldownAfterSeverity`, the next scheduler/`/dm weather roll` filters to `severity <= cooldownMaxNextSeverity`. If that pool is empty (e.g. an all-evil table), the ceiling rises (3, 4, …) until at least one entry matches. `/dm weather set` bypasses the filter. Per-guild overrides via `/dm weather-settings cooldown` (null columns inherit these content defaults; guild can also disable cooldown). See [`feature-weather-severity-duration.md`](./feature-weather-severity-duration.md) and [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
 
 **Roll pool order:** severity dial → magical dial → severity cooldown (within that intersection) → one weighted pick. Setting either dial rejects empty pools and empty **intersections** with the other active dial (no silent fallback). See [`feature-weather-magical-dial.md`](./feature-weather-magical-dial.md).
 
@@ -234,7 +234,7 @@ Ship a sensible starter table with placeholder images; real art can be swapped l
 Expose a small service interface that commands and the scheduler both call into:
 
 - `getCurrentWeather(guildId)`
-- `getAdminStatus(guildId)` — severity, magical flag, schedule, cooldown rules + next-roll filter, severity/magical dials, duration source, effective interval/window (for `/weather status`)
+- `getAdminStatus(guildId)` — severity, magical flag, schedule, cooldown rules + next-roll filter, severity/magical dials, duration source, effective interval/window (for `/dm weather status`)
 - `getScheduleSettings(guildId)` — effective interval + active window (guild override or `.env`)
 - `getCooldownSettings(guildId)` — effective cooldown enabled/thresholds (guild override or `weather-rules.json`)
 - `setSeverityDial` / `clearSeverityDial` — temporary min/max band for rolls
@@ -253,91 +253,64 @@ Discord commands should only parse input, call the service, and format the reply
 
 `EryndorCalendarService` fetches public static JSON (no secrets). The calendar site is GitHub Pages; there is no live “today” API — the bot computes Harptos day-of-year (DOY) in `WEATHER_TIMEZONE`, capped at **365** (no leap day), then fetches:
 
-- `/world today` → `{BASE}/data/days/{doy}.json` (3-digit zero-padded DOY)
-- `/world fullmoon` → `{BASE}/data/full-moons.json` → `nextByFromDoy[String(doy)]` (exact Full Moon only)
+- `/eryndor today` → `{BASE}/data/days/{doy}.json` (3-digit zero-padded DOY)
+- `/eryndor fullmoon` → `{BASE}/data/full-moons.json` → `nextByFromDoy[String(doy)]` (exact Full Moon only)
 
 Fetch order: Pages base URL first; on persistent 404, optional raw.githubusercontent.com fallback. Do not scrape HTML.
 
-Replies are Dutch Discord embeds (`content/messages.json` for labels/errors). Today embed: Harptos title, moon phase, NL-formatted Gregorian date under the moon, events list, then a markdown “Bekijk ↗” link to the calendar UI (`ERYNDOR_CALENDAR_BASE_URL`) under Events — **no** next-full-moon footer on today (full moon is only via `/world fullmoon`).
+Replies are Dutch Discord embeds (`content/messages.json` for labels/errors). Today embed: Harptos title, moon phase, NL-formatted Gregorian date under the moon, events list, then a markdown “Bekijk ↗” link to the calendar UI (`ERYNDOR_CALENDAR_BASE_URL`) under Events — **no** next-full-moon footer on today (full moon is only via `/eryndor fullmoon`).
 
 UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec detail: [`docs/feature-eryndor-calendar.md`](./feature-eryndor-calendar.md). Daily auto-post of events: [`docs/feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
 ## Permissions
 
-- `/weather current` — available to everyone in the guild.
-- `/eryndor help` — available to everyone in the guild. Players see a short Dutch overview of player commands only (no handout link). Allowlisted users also see DM commands plus the DM handout link (`HANDOUT_URL`).
-- All other `/weather` subcommands (including `status`, `next`, `settings`) — only users whose Discord user ID appears in `ALLOWED_USER_IDS`.
-- `/world today` and `/world fullmoon` — available to everyone in the guild (world info; no weather-timer spoilers).
-- `/world setup` and `/world clear` — allowlist only (calendar-event channel).
-- `/resource donate|buy|stock|personal|type list`, `/building donate|fund|contribute|list|status`, `/production list` — everyone in the guild.
-- `/resource setup|clear|type add|edit|remove|adjust|cap`, `/building create|cost|cancel`, `/production add|workers|yield|remove` — allowlist only.
+**Player-facing (everyone in the guild):**
+- `/weather current`
+- `/eryndor help` (players: player commands only; allowlist also sees DM cheat-sheet + `HANDOUT_URL`)
+- `/eryndor today`, `/eryndor fullmoon`
+- `/resource donate|buy|stock|personal|*|type list`
+- `/building donate|fund|contribute|list|status|cost show`
+- `/production list`
 
-Do **not** require Discord “Manage Server” or a DM role. The operator may not have those permissions; user-ID allowlist is the intended gate. Later this can be extended with role IDs; do not build role support now unless trivial.
+**DM-only:** all under `/dm …` (see Slash Commands). Runtime gate remains `ALLOWED_USER_IDS`.
+
+`/dm` is registered with Discord `default_member_permissions: 0` so it is **hidden from the `/` picker for normal members**. Server admins see it by default. For non-admin DMs: Server Settings → Integrations → bot → enable `/dm` for those users or a DM role ([Command Permissions](https://support-apps.discord.com/hc/en-us/articles/26501869403159-Command-Permissions)). Allowlist still denies execution if someone somehow invokes `/dm` without being listed.
 
 Unauthorized users get a short ephemeral denial.
 
 ## Slash Commands
 
-There is **no** `/weather post`. Anything that changes weather also broadcasts to the configured channel/thread. A separate “post current again” command is redundant with `current` and with the channel history.
+There is **no** `/weather post`. Anything that changes weather also broadcasts to the configured channel/thread.
 
-### Bot overview
-- `/eryndor help` — short ephemeral cheat-sheet. Everyone: player commands only (Dutch). Allowlist: everyone + DM commands plus link to the DM handout (`HANDOUT_URL`, default GitHub Pages). Does not post to the channel.
+### Player commands
+- `/eryndor help|today|fullmoon` — help + calendar info. Everyone.
+- `/weather current` — private current weather. Everyone.
+- `/resource donate|buy|stock|personal|*|type list` — stockpile. Everyone.
+- `/building donate|fund|contribute|list|status|cost show` — projects. Everyone.
+- `/production list` — production overview. Everyone.
 
-### Weather
-- `/weather setup <channel> [thread]` — configure where weather updates are sent (scheduler, `roll`, and `set`). `thread` is optional. Uses the current guild’s `guildId` from the interaction.
-- `/weather current` — show the current weather **to the invoking user** (ephemeral or command reply). Does **not** post to the weather channel — if the bot is working, the latest update is already visible there; this is a quiet status check (e.g. DM mid-session without spamming the channel).
-- `/weather status` — allowlist-only admin view: type, severity, magical flag, forced flag, since-when, remaining/next update, duration source (per-type vs guild/env fallback), effective interval + active window, severity dial, magical dial, cooldown rules (guild or content) and whether the next roll is filtered. Ephemeral; does not post to the channel.
-- `/weather severity set <min> <max> <duration>` — temporary severity band for auto-roll / `/weather roll` (e.g. min 1, max 4, `1d`). Lazy-expires; then default table + cooldown. Rejects empty bands and empty intersection with an active magical dial. Allowlist only. Does not change current weather or post.
-- `/weather severity clear` — clear the dial early. Allowlist only.
-- `/weather magical set <only|none> <duration>` — temporary magical filter for auto-roll / `/weather roll` (`only` = magical types only; `none` = non-magical only). Lazy-expires. Rejects empty pools and empty intersection with an active severity dial. Allowlist only. Does not change current weather or post.
-- `/weather magical clear` — clear the magical dial early. Allowlist only.
-- `/weather settings show` — show effective auto-update interval, active posting window, and cooldown (guild override or defaults). Allowlist only.
-- `/weather settings interval <min> <max>` — set per-guild fallback interval in minutes (when the current type has no `duration*Minutes`). Reschedules immediately. Allowlist only.
-- `/weather settings window <enabled> [start] [end]` — set per-guild active posting window (`HH:mm`, same-day). Timezone stays in `.env`. Reschedules immediately. Allowlist only.
-- `/weather settings cooldown [enabled] [after] [max_next]` — per-guild severity cooldown overrides (field-level; null = inherit `weather-rules.json`). At least one option required. Does not reschedule. Soft-warns if `max_next >= after` or start pool would be empty. Allowlist only.
-- `/weather settings clear <scope>` — clear guild overrides by scope: `schedule` (→ `.env`), `cooldown` (→ content), or `all`. Schedule clears reschedule. Allowlist only.
-- `/weather next` — show when the next **automatic** update is scheduled (ephemeral). Also reports pause state and when an update is due but waiting for the active posting window. **Allowlist only** (players should not see when weather will change). Does not post to the weather channel.
-- `/weather roll` — roll against the table (with severity dial + magical dial + cooldown when applicable), set that as current weather, **and** post the update to the configured channel/thread. Also reply to the invoker with the result (roll value + type).
-- `/weather set <value> [duration]` — set weather by **type** (`storm`) or **physical d100** (`81`), then post. Type → `forced = true`; numeric 1–100 → table lookup, `forced = false` (external die). Optional `duration` as before. Bypasses dials and cooldown.
-- `/weather schedule <duration>` — keep the **current** weather; only change when the next automatic roll happens. Same duration format. Clears pause. Allowlist only. Does not post to the channel.
-- `/weather pause <duration>` — pause automatic updates. Duration format: `30m`, `2h`, or `1d` (minutes / hours / days). Reject invalid input with a clear ephemeral error.
-- `/weather resume` — resume automatic updates.
+### `/dm` (allowlist + Discord picker hidden by default)
 
-### World / calendar
-- `/world today` — current Harptos day, moon phase, events (embed). Everyone.
-- `/world fullmoon` — next exact Full Moon from `full-moons.json` (embed). Everyone.
-- `/world setup <channel>` — where morning calendar-event posts go (separate from weather). Allowlist only.
-- `/world clear` — disable automatic morning calendar-event posts. Allowlist only.
+Groups (Discord nesting: command → group → sub):
 
-### Announcements (DM-scheduled text)
-- `/announce schedule <channel> <when>` — open a modal for body text; store for later. `when`: `30m`/`2h`/`1d` or `DD-MM-YYYY HH:mm` (also accepts `YYYY-MM-DD`) in `WEATHER_TIMEZONE`. Allowlist only. Destination is independent of `/weather setup`.
-- `/announce list` — pending posts (ephemeral). Allowlist only.
-- `/announce cancel <id>` — cancel a pending post. Allowlist only.
+- `/dm weather` — `setup`, `status`, `next`, `roll`, `set`, `schedule`, `pause`, `resume`
+- `/dm weather-severity` — `set`, `clear` (temporary severity band for auto-roll / `/dm weather roll`)
+- `/dm weather-magical` — `set`, `clear` (`only` / `none`)
+- `/dm weather-settings` — `show`, `interval`, `window`, `cooldown`, `clear` (per-guild schedule + cooldown)
+- `/dm calendar` — `setup`, `clear` (morning events + evening moon posts channel)
+- `/dm announce` — `schedule`, `list`, `cancel` (free-text posts; independent of weather channel)
+- `/dm resource` — `setup`, `clear`, `adjust`, `cap`
+- `/dm resource-type` — `add`, `edit`, `remove`
+- `/dm building` — `create`, `cancel`
+- `/dm building-cost` — `add`, `buildtime`
+- `/dm production` — `add`, `workers`, `yield`, `remove`
 
-### Resources & buildings
-- `/resource setup <channel>` — channel for silent resource/building/production posts. Allowlist only.
-- `/resource clear` — clear that setup. Allowlist only.
-- `/resource type add|edit|remove|list` — manage types (display name + sell/buy GC). add/edit/remove allowlist; list everyone.
-- `/resource donate|buy|stock` — guild stock (everyone). Overflow past storage cap on donate → personal.
-- `/resource personal add|remove|show` — personal stash (everyone).
-- `/resource adjust` — stock correction without public GC (allowlist); positive overflow → personal.
-- `/resource cap [amount]` — show/set per-type storage cap (default 300). Allowlist only.
-- `/building create` — new project; phase-2 build time defaults to **100**. Allowlist only.
-- `/building cost add` — material cost wizard (type + amount; “add another”). Allowlist only.
-- `/building cost buildtime` — set/override phase-2 build time (menu + modal). Allowlist only.
-- `/building cost show` / `/building status` — progress via menu (everyone).
-- `/building cancel` — cancel project; funded materials return to stock (overflow → personal). Allowlist only.
-- `/building donate|fund|contribute|list` — contribute materials/time via menus + amount modal; silent posts show **all** material progress. Everyone.
-
-### Production
-- `/production add|workers|yield|remove` — production sources (allowlist). Wizard menus.
-- `/production list` — overview (everyone).
-- Daily silent summary on the resource channel after `PRODUCTION_POST_TIME` (default 17:00); overflow past cap is **lost** and shown in that post.
+Behaviour of each subcommand is unchanged from the former top-level paths (`/dm weather roll` → `/dm weather roll`, `/announce schedule` → `/dm announce schedule`, `/dm calendar setup` → `/dm calendar setup`, etc.). Daily production summary still posts after `PRODUCTION_POST_TIME` on the resource channel.
 
 Slash commands are registered globally via `npm run register-commands` (`Routes.applicationCommands`). Global commands can take up to ~1 hour to appear in Discord clients; guild-scoped registration is faster for single-server testing if needed later.
 
 ## Post format
-When posting weather (scheduler, `/weather roll`, or `/weather set`):
+When posting weather (scheduler, `/dm weather roll`, or `/dm weather set`):
 - **Image + title + `@everyone`** — attach the single image for that weather type; ping the guild
 - Requires bot permission **Mention Everyone** (and channel must not deny it)
 - All flavor, stats, and atmosphere are in the image (like DM weather cards)
@@ -357,14 +330,14 @@ Responsible for:
 - once per day after `PRODUCTION_POST_TIME`, paying due production sources and posting one silent summary on the resource channel (lost overflow shown) — same-day catch-up if the bot starts late
 - once per `STATUS_REPORT_CADENCE` after `STATUS_REPORT_TIME`, DM status reports to `STATUS_REPORT_USER_ID` (active/paused + usage counts + recent issues; no next-update spoilers)
 
-Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/weather roll`, `/weather set`); the scheduler owns the recurring automatic updates, due announcements, and morning calendar-event posts.
+Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/dm weather roll`, `/dm weather set`); the scheduler owns the recurring automatic updates, due announcements, and morning calendar-event posts.
 
-**Choice:** `.env` holds **defaults** (and timezone). Per-guild cadence and posting window can be overridden in SQLite via `/weather settings` so DMs can change them without host access or a restart. Empty/null guild columns mean “inherit `.env`”.
+**Choice:** `.env` holds **defaults** (and timezone). Per-guild cadence and posting window can be overridden in SQLite via `/dm weather-settings` so DMs can change them without host access or a restart. Empty/null guild columns mean “inherit `.env`”.
 
 ### Weather duration precedentie (hoog → laag)
-1. Expliciete DM-duur (`/weather set … duration`, `/weather schedule`)
+1. Expliciete DM-duur (`/dm weather set … duration`, `/dm weather schedule`)
 2. Entry `durationMinMinutes` / `durationMaxMinutes`
-3. Guild `/weather settings interval`
+3. Guild `/dm weather-settings interval`
 4. `.env` `WEATHER_UPDATE_*_MINUTES`
 
 ## Deploy & GitHub
@@ -372,7 +345,7 @@ Keep this logic entirely out of command handlers — commands trigger immediate 
 - GitHub holds the **code and content**, not secrets. Use `.gitignore` for `.env` and `storage/*.sqlite` (or document how local DB files are treated).
 - The bot is a **long-running Node process**. GitHub Actions alone is not a host — Actions jobs are short-lived.
 - Target workflow: develop and test on a personal machine or private VPS (`git pull` + `node` / PM2 / Docker), with `.env` filled locally. Later the same repo can deploy to a PaaS that connects to GitHub (e.g. Railway, Render, Fly.io) using environment variables there.
-- One Discord application/bot token can be invited to multiple guilds; each guild runs `/weather setup` independently. No second codebase needed for a second server.
+- One Discord application/bot token can be invited to multiple guilds; each guild runs `/dm weather setup` independently. No second codebase needed for a second server.
 
 ## Code Style
 - TypeScript strict mode.
@@ -395,25 +368,25 @@ Architecture should allow these without major refactoring, but **none should be 
 - Guild-scoped slash command registration for faster iteration on a single server
 
 ### Weather duration (per type) — implemented
-Each weather type may define `durationMinMinutes` / `durationMaxMinutes`. When present, that range schedules the next auto-update after the type becomes current; otherwise the guild `/weather settings interval` applies when set, else the global `.env` interval. Explicit DM duration (`/weather set … duration`, `/weather schedule`) always wins.
+Each weather type may define `durationMinMinutes` / `durationMaxMinutes`. When present, that range schedules the next auto-update after the type becomes current; otherwise the guild `/dm weather-settings interval` applies when set, else the global `.env` interval. Explicit DM duration (`/dm weather set … duration`, `/dm weather schedule`) always wins.
 
 ### Guild schedule settings — implemented
-`/weather settings` stores optional per-guild overrides on `world_state`: `update_min_minutes` / `update_max_minutes`, `active_window_enabled` / `active_window_start` / `active_window_end`. Null = inherit `.env`. Timezone stays in `.env` (`WEATHER_TIMEZONE`). Changing settings reschedules `next_update_at` immediately. Visible on `/weather status` and `/weather settings show`. Clear via `/weather settings clear scope:schedule|all`.
+`/dm weather-settings` stores optional per-guild overrides on `world_state`: `update_min_minutes` / `update_max_minutes`, `active_window_enabled` / `active_window_start` / `active_window_end`. Null = inherit `.env`. Timezone stays in `.env` (`WEATHER_TIMEZONE`). Changing settings reschedules `next_update_at` immediately. Visible on `/dm weather status` and `/dm weather-settings show`. Clear via `/dm weather-settings clear scope:schedule|all`.
 
 ### Severity & transition rules — implemented
-Each entry has numeric **severity**. After weather at or above `cooldownAfterSeverity`, the next auto-roll / `/weather roll` must resolve to `severity <= cooldownMaxNextSeverity` (filter + one weighted pick; empty pools escalate the ceiling). Thresholds live in `content/weather-rules.json`. `/weather set` bypasses the filter. Per-guild overrides: see guild cooldown settings below.
+Each entry has numeric **severity**. After weather at or above `cooldownAfterSeverity`, the next auto-roll / `/dm weather roll` must resolve to `severity <= cooldownMaxNextSeverity` (filter + one weighted pick; empty pools escalate the ceiling). Thresholds live in `content/weather-rules.json`. `/dm weather set` bypasses the filter. Per-guild overrides: see guild cooldown settings below.
 
 ### DM severity dial — implemented
-`/weather severity set <min> <max> <duration>` stores a temporary inclusive band on `world_state` (`severity_min` / `severity_max` / `severity_override_until`). Auto-roll and `/weather roll` filter to that band first, then apply magical dial (if any) and cooldown within the intersection. Lazy expiry (checked at roll time). `/weather severity clear` removes it early. Visible on `/weather status`. `/weather set` still bypasses filters. Setting rejects empty bands and empty intersection with an active magical dial.
+`/dm weather-severity set <min> <max> <duration>` stores a temporary inclusive band on `world_state` (`severity_min` / `severity_max` / `severity_override_until`). Auto-roll and `/dm weather roll` filter to that band first, then apply magical dial (if any) and cooldown within the intersection. Lazy expiry (checked at roll time). `/dm weather-severity clear` removes it early. Visible on `/dm weather status`. `/dm weather set` still bypasses filters. Setting rejects empty bands and empty intersection with an active magical dial.
 
 ### DM magical dial — implemented
-Each weather entry has boolean **`magical`**. `/weather magical set <only|none> <duration>` stores a temporary filter on `world_state` (`magical_mode` / `magical_override_until`). Roll order: severity dial → magical dial → cooldown → weighted pick. Lazy expiry. `/weather magical clear` removes it early. Visible on `/weather status`. `/weather set` bypasses. Setting rejects empty magical pools and empty intersection with an active severity dial (no silent fallback / escalate on magical).
+Each weather entry has boolean **`magical`**. `/dm weather-magical set <only|none> <duration>` stores a temporary filter on `world_state` (`magical_mode` / `magical_override_until`). Roll order: severity dial → magical dial → cooldown → weighted pick. Lazy expiry. `/dm weather-magical clear` removes it early. Visible on `/dm weather status`. `/dm weather set` bypasses. Setting rejects empty magical pools and empty intersection with an active severity dial (no silent fallback / escalate on magical).
 
 ### Guild cooldown settings — implemented
-Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / default on; `0`/`1` = off/on), `cooldown_after_severity`, `cooldown_max_next_severity` (null = inherit `content/weather-rules.json`). Field-level merge. `/weather settings cooldown` patches provided fields; soft-warns when `max_next >= after` or the start pool would be empty (escalate still applies). `/weather settings clear scope:cooldown|all` clears overrides. Visible on `/weather status` and `settings show` with source label `guild` | `content`. Does not reschedule. See [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
+Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / default on; `0`/`1` = off/on), `cooldown_after_severity`, `cooldown_max_next_severity` (null = inherit `content/weather-rules.json`). Field-level merge. `/dm weather-settings cooldown` patches provided fields; soft-warns when `max_next >= after` or the start pool would be empty (escalate still applies). `/dm weather-settings clear scope:cooldown|all` clears overrides. Visible on `/dm weather status` and `settings show` with source label `guild` | `content`. Does not reschedule. See [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
 
 ### Scheduled announcements — implemented
-`/announce schedule|list|cancel` stores free-text posts in `scheduled_posts` and posts them via the existing 30s scheduler to a chosen channel (not the weather destination). Relative or absolute `when` in `WEATHER_TIMEZONE`. Modal body max 2000 chars. Allowlist only. See [`feature-scheduled-announcements.md`](./feature-scheduled-announcements.md).
+`/dm announce schedule|list|cancel` stores free-text posts in `scheduled_posts` and posts them via the existing 30s scheduler to a chosen channel (not the weather destination). Relative or absolute `when` in `WEATHER_TIMEZONE`. Modal body max 2000 chars. Allowlist only. See [`feature-scheduled-announcements.md`](./feature-scheduled-announcements.md).
 
 ### Guild resources & buildings — implemented
 `/resource` (types, donate/buy/stock, setup, cap) and `/building` (create/cost add|buildtime|show/fund/donate/contribute). Flexible resource types per guild, two-phase building projects (materials → build time, default **100**), public silent embeds (donate/fund show full material progress), ledger + status-report backup. No player GC balance in DB. See [`feature-guild-resources.md`](./feature-guild-resources.md).
@@ -422,12 +395,12 @@ Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / def
 `/production` (add/list/workers/yield/remove) and `/resource cap`. Per-type `storage_cap` (default 300). Interactive overflow → personal stock; auto production overflow → **lost**, shown clearly on the daily silent post after `PRODUCTION_POST_TIME` (default `17:00`). Same same-day catch-up as calendar posts if the bot starts late. See [`feature-guild-production.md`](./feature-guild-production.md).
 
 ### Calendar events channel — implemented
-`/world setup` stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/world today` embed **only when** `events.length > 0`. Empty days stay silent. `/world clear` disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
+`/dm calendar setup` stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/eryndor today` embed **only when** `events.length > 0`. Empty days stay silent. `/dm calendar clear` disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
-**Possible adjustment (not built):** post the today-embed **every** morning. Days with events: keep `@everyone` (and normal notifications). Empty days: no `@everyone`, plus Discord `MessageFlags.SuppressNotifications` (no sound/push). Current preference remains “only post on event days” — a daily date post is likely noise; anyone curious can run `/world today` on demand.
+**Possible adjustment (not built):** post the today-embed **every** morning. Days with events: keep `@everyone` (and normal notifications). Empty days: no `@everyone`, plus Discord `MessageFlags.SuppressNotifications` (no sound/push). Current preference remains “only post on event days” — a daily date post is likely noise; anyone curious can run `/eryndor today` on demand.
 
 ### Calendar full moon evening posts — implemented
-Same `/world setup` channel. Each evening after `CALENDAR_FULLMOON_POST_TIME` (default `20:00`):
+Same `/dm calendar setup` channel. Each evening after `CALENDAR_FULLMOON_POST_TIME` (default `20:00`):
 - **Full Moon (Rising)** (avond vóór exacte volle maan) → moon embed, no ping, `SuppressNotifications`
 - **exact Full Moon** (`isExactFullMoon`) → moon embed + `@everyone`
 No flavor-text pool — phase + Harptos date + calendar link. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).

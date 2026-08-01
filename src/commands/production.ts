@@ -18,25 +18,7 @@ export function buildProductionCommand() {
     .setName('production')
     .setDescription('Guild production sources')
     .addSubcommand((sub) =>
-      sub.setName('add').setDescription('Add a production source (DM)'),
-    )
-    .addSubcommand((sub) =>
       sub.setName('list').setDescription('List production sources'),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName('workers')
-        .setDescription('Set workers on a production source (DM)'),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName('yield')
-        .setDescription('Set yield per worker on a production source (DM)'),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName('remove')
-        .setDescription('Remove a production source (DM)'),
     );
 }
 

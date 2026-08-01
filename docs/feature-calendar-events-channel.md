@@ -16,15 +16,15 @@ Zie ook: [`agent.md`](./agent.md), [`feature-eryndor-calendar.md`](./feature-ery
 
 | Command | Effect |
 |---|---|
-| `/world setup channel` | Zet `calendar_channel_id` |
-| `/world clear` | Zet `calendar_channel_id` op null |
-| `/world today` / `fullmoon` | Ongewijzigd (iedereen) |
+| `/dm calendar setup channel` | Zet `calendar_channel_id` |
+| `/dm calendar clear` | Zet `calendar_channel_id` op null |
+| `/eryndor today` / `fullmoon` | Ongewijzigd (iedereen) |
 
 ### Ochtend (events)
 
 - Posttijd: `CALENDAR_EVENTS_POST_TIME` (default `08:30`) in `WEATHER_TIMEZONE`.
 - `events.length === 0` → **geen** bericht.
-- anders → `@everyone` + zelfde embed als `/world today`.
+- anders → `@everyone` + zelfde embed als `/eryndor today`.
 
 ### Avond (volle maan)
 
@@ -65,7 +65,7 @@ Timezone blijft `WEATHER_TIMEZONE`. Restart nodig om tijden te wijzigen.
 
 | Stuk | Rol |
 |---|---|
-| `src/commands/world.ts` | `setup` / `clear` + today/fullmoon |
+| `src/commands/eryndor.ts` | `setup` / `clear` + today/fullmoon |
 | `src/services/SchedulerService.ts` | `tickCalendarEvents`, `tickCalendarFullMoon` |
 | `src/services/EryndorCalendarService.ts` | `buildTodayEmbed`, `buildMoonNightEmbed` |
 | `src/services/WeatherService.ts` | calendar channel + last-handled helpers |
@@ -80,4 +80,4 @@ Timezone blijft `WEATHER_TIMEZONE`. Restart nodig om tijden te wijzigen.
 2. Ochtend: dag mét events → embed + `@everyone`; lege dag → stil.
 3. Avond Rising: tijdelijk `CALENDAR_FULLMOON_POST_TIME` in het verleden + mock/check op een Rising-dag → stil post (geen ping).
 4. Avond exact Full Moon → post + `@everyone`.
-5. `/world clear` → geen posts meer.
+5. `/dm calendar clear` → geen posts meer.

@@ -536,7 +536,7 @@
         </article>
         <article class="tile">
           <h3>Jij als DM</h3>
-          <p>Aan tafel: weer vastzetten of laten dobbelen, updates pauzeren, ritme/limieten en berichten. Op Discord tussen sessies: guild-voorraad, bouw en productie inrichten.</p>
+          <p>Alle DM-commands zitten onder <code>/dm</code> (verborgen voor spelers). Eén keer aanzetten: Serverinstellingen → Integraties → Eryndor-Bot → <code>/dm</code> → toestaan voor aangewezen DM’s of een DM-rol. Daarna: weer, kalenderkanaal, berichten, voorraad, bouw en productie via die boom.</p>
         </article>
         <article class="tile">
           <h3>Spelers</h3>
@@ -544,15 +544,15 @@
         </article>
         <article class="tile">
           <h3>Kalender</h3>
-          <p><code>/world today</code> en <code>/world fullmoon</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — zonder te verklappen wanneer het weer wisselt. Optioneel post de bot ’s ochtends (rond 08:30) bij events, en ’s avonds (rond 20:00) bij <strong>Full Moon (Rising)</strong> en de exacte volle maan, naar een apart kanaal. Inrichten: <code>/world setup</code>.</p>
+          <p><code>/eryndor today</code> en <code>/eryndor fullmoon</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — zonder te verklappen wanneer het weer wisselt. Optioneel post de bot ’s ochtends (rond 08:30) bij events, en ’s avonds (rond 20:00) bij <strong>Full Moon (Rising)</strong> en de exacte volle maan, naar een apart kanaal. Inrichten: <code>/dm calendar setup</code>.</p>
         </article>
         <article class="tile">
           <h3>Geplande berichten</h3>
-          <p>Zet sfeer- of wereldtekst klaar; de bot post die op het gekozen moment in een <strong>ander kanaal</strong> dan het weer. Commando: <code>/announce schedule</code>.</p>
+          <p>Zet sfeer- of wereldtekst klaar; de bot post die op het gekozen moment in een <strong>ander kanaal</strong> dan het weer. Commando: <code>/dm announce schedule</code>.</p>
         </article>
         <article class="tile">
           <h3>Voorraad &amp; bouw</h3>
-          <p>Discord-downtime: grondstoffen, bouwprojecten en productie. Geen tafel-feature — de tafel speelt, Discord houdt de economy bij. Uitleg: tab <strong>Voorraad &amp; bouw</strong>. Kanaal: <code>/resource setup</code>.</p>
+          <p>Discord-downtime: grondstoffen, bouwprojecten en productie. Geen tafel-feature — de tafel speelt, Discord houdt de economy bij. Uitleg: tab <strong>Voorraad &amp; bouw</strong>. Kanaal: <code>/dm resource setup</code>.</p>
         </article>
       </div>
 
@@ -560,8 +560,8 @@
       <p class="lead">
         Elk weertype heeft een cijfer van mild (1) tot catastrofaal (5).
         Weer van <strong>4 of hoger</strong> telt als zwaar; daarna dobbelt de bot eerst weer tot hoogstens zwaarte <strong>2</strong> (afkoeling).
-        Kies je zelf het weer met <code>/weather set</code>, dan geldt die afkoeling niet — jij hebt het laatste woord.
-        Afkoeling aanpassen: <code>/weather settings cooldown</code>.
+        Kies je zelf het weer met <code>/dm weather set</code>, dan geldt die afkoeling niet — jij hebt het laatste woord.
+        Afkoeling aanpassen: <code>/dm weather-settings cooldown</code>.
       </p>
       <div class="severity-scale" aria-label="Zwaarte schaal">
         <div class="sev" data-n="1"><strong>1</strong>Mild</div>
@@ -578,15 +578,15 @@
         <p style="margin:0 0 0.75rem"><strong>Standaard ritme</strong><br />
         Hoe vaak de bot zelf opnieuw dobbelt: standaard ergens tussen <strong>6 en 18 uur</strong>.
         Heeft een weertype een eigen duur, of kies jij een duur bij zetten/plannen, dan wint die.
-        Aanpassen: <code>/weather settings interval</code>.</p>
+        Aanpassen: <code>/dm weather-settings interval</code>.</p>
         <p style="margin:0 0 0.75rem"><strong>Berichtenvenster</strong><br />
         Automatische weerberichten alleen tussen <strong>06:00 en 23:00</strong> (Nederlandse tijd). Daarbuiten wacht de bot.
-        Handmatig dobbelen of zetten werkt altijd. Aanpassen: <code>/weather settings window</code>.</p>
+        Handmatig dobbelen of zetten werkt altijd. Aanpassen: <code>/dm weather-settings window</code>.</p>
         <p style="margin:0 0 0.75rem"><strong>Terugzetten &amp; checken</strong><br />
-        Terug naar de standaard: <code>/weather settings clear</code> — kies of je ritme/venster, afkoeling, of alles wilt wissen.
-        Wat geldt er nu?: <code>/weather settings show</code> of <code>/weather status</code>.</p>
+        Terug naar de standaard: <code>/dm weather-settings clear</code> — kies of je ritme/venster, afkoeling, of alles wilt wissen.
+        Wat geldt er nu?: <code>/dm weather-settings show</code> of <code>/dm weather status</code>.</p>
         <p style="margin:0"><strong>Afkoeling</strong><br />
-        Zie <strong>Zwaarte</strong> hierboven (standaard: na 4+ eerst max 2). Aanpassen of uitzetten: <code>/weather settings cooldown</code>.</p>
+        Zie <strong>Zwaarte</strong> hierboven (standaard: na 4+ eerst max 2). Aanpassen of uitzetten: <code>/dm weather-settings cooldown</code>.</p>
       </div>
     </section>
 
@@ -623,46 +623,46 @@
       <div class="grid-2">
         <article class="tile">
           <h3>Sessie starten</h3>
-          <p>Zet aan het begin van een sessie het weer vast: jij bepaalt onder welke omstandigheden gespeeld wordt, en de bot past het weer niet mid-sessie aan. <code>/weather pause 4h</code> — na afloop <code>/weather resume</code>.</p>
+          <p>Zet aan het begin van een sessie het weer vast: jij bepaalt onder welke omstandigheden gespeeld wordt, en de bot past het weer niet mid-sessie aan. <code>/dm weather pause 4h</code> — na afloop <code>/dm weather resume</code>.</p>
         </article>
         <article class="tile">
           <h3>Nu dit weer</h3>
-          <p>Dit weer past bij de scene — of jij wilt zelf de d100 gooien. <code>/weather set storm</code> (of vul je eigen score in). Optioneel hoe lang: bijv. <code>2h</code>.</p>
+          <p>Dit weer past bij de scene — of jij wilt zelf de d100 gooien. <code>/dm weather set storm</code> (of vul je eigen score in). Optioneel hoe lang: bijv. <code>2h</code>.</p>
         </article>
         <article class="tile">
           <h3>Dobbel live</h3>
-          <p>Laat de tafel meegenieten van een echte worp. <code>/weather roll</code> — de bot dobbelt (met afkoeling en eventuele limieten) en post meteen.</p>
+          <p>Laat de tafel meegenieten van een echte worp. <code>/dm weather roll</code> — de bot dobbelt (met afkoeling en eventuele limieten) en post meteen.</p>
         </article>
         <article class="tile">
           <h3>Gevaarlijke avond</h3>
-          <p>Alleen zwaar weer voor de rest van de avond. <code>/weather severity set</code> — kies min 4, max 5, duur bijv. <code>3h</code>. Tot die tijd blijft de dobbelsteen in dat bereik.</p>
+          <p>Alleen zwaar weer voor de rest van de avond. <code>/dm weather-severity set</code> — kies min 4, max 5, duur bijv. <code>3h</code>. Tot die tijd blijft de dobbelsteen in dat bereik.</p>
         </article>
         <article class="tile">
           <h3>Rustige trek</h3>
-          <p>Alleen mild weer terwijl de party reist. <code>/weather severity set</code> — min 1, max 2. Of: géén magisch weer via <code>/weather magical set</code> → kies <strong>none</strong>.</p>
+          <p>Alleen mild weer terwijl de party reist. <code>/dm weather-severity set</code> — min 1, max 2. Of: géén magisch weer via <code>/dm weather-magical set</code> → kies <strong>none</strong>.</p>
         </article>
         <article class="tile">
           <h3>Alleen magie</h3>
-          <p>Arcane-thema: alleen magisch weer. <code>/weather magical set</code> → kies <strong>only</strong> (of juist <strong>none</strong> voor gewone lucht).</p>
+          <p>Arcane-thema: alleen magisch weer. <code>/dm weather-magical set</code> → kies <strong>only</strong> (of juist <strong>none</strong> voor gewone lucht).</p>
         </article>
         <article class="tile">
           <h3>Ritme, venster of afkoeling</h3>
-          <p>Hoe vaak de bot dobbelt, tussen welke uren hij mag posten, of hoe streng afkoeling is — per server. <code>/weather settings interval</code> (ritme), <code>window</code> (berichtenvenster) of <code>cooldown</code> (afkoeling). Terug naar standaard: <code>/weather settings clear</code> — kies ritme/venster, afkoeling, of alles.</p>
+          <p>Hoe vaak de bot dobbelt, tussen welke uren hij mag posten, of hoe streng afkoeling is — per server. <code>/dm weather-settings interval</code> (ritme), <code>window</code> (berichtenvenster) of <code>cooldown</code> (afkoeling). Terug naar standaard: <code>/dm weather-settings clear</code> — kies ritme/venster, afkoeling, of alles.</p>
         </article>
         <article class="tile">
           <h3>Bericht voor later</h3>
-          <p>Wereldgebeurtenis klaarzetten terwijl jij slaapt. <code>/announce schedule</code> — kies kanaal en wanneer, vul de tekst in. Checken of schrappen: <code>/announce list</code> / <code>/announce cancel</code>.</p>
+          <p>Wereldgebeurtenis klaarzetten terwijl jij slaapt. <code>/dm announce schedule</code> — kies kanaal en wanneer, vul de tekst in. Checken of schrappen: <code>/dm announce list</code> / <code>/dm announce cancel</code>.</p>
         </article>
         <article class="tile">
           <h3>Kalender-events kanaal</h3>
-          <p>Events ’s ochtends, en Rising-/volle-maan ’s avonds (exacte volle maan met @everyone)? Eenmalig: <code>/world setup</code> — kies een ander kanaal dan het weer. Uit zetten: <code>/world clear</code>.</p>
+          <p>Events ’s ochtends, en Rising-/volle-maan ’s avonds (exacte volle maan met @everyone)? Eenmalig: <code>/dm calendar setup</code> — kies een ander kanaal dan het weer. Uit zetten: <code>/dm calendar clear</code>.</p>
         </article>
         <article class="tile">
           <h3>Even checken</h3>
-          <p>Wat speelt er nu? <code>/weather status</code> — weer, planning, ritme, venster, afkoeling, limieten. Alleen de volgende update: <code>/weather next</code>.</p>
+          <p>Wat speelt er nu? <code>/dm weather status</code> — weer, planning, ritme, venster, afkoeling, limieten. Alleen de volgende update: <code>/dm weather next</code>.</p>
         </article>
       </div>
-      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code>. Kalenderposts via <code>/world setup</code>. Voorraad, bouw en productie horen bij Discord tussen sessies — zie tab <strong>Voorraad &amp; bouw</strong>.</p>
+      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/dm announce</code>. Kalenderposts via <code>/dm calendar setup</code>. Voorraad, bouw en productie horen bij Discord tussen sessies — zie tab <strong>Voorraad &amp; bouw</strong>.</p>
     </section>
 
     <section id="voorraad" class="panel" role="tabpanel" hidden>
@@ -672,26 +672,26 @@
       <div class="grid-2">
         <article class="tile">
           <h3>1. Voorraadkanaal</h3>
-          <p>Eenmalig: <code>/resource setup</code> — kies een kanaal voor stille berichten (geen ping). Donaties, aankopen, bouw en de dagelijkse productiesamenvatting landen daar. Uit: <code>/resource clear</code>.</p>
+          <p>Eenmalig: <code>/dm resource setup</code> — kies een kanaal voor stille berichten (geen ping). Donaties, aankopen, bouw en de dagelijkse productiesamenvatting landen daar. Uit: <code>/dm resource clear</code>.</p>
         </article>
         <article class="tile">
           <h3>2. Grondstoftypes</h3>
-          <p>Maak types aan: <code>/resource type add</code> — naam (bijv. Hout) + hoeveel GC je krijgt bij doneren (veld <code>sell</code>). Optioneel koopprijs (veld <code>buy</code>; anders 2× sell). Aanpassen: <code>edit</code> / weg: <code>remove</code>. Lijst: <code>/resource type list</code>.</p>
+          <p>Maak types aan: <code>/dm resource-type add</code> — naam (bijv. Hout) + hoeveel GC je krijgt bij doneren (veld <code>sell</code>). Optioneel koopprijs (veld <code>buy</code>; anders 2× sell). Aanpassen: <code>edit</code> / weg: <code>remove</code>. Lijst: <code>/resource type list</code>.</p>
         </article>
         <article class="tile">
           <h3>3. Guild vs persoonlijk</h3>
-          <p><strong>Guild-voorraad:</strong> <code>/resource donate</code> (inleveren, + GC-melding) / <code>/resource buy</code> (kopen, − GC-melding) / <code>/resource stock</code>. <strong>Persoonlijk:</strong> eigen bak met <code>/resource personal add|remove|show</code> — geen GC. DM-correctie zonder GC-melding: <code>/resource adjust</code>.</p>
+          <p><strong>Guild-voorraad:</strong> <code>/resource donate</code> (inleveren, + GC-melding) / <code>/resource buy</code> (kopen, − GC-melding) / <code>/resource stock</code>. <strong>Persoonlijk:</strong> eigen bak met <code>/resource personal add|remove|show</code> — geen GC. DM-correctie zonder GC-melding: <code>/dm resource adjust</code>.</p>
         </article>
         <article class="tile">
           <h3>4. Opslaglimiet</h3>
-          <p>Standaard max <strong>300 per type</strong> (Hout 300 én Steen 300, niet opgeteld). Aanpassen: <code>/resource cap</code>. Zit de guild vol? Rest van een donatie/correctie gaat naar je <strong>persoonlijke</strong> bak. Dagelijkse productie die niet past is <strong>verloren</strong> — dat staat in de avondpost.</p>
+          <p>Standaard max <strong>300 per type</strong> (Hout 300 én Steen 300, niet opgeteld). Aanpassen: <code>/dm resource cap</code>. Zit de guild vol? Rest van een donatie/correctie gaat naar je <strong>persoonlijke</strong> bak. Dagelijkse productie die niet past is <strong>verloren</strong> — dat staat in de avondpost.</p>
         </article>
         <article class="tile">
           <h3>5. Bouwproject — zo werkt het</h3>
-          <p><strong>1.</strong> DM: <code>/building create</code> + materiaalkosten (<code>/building cost add</code>) + eventueel bouwtijd (<code>/building cost buildtime</code>, standaard 100 eenheden werk).<br />
+          <p><strong>1.</strong> DM: <code>/dm building create</code> + materiaalkosten (<code>/dm building-cost add</code>) + eventueel bouwtijd (<code>/dm building-cost buildtime</code>, standaard 100 eenheden werk).<br />
           <strong>2.</strong> Materialen verzamelen tot alles binnen is.<br />
           <strong>3.</strong> Meebouwen met <code>/building contribute</code> tot de bouwtijd vol is → klaar.<br />
-          Annuleren: <code>/building cancel</code> (materialen terug naar de guild).</p>
+          Annuleren: <code>/dm building cancel</code> (materialen terug naar de guild).</p>
         </article>
         <article class="tile">
           <h3>6. Materiaal naar een project</h3>
@@ -702,11 +702,11 @@
         </article>
         <article class="tile">
           <h3>7. Bouwtijd</h3>
-          <p>Standaard <strong>100 eenheden werk</strong>. Elke contribute-eenheid kost <strong>1 GC</strong> (melding; zelf bijhouden). Pas de totale bouwtijd aan met <code>/building cost buildtime</code> — alleen vóór er materiaal gestort is.</p>
+          <p>Standaard <strong>100 eenheden werk</strong>. Elke contribute-eenheid kost <strong>1 GC</strong> (melding; zelf bijhouden). Pas de totale bouwtijd aan met <code>/dm building-cost buildtime</code> — alleen vóór er materiaal gestort is.</p>
         </article>
         <article class="tile">
           <h3>8. Productiebronnen</h3>
-          <p>Los van bouw: iets dat elke dag of week oplevert (bijv. Houthakkershut → Hout). <code>/production add</code> — type, interval, naam, medewerkers, opbrengst per medewerker. Rond <strong>17:00</strong> één stille samenvatting op het voorraadkanaal. Beheer: <code>workers</code> / <code>yield</code> / <code>remove</code>; overzicht: <code>list</code>.</p>
+          <p>Los van bouw: iets dat elke dag of week oplevert (bijv. Houthakkershut → Hout). <code>/dm production add</code> — type, interval, naam, medewerkers, opbrengst per medewerker. Rond <strong>17:00</strong> één stille samenvatting op het voorraadkanaal. Beheer: <code>workers</code> / <code>yield</code> / <code>remove</code>; overzicht: <code>list</code>.</p>
         </article>
       </div>
       <p class="note" style="margin-top:1rem">
@@ -722,7 +722,7 @@
       <div class="grid-2">
         <article class="tile">
           <h3>1. Naam</h3>
-          <p>Hoe het type heet (bijv. <code>storm</code> of <code>Clockwork clouds</code>). Dit zie je terug in status en bij <code>/weather set</code>.</p>
+          <p>Hoe het type heet (bijv. <code>storm</code> of <code>Clockwork clouds</code>). Dit zie je terug in status en bij <code>/dm weather set</code>.</p>
         </article>
         <article class="tile">
           <h3>2. Plaatje</h3>
@@ -801,161 +801,161 @@
         when: "Even checken zonder de tafel te storen.",
       },
       {
-        cmd: "/world today",
+        cmd: "/eryndor today",
         who: "everyone",
         cat: "bekijken",
         what: "Huidige Harptos-dag (Eryndor-kalender), maanfase en events.",
         when: "Wereldtijd / feestdagen aan tafel.",
       },
       {
-        cmd: "/world fullmoon",
+        cmd: "/eryndor fullmoon",
         who: "everyone",
         cat: "bekijken",
         what: "Wanneer de volgende exacte volle maan is.",
         when: "Lycantropie, rituelen, nacht-scenes.",
       },
       {
-        cmd: "/weather setup",
+        cmd: "/dm weather setup",
         who: "dm",
         cat: "inrichten",
         what: "Kies in welk kanaal (en optioneel thread) weerupdates verschijnen.",
         when: "Eenmalig bij start, of als het kanaal wijzigt.",
       },
       {
-        cmd: "/world setup",
+        cmd: "/dm calendar setup",
         who: "dm",
         cat: "inrichten",
-        what: "Kies in welk kanaal kalenderposts komen. Ochtend (~08:30): @everyone + /world today-embed alleen bij events. Avond (~20:00): Full Moon (Rising) stil, exacte volle maan met @everyone. Los van het weerkanaal.",
+        what: "Kies in welk kanaal kalenderposts komen. Ochtend (~08:30): @everyone + /eryndor today-embed alleen bij events. Avond (~20:00): Full Moon (Rising) stil, exacte volle maan met @everyone. Los van het weerkanaal.",
         when: "Eenmalig als je feestdagen/verjaardagen en volle-maan-avonden automatisch wilt laten zien.",
       },
       {
-        cmd: "/world clear",
+        cmd: "/dm calendar clear",
         who: "dm",
         cat: "inrichten",
         what: "Zet automatische ochtend-kalenderposts uit.",
         when: "Geen automatische event-berichten meer in dat kanaal.",
       },
       {
-        cmd: "/weather settings show",
+        cmd: "/dm weather-settings show",
         who: "dm",
         cat: "instellingen",
         what: "Toont welk ritme, berichtenvenster en afkoeling nu gelden voor deze server (eigen waarden of de standaard).",
         when: "Even checken wat er actief is.",
       },
       {
-        cmd: "/weather settings interval",
+        cmd: "/dm weather-settings interval",
         who: "dm",
         cat: "instellingen",
         what: "Stel het standaard ritme in voor deze server (wachttijd tussen automatische updates, in minuten). Geldt als het huidige type geen eigen duur heeft. De bot zet de volgende update meteen opnieuw klaar.",
         when: "Als je wilt dat het weer vaker of juist minder vaak vanzelf wisselt (standaard ongeveer 6–18 uur).",
       },
       {
-        cmd: "/weather settings window",
+        cmd: "/dm weather-settings window",
         who: "dm",
         cat: "instellingen",
         what: "Berichtenvenster aan of uit, optioneel start/eind (bijv. 06:00–23:00). Alleen automatische weerberichten wachten hierop; handmatig werkt altijd. De bot zet de volgende update meteen opnieuw klaar.",
         when: "Kortere dagen, of automatisch weer op elk moment van de dag (venster uit).",
       },
       {
-        cmd: "/weather settings cooldown",
+        cmd: "/dm weather-settings cooldown",
         who: "dm",
         cat: "instellingen",
-        what: "Afkoeling voor deze server: aan/uit, vanaf welke zwaarte “zwaar” telt (after), en max zwaarte daarna (max_next). Laat velden leeg om ze te houden. /weather set negeert afkoeling altijd.",
+        what: "Afkoeling voor deze server: aan/uit, vanaf welke zwaarte “zwaar” telt (after), en max zwaarte daarna (max_next). Laat velden leeg om ze te houden. /dm weather set negeert afkoeling altijd.",
         when: "Storm-periode zonder afkoeling (uit), of een mildere/strengere wereld (andere drempels).",
       },
       {
-        cmd: "/weather settings clear",
+        cmd: "/dm weather-settings clear",
         who: "dm",
         cat: "instellingen",
         what: "Wis server-aanpassingen terug naar de standaard. Kies wat je wist: schedule (ritme + berichtenvenster), cooldown (afkoeling), of all (alles). Bij ritme/venster zet de bot de volgende update opnieuw klaar.",
         when: "Terug naar de normale campagne-instellingen — zonder per ongeluk alles te wissen.",
       },
       {
-        cmd: "/weather roll",
+        cmd: "/dm weather roll",
         who: "dm",
         cat: "acties",
         what: "Dobbel nieuw weer (met afkoeling en actieve limieten) en post meteen in het weerkanaal.",
         when: "Live dobbelen tijdens de sessie.",
       },
       {
-        cmd: "/weather set",
+        cmd: "/dm weather set",
         who: "dm",
         cat: "acties",
         what: "Kies zelf het weer: typ een weertype (bijv. storm) of gooi zelf een d100 en vul die score in. Optioneel hoe lang het blijft (30m, 2h, 1d). Negeert afkoeling en limieten — jij hebt het laatste woord.",
         when: "Als je zelf wilt dobbelen, of gewoon dit weer wilt omdat het bij de scene past.",
       },
       {
-        cmd: "/weather schedule",
+        cmd: "/dm weather schedule",
         who: "dm",
         cat: "acties",
         what: "Huidig weer blijft staan; alleen het moment van de volgende automatische update wijzigen.",
         when: "Weer langer of korter laten hangen zonder opnieuw te dobbelen.",
       },
       {
-        cmd: "/weather pause",
+        cmd: "/dm weather pause",
         who: "dm",
         cat: "acties",
         what: "Zet automatische updates stil voor een duur (30m, 2h, 1d). Het huidige weer blijft staan tot jij hervat of de pauze verloopt.",
         when: "Sessie starten — geen verrassingen mid-combat.",
       },
       {
-        cmd: "/weather resume",
+        cmd: "/dm weather resume",
         who: "dm",
         cat: "acties",
         what: "Hef de pauze op; de bot plant weer de volgende automatische update.",
         when: "Na de sessie of als je automatisch weer wilt.",
       },
       {
-        cmd: "/announce schedule",
+        cmd: "/dm announce schedule",
         who: "dm",
         cat: "berichten",
         what: "Plan een tekstbericht: kies kanaal en wanneer (30m, 2h, 1d, of bijv. 31-07-2026 08:00). Daarna vul je de tekst in (max 2000 tekens). Post naar dat kanaal — los van het weerkanaal. Volgt niet het berichtenvenster en stopt niet bij een weer-pauze.",
         when: "Wereldgebeurtenis of sfeertekst klaarzetten voor later.",
       },
       {
-        cmd: "/announce list",
+        cmd: "/dm announce list",
         who: "dm",
         cat: "berichten",
         what: "Toont openstaande geplande berichten (nummer, kanaal, tijd, korte preview).",
         when: "Even checken wat er nog in de wachtrij staat.",
       },
       {
-        cmd: "/announce cancel",
+        cmd: "/dm announce cancel",
         who: "dm",
         cat: "berichten",
         what: "Annuleer een openstaand gepland bericht op nummer (het id uit list).",
         when: "Scene gewijzigd of bericht niet meer nodig.",
       },
       {
-        cmd: "/weather severity set",
+        cmd: "/dm weather-severity set",
         who: "dm",
         cat: "limieten",
         what: "Tijdelijke zwaarte-limiet: nieuwe worpen alleen binnen min–max zwaarte (1 mild tot 5 catastrofaal), voor een duur.",
         when: "Escalatie-avond of juist een rustige trek.",
       },
       {
-        cmd: "/weather severity clear",
+        cmd: "/dm weather-severity clear",
         who: "dm",
         cat: "limieten",
         what: "Zet de zwaarte-limiet uit → weer normaal dobbelen.",
         when: "Limiet niet meer nodig.",
       },
       {
-        cmd: "/weather magical set",
+        cmd: "/dm weather-magical set",
         who: "dm",
         cat: "limieten",
         what: "Tijdelijke magie-filter: alleen magisch weer (only) of juist geen magisch weer (none), voor een duur.",
         when: "Arcane-thema of juist “gewone lucht”.",
       },
       {
-        cmd: "/weather magical clear",
+        cmd: "/dm weather-magical clear",
         who: "dm",
         cat: "limieten",
         what: "Zet de magie-filter uit.",
         when: "Limiet niet meer nodig.",
       },
       {
-        cmd: "/weather status",
+        cmd: "/dm weather status",
         who: "dm",
         cat: "info",
         what: "Overzicht: huidig weer, zwaarte, magisch, planning, ritme, berichtenvenster, afkoeling en actieve limieten.",
@@ -969,7 +969,7 @@
         when: "Snel terugvinden wat er kan, of als DM de handout openen vanuit Discord.",
       },
       {
-        cmd: "/weather next",
+        cmd: "/dm weather next",
         who: "dm",
         cat: "info",
         what: "Wanneer de volgende automatische update gepland staat (alleen voor jou zichtbaar).",
@@ -1025,49 +1025,49 @@
         when: "Welke types bestaan er, en tegen welke GC?",
       },
       {
-        cmd: "/resource setup",
+        cmd: "/dm resource setup",
         who: "dm",
         cat: "inrichten",
         what: "Kies het kanaal voor stille voorraad-, bouw- en productieberichten (geen ping).",
         when: "Eenmalig bij start van de economy, of als het kanaal wijzigt.",
       },
       {
-        cmd: "/resource clear",
+        cmd: "/dm resource clear",
         who: "dm",
         cat: "inrichten",
         what: "Wis de voorraadkanaal-setup. Acties die daar posten werken pas weer na opnieuw setup.",
         when: "Economy-posts tijdelijk uitzetten of verplaatsen.",
       },
       {
-        cmd: "/resource type add",
+        cmd: "/dm resource-type add",
         who: "dm",
         cat: "voorraad",
         what: "Nieuw grondstoftype: weergavenaam (bijv. Hout) + sell (GC bij doneren). Optioneel buy (anders 2× sell). Interne id volgt uit de naam en blijft daarna vast.",
         when: "De party ontdekte een nieuwe grondstof.",
       },
       {
-        cmd: "/resource type edit",
+        cmd: "/dm resource-type edit",
         who: "dm",
         cat: "voorraad",
         what: "Pas weergavenaam (rename) en/of sell/buy aan. De interne id blijft hetzelfde.",
         when: "Prijzen of weergavenaam bijstellen.",
       },
       {
-        cmd: "/resource type remove",
+        cmd: "/dm resource-type remove",
         who: "dm",
         cat: "voorraad",
         what: "Verwijder een type — alleen als guild- en persoonlijke voorraad leeg zijn en het niet in een actief bouwproject of productiebron zit.",
         when: "Type was een vergissing of verdwijnt uit de wereld.",
       },
       {
-        cmd: "/resource adjust",
+        cmd: "/dm resource adjust",
         who: "dm",
         cat: "voorraad",
         what: "Corrigeer de guild-voorraad met een positief of negatief aantal, zonder publieke GC-melding. Overflow bij volle opslag → jouw persoonlijke bak.",
         when: "DM-correctie of housekeeping.",
       },
       {
-        cmd: "/resource cap",
+        cmd: "/dm resource cap",
         who: "dm",
         cat: "voorraad",
         what: "Toon of zet de opslaglimiet per type (standaard 300). Geldt per grondstof, niet als som van alles.",
@@ -1116,28 +1116,28 @@
         when: "Wat is er nog nodig?",
       },
       {
-        cmd: "/building create",
+        cmd: "/dm building create",
         who: "dm",
         cat: "bouwen",
         what: "Nieuw bouwproject. Start in de materialen-fase; bouwtijd (fase 2) staat standaard op 100. Meerdere projecten tegelijk mag.",
         when: "De tafel plant een hut, muur, of ander bouwwerk.",
       },
       {
-        cmd: "/building cost add",
+        cmd: "/dm building-cost add",
         who: "dm",
         cat: "bouwen",
         what: "Voeg een materiaalkost toe: kies project → vul grondstof (bijv. Hout) en aantal in. Daarna knop om nog een kost toe te voegen. Alleen zolang er nog niets gestort is.",
         when: "Kostenlijst van een nieuw project vullen.",
       },
       {
-        cmd: "/building cost buildtime",
+        cmd: "/dm building-cost buildtime",
         who: "dm",
         cat: "bouwen",
         what: "Zet de bouwtijd voor fase 2 (menu → modal). Nieuwe projecten starten op 100. Eén tijd-unit = 1 GC bij contribute. Alleen vóór stortingen.",
         when: "Andere bouwtijd dan de standaard 100.",
       },
       {
-        cmd: "/building cancel",
+        cmd: "/dm building cancel",
         who: "dm",
         cat: "bouwen",
         what: "Annuleer een open project. Gestorte materialen gaan terug naar de guild-voorraad; past dat niet → rest naar jouw persoonlijke bak. GC die spelers al kregen, draait niet terug.",
@@ -1151,28 +1151,28 @@
         when: "Wat produceert de guild nu?",
       },
       {
-        cmd: "/production add",
+        cmd: "/dm production add",
         who: "dm",
         cat: "productie",
         what: "Nieuwe productiebron: kies grondstoftype → dagelijks of wekelijks → vul naam, medewerkers, opbrengst per medewerker (en optioneel max medewerkers, standaard 5).",
         when: "Bijv. Houthakkershut die Hout oplevert.",
       },
       {
-        cmd: "/production workers",
+        cmd: "/dm production workers",
         who: "dm",
         cat: "productie",
         what: "Zet het aantal medewerkers op een bron (menu → modal), 0 tot max van die bron.",
         when: "Meer of minder mensen aan het werk zetten.",
       },
       {
-        cmd: "/production yield",
+        cmd: "/dm production yield",
         who: "dm",
         cat: "productie",
         what: "Zet de opbrengst per medewerker per interval (menu → modal).",
         when: "Bron efficiënter of zuiniger maken.",
       },
       {
-        cmd: "/production remove",
+        cmd: "/dm production remove",
         who: "dm",
         cat: "productie",
         what: "Verwijder een productiebron (menu).",

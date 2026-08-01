@@ -29,7 +29,7 @@ Zie ook: [`agent.md`](./agent.md), [`feature-guild-production.md`](./feature-gui
 | `/resource setup channel` | Kanaal voor publieke silent posts (donate/buy/fund/contribute) |
 | `/resource clear` | Setup wissen (commands die posten falen tot opnieuw setup) |
 
-Zelfde patroon als `/weather setup` / `/world setup`: per Discord-guild één destination.
+Zelfde patroon als `/weather setup` / `/dm calendar setup`: per Discord-guild één destination.
 
 ### Resource types (allowlist)
 

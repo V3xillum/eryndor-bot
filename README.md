@@ -1,6 +1,6 @@
 # Eryndor bot
 
-Discord bot for the Eryndor (West Marches) D&D server: weather, calendar, guild resources/buildings/production. The bot posts weather automatically on a random interval (defaults in `.env`, overridable per guild via `/weather settings`) and gives allowlisted users slash-command control during sessions.
+Discord bot for the Eryndor (West Marches) D&D server: weather, calendar, guild resources/buildings/production. The bot posts weather automatically on a random interval (defaults in `.env`, overridable per guild via `/dm weather-settings`) and gives allowlisted users slash-command control during sessions.
 
 DM handout (GitHub Pages, from `/docs`): [`docs/handout/`](./docs/handout/). Agent rules for that handout: [`docs/handout-agent.md`](./docs/handout-agent.md). Feature specs: `docs/feature-*.md`.
 
@@ -34,10 +34,10 @@ cp .env.example .env
 # fill DISCORD_TOKEN, DISCORD_CLIENT_ID, ALLOWED_USER_IDS
 # optional defaults: WEATHER_UPDATE_MIN_MINUTES / MAX (e.g. 1 and 5 for testing)
 # optional defaults: WEATHER_ACTIVE_START / END / TIMEZONE (default 06:00–23:00 Europe/Amsterdam)
-# per-guild overrides at runtime: /weather settings (no restart)
+# per-guild overrides at runtime: /dm weather-settings (no restart)
 
 npm install
-npm run register-commands   # register /eryndor, /weather, /world, /announce, /resource, /building, /production
+npm run register-commands   # register /eryndor, /weather, /dm, /resource, /building, /production
 npm run build
 npm start
 ```
@@ -52,71 +52,33 @@ Global slash commands can take up to about an hour to appear after registration.
 
 ## Commands
 
-### Bot overview
-
-| Command | Who | Effect |
-|---|---|---|
-| `/eryndor help` | everyone (DM content allowlist) | Players: Dutch overview of player commands. Allowlist: + DM commands + handout link (`HANDOUT_URL`) |
-
-### Weather
-
-| Command | Who | Effect |
-|---|---|---|
-| `/weather current` | everyone | Private status check (does not post to the weather channel) |
-| `/weather status` | allowlist | Admin detail: severity, magical, remaining time, duration, interval/window, cooldown, dials |
-| `/weather severity set` | allowlist | Tijdelijke severity-band (`min`/`max`/`duration`) voor rolls |
-| `/weather severity clear` | allowlist | Severity dial uitzetten → default gedrag |
-| `/weather magical set` | allowlist | Tijdelijk alleen magisch (`only`) of juist niet (`none`) voor rolls |
-| `/weather magical clear` | allowlist | Magical dial uitzetten → default gedrag |
-| `/weather settings show` | allowlist | Effectief interval + postvenster + afkoeling (guild of default) |
-| `/weather settings interval` | allowlist | Guild-fallback interval in minuten (reschedule) |
-| `/weather settings window` | allowlist | Guild actief postvenster aan/uit + `HH:mm` (reschedule) |
-| `/weather settings cooldown` | allowlist | Guild afkoeling aan/uit + drempels (geen reschedule) |
-| `/weather settings clear` | allowlist | Overrides wissen per scope: `schedule` / `cooldown` / `all` |
-| `/weather next` | allowlist | When the next automatic update is due (ephemeral) |
-| `/weather setup <channel> [thread]` | allowlist | Where automated/`roll`/`set` posts go |
-| `/weather roll` | allowlist | d100 roll, update state, post to channel/thread |
-| `/weather set <value> [duration]` | allowlist | Type of d100 (1–100); post + optionele duur |
-| `/weather schedule <duration>` | allowlist | Keep current weather; set when the next auto-roll happens |
-| `/weather pause <duration>` | allowlist | Pause auto-updates (`30m`, `2h`, `1d`) |
-| `/weather resume` | allowlist | Clear pause and schedule the next update |
-
-There is no `/weather post` — anything that changes weather also broadcasts.
-
-### Announcements (scheduled text)
-
-Allowlist only. Posts go to the channel you pick — independent of `/weather setup`.
+### Players (visible in `/`)
 
 | Command | Effect |
 |---|---|
-| `/announce schedule <channel> <when>` | Opens a modal for the text; posts later (`30m`/`2h`/`1d` or `DD-MM-YYYY HH:mm` in `WEATHER_TIMEZONE`) |
-| `/announce list` | Pending posts (ephemeral) |
-| `/announce cancel <id>` | Cancel a pending post |
+| `/eryndor help` | Dutch overview of player commands (DMs also get DM cheat-sheet + handout link) |
+| `/eryndor today` / `fullmoon` | Harptos day / next exact Full Moon |
+| `/weather current` | Private current weather |
+| `/resource …` | `donate` / `buy` / `stock` / `personal` / `type list` |
+| `/building …` | `donate` / `fund` / `contribute` / `list` / `status` / `cost show` |
+| `/production list` | Production sources overview |
 
-### Calendar (Eryndor)
+### DM (`/dm` — hidden from players by default)
 
-Data comes from the static [Calendar of Eryndor](https://v3xillum.github.io/eryndor/) JSON API. Everyone in the guild may use the info commands (world info, no weather-timer spoilers). Replies are in Dutch.
+All former allowlist commands live under `/dm` (e.g. `/dm weather roll`, `/dm calendar setup`, `/dm announce schedule`). Registered with `default_member_permissions: 0`. Enable for DMs via **Server Settings → Integrations → bot → `/dm`**. Runtime gate remains `ALLOWED_USER_IDS`.
 
-| Command | Who | Effect |
-|---|---|---|
-| `/world today` | everyone | Current Harptos day, moon phase, and events |
-| `/world fullmoon` | everyone | Next exact Full Moon (from `full-moons.json`) |
-| `/world setup <channel>` | allowlist | Morning event posts + evening Rising / exact Full Moon posts |
-| `/world clear` | allowlist | Disable automatic morning calendar-event posts |
-
-Optional env: `ERYNDOR_CALENDAR_BASE_URL` / `ERYNDOR_CALENDAR_FALLBACK_URL` / `CALENDAR_EVENTS_POST_TIME` (default `08:30`) / `CALENDAR_FULLMOON_POST_TIME` (default `20:00`, see `.env.example`). Timezone for “today” and the posts follows `WEATHER_TIMEZONE` (default `Europe/Amsterdam`).
-
-### Resources, buildings & production
-
-Guild stockpile, personal stash, building projects, and production sources. Full DM-facing explanation: handout tab **Voorraad & bouw**. Specs: [`docs/feature-guild-resources.md`](./docs/feature-guild-resources.md), [`docs/feature-guild-production.md`](./docs/feature-guild-production.md).
-
-| Area | Commands (summary) |
+| Group | Subs (summary) |
 |---|---|
-| Resources | `/resource setup\|type\|donate\|buy\|stock\|personal\|adjust\|cap` |
-| Buildings | `/building create\|cost add\|cost buildtime\|donate\|fund\|contribute\|list\|status\|cancel` — new projects default build time **100** |
-| Production | `/production add\|list\|workers\|yield\|remove` — daily silent summary after `PRODUCTION_POST_TIME` (default `17:00`) |
+| `weather` | `setup`, `status`, `next`, `roll`, `set`, `schedule`, `pause`, `resume` |
+| `weather-severity` / `weather-magical` | `set`, `clear` |
+| `weather-settings` | `show`, `interval`, `window`, `cooldown`, `clear` |
+| `calendar` | `setup`, `clear` |
+| `announce` | `schedule`, `list`, `cancel` |
+| `resource` / `resource-type` | setup/clear/adjust/cap · type add/edit/remove |
+| `building` / `building-cost` | create/cancel · cost add/buildtime |
+| `production` | `add`, `workers`, `yield`, `remove` |
 
-GC is announced only (players track balances themselves). Storage cap default **300 per type**.
+Full DM-facing explanation: [`docs/handout/`](./docs/handout/). Calendar JSON: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/).
 
 ## Content
 
@@ -127,7 +89,7 @@ Edit without touching TypeScript:
 - `content/messages.json` — bot reply strings (errors / confirmations only)
 - `content/images/` — one image per `image` field (DM weather cards)
 
-After severity ≥ `cooldownAfterSeverity`, the next auto-roll / `/weather roll` only picks milder types (up to `cooldownMaxNextSeverity`, escalating if that pool is empty). Defaults live in `content/weather-rules.json`; per-guild overrides via `/weather settings cooldown` (null = inherit). `/weather set` bypasses filters. Temporary dials: **severity** (`/weather severity set`) and **magical** (`/weather magical set only|none`) further limit the roll pool until they expire; setting either dial rejects empty pools and empty intersections. Channel posts are image + title + `@everyone`.
+After severity ≥ `cooldownAfterSeverity`, the next auto-roll / `/dm weather roll` only picks milder types (up to `cooldownMaxNextSeverity`, escalating if that pool is empty). Defaults live in `content/weather-rules.json`; per-guild overrides via `/dm weather-settings cooldown` (null = inherit). `/dm weather set` bypasses filters. Temporary dials: **severity** (`/dm weather-severity set`) and **magical** (`/dm weather-magical set only|none`) further limit the roll pool until they expire. Channel posts are image + title + `@everyone`.
 
 ## Data
 

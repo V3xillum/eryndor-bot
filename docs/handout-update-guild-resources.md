@@ -18,14 +18,14 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 | `/resource personal add` | Zet iets in je persoonlijke bak. Stil bericht. Geen GC. | Voorraad | Iedereen |
 | `/resource personal remove` | Haal iets uit je persoonlijke bak. Stil bericht. | Voorraad | Iedereen |
 | `/resource personal show` | Toon jouw persoonlijke voorraad (alleen voor jou). | Voorraad | Iedereen |
-| `/resource setup` | Kies het kanaal voor stille voorraad-/bouw-/productieberichten. | Inrichten | DM |
-| `/resource clear` | Wis die kanaal-setup. | Inrichten | DM |
-| `/resource type add` | Nieuw grondstoftype: weergavenaam + sell-GC (+ optioneel buy; default 2× sell). | Voorraad | DM |
-| `/resource type edit` | Pas weergavenaam of GC-prijzen aan (interne id blijft). | Voorraad | DM |
-| `/resource type remove` | Verwijder type (alleen als nergens meer in gebruik). | Voorraad | DM |
+| `/dm resource setup` | Kies het kanaal voor stille voorraad-/bouw-/productieberichten. | Inrichten | DM |
+| `/dm resource clear` | Wis die kanaal-setup. | Inrichten | DM |
+| `/dm resource-type add` | Nieuw grondstoftype: weergavenaam + sell-GC (+ optioneel buy; default 2× sell). | Voorraad | DM |
+| `/dm resource-type edit` | Pas weergavenaam of GC-prijzen aan (interne id blijft). | Voorraad | DM |
+| `/dm resource-type remove` | Verwijder type (alleen als nergens meer in gebruik). | Voorraad | DM |
 | `/resource type list` | Lijst van types + sell/buy. | Voorraad | Iedereen |
-| `/resource adjust` | Corrigeer guild-voorraad zonder GC-melding (positief of negatief). | Voorraad | DM |
-| `/resource cap` | Toon of zet de opslaglimiet per type (standaard 300). | Voorraad | DM |
+| `/dm resource adjust` | Corrigeer guild-voorraad zonder GC-melding (positief of negatief). | Voorraad | DM |
+| `/dm resource cap` | Toon of zet de opslaglimiet per type (standaard 300). | Voorraad | DM |
 
 ### Bouwen (`/building`)
 
@@ -37,27 +37,27 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 | `/building list` | Overzicht bouwprojecten + status. | Bouwen | Iedereen |
 | `/building status` | Menu: project → kosten/voortgang. | Bouwen | Iedereen |
 | `/building cost show` | Zelfde als status (menu). | Bouwen | Iedereen |
-| `/building create` | Nieuw project; bouwtijd fase 2 default **100**. | Bouwen | DM |
-| `/building cost add` | Menu: project → modal type+aantal → “nog een toevoegen”. | Bouwen | DM |
-| `/building cost buildtime` | Menu: project → modal bouwtijd (fase 2). | Bouwen | DM |
-| `/building cancel` | Annuleer project; gestorte materialen terug naar voorraad (overflow → persoonlijk). | Bouwen | DM |
+| `/dm building create` | Nieuw project; bouwtijd fase 2 default **100**. | Bouwen | DM |
+| `/dm building-cost add` | Menu: project → modal type+aantal → “nog een toevoegen”. | Bouwen | DM |
+| `/dm building-cost buildtime` | Menu: project → modal bouwtijd (fase 2). | Bouwen | DM |
+| `/dm building cancel` | Annuleer project; gestorte materialen terug naar voorraad (overflow → persoonlijk). | Bouwen | DM |
 
 ### Productie (`/production`)
 
 | Command | Wat het doet (DM-taal) | Categorie | Wie |
 |---|---|---|---|
 | `/production list` | Overzicht productiebronnen (medewerkers, opbrengst, interval). | Productie | Iedereen |
-| `/production add` | Nieuwe bron (menu: type → dagelijks/wekelijks → naam/medewerkers/opbrengst). | Productie | DM |
-| `/production workers` | Zet aantal medewerkers (menu → modal). | Productie | DM |
-| `/production yield` | Zet opbrengst per medewerker (menu → modal). | Productie | DM |
-| `/production remove` | Verwijder een bron (menu). | Productie | DM |
+| `/dm production add` | Nieuwe bron (menu: type → dagelijks/wekelijks → naam/medewerkers/opbrengst). | Productie | DM |
+| `/dm production workers` | Zet aantal medewerkers (menu → modal). | Productie | DM |
+| `/dm production yield` | Zet opbrengst per medewerker (menu → modal). | Productie | DM |
+| `/dm production remove` | Verwijder een bron (menu). | Productie | DM |
 
 ---
 
 ## Wat Overzicht kort mag zeggen
 
 - Één tile: guild-voorraad, bouwprojecten en productiebronnen — DMs richten types/gebouwen/productie in.
-- Max één verwijzing naar de tab of `/resource setup`.
+- Max één verwijzing naar de tab of `/dm resource setup`.
 - Geen how-to op Overzicht.
 
 ---

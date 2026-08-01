@@ -2,11 +2,11 @@ import {
   ActionRowBuilder,
   ChannelType,
   ModalBuilder,
-  SlashCommandBuilder,
   TextInputBuilder,
   TextInputStyle,
   type ChatInputCommandInteraction,
   type ModalSubmitInteraction,
+  type SlashCommandSubcommandBuilder,
 } from 'discord.js';
 import type { AppConfig } from '../config.js';
 import type { AnnounceService } from '../services/AnnounceService.js';
@@ -16,42 +16,45 @@ const MODAL_PREFIX = 'announce:';
 const BODY_MAX = 2000;
 const PREVIEW_LEN = 80;
 
-export function buildAnnounceCommand() {
-  return new SlashCommandBuilder()
-    .setName('announce')
-    .setDescription('Schedule free-text posts to a channel (separate from weather)')
-    .addSubcommand((sub) =>
-      sub
-        .setName('schedule')
-        .setDescription('Plan a text post for later (opens a text modal)')
-        .addChannelOption((opt) =>
-          opt
-            .setName('channel')
-            .setDescription('Channel where the text will be posted')
-            .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
-            .setRequired(true),
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName('when')
-            .setDescription('30m / 2h / 1d, or DD-MM-YYYY HH:mm (server timezone)')
-            .setRequired(true),
-        ),
+export function buildAnnounceScheduleSubcommand(
+  sub: SlashCommandSubcommandBuilder,
+): SlashCommandSubcommandBuilder {
+  return sub
+    .setName('schedule')
+    .setDescription('Plan a text post for later (opens a text modal)')
+    .addChannelOption((opt) =>
+      opt
+        .setName('channel')
+        .setDescription('Channel where the text will be posted')
+        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+        .setRequired(true),
     )
-    .addSubcommand((sub) =>
-      sub.setName('list').setDescription('List pending scheduled posts for this server'),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName('cancel')
-        .setDescription('Cancel a pending scheduled post by id')
-        .addIntegerOption((opt) =>
-          opt
-            .setName('id')
-            .setDescription('Post id from /announce list')
-            .setRequired(true)
-            .setMinValue(1),
-        ),
+    .addStringOption((opt) =>
+      opt
+        .setName('when')
+        .setDescription('30m / 2h / 1d, or DD-MM-YYYY HH:mm (server timezone)')
+        .setRequired(true),
+    );
+}
+
+export function buildAnnounceListSubcommand(
+  sub: SlashCommandSubcommandBuilder,
+): SlashCommandSubcommandBuilder {
+  return sub.setName('list').setDescription('List pending scheduled posts for this server');
+}
+
+export function buildAnnounceCancelSubcommand(
+  sub: SlashCommandSubcommandBuilder,
+): SlashCommandSubcommandBuilder {
+  return sub
+    .setName('cancel')
+    .setDescription('Cancel a pending scheduled post by id')
+    .addIntegerOption((opt) =>
+      opt
+        .setName('id')
+        .setDescription('Post id from /dm announce list')
+        .setRequired(true)
+        .setMinValue(1),
     );
 }
 
