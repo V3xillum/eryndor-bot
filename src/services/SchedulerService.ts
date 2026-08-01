@@ -21,7 +21,9 @@ import {
   type EryndorCalendarService,
 } from './EryndorCalendarService.js';
 import type { StatusReportService } from './StatusReportService.js';
+import type { ProductionService } from './ProductionService.js';
 import type { WeatherService } from './WeatherService.js';
+import { buildProductionEmbed } from '../commands/resourceEmbeds.js';
 
 const CHECK_INTERVAL_MS = 30 * 1000;
 const DISCORD_CONTENT_LIMIT = 2000;
@@ -44,8 +46,10 @@ export class SchedulerService {
     private readonly calendar: EryndorCalendarService,
     private readonly activity: ActivityLogService,
     private readonly statusReport: StatusReportService | null,
+    private readonly production: ProductionService | null,
     private readonly calendarEventsPostTime: TimeOfDay,
     private readonly calendarFullMoonPostTime: TimeOfDay,
+    private readonly productionPostTime: TimeOfDay,
     private readonly calendarTimeZone: string,
   ) {}
 
@@ -80,8 +84,86 @@ export class SchedulerService {
     await this.tickAnnouncements();
     await this.tickCalendarEvents();
     await this.tickCalendarFullMoon();
+    await this.tickProduction();
     await this.tickStatusReport();
     this.activity.pruneOld();
+  }
+
+  /**
+   * Once per local day after productionPostTime: pay due sources, one silent
+   * embed on the resource channel (bron / type / amount; lost if cap overflow).
+   */
+  private async tickProduction(now = new Date()): Promise<void> {
+    const production = this.production;
+    if (!production) return;
+    if (!isAtOrAfterPostTime(now, this.productionPostTime, this.calendarTimeZone)) {
+      return;
+    }
+
+    for (const guildId of production.guildIdsConfigured()) {
+      if (!production.shouldPostToday(guildId, now)) continue;
+
+      try {
+        const lines = production.payDueForGuild(guildId, now);
+        if (lines.length === 0) {
+          production.markPosted(guildId, now);
+          continue;
+        }
+
+        const settings = production.getSettings(guildId);
+        if (!settings?.channel_id) {
+          production.markPosted(guildId, now);
+          continue;
+        }
+
+        const channel = await this.client.channels.fetch(settings.channel_id);
+        if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+          this.activity.warn(
+            'system',
+            `Production ${guildId}: resource channel not text-based`,
+          );
+          production.markPosted(guildId, now);
+          continue;
+        }
+        if (!('send' in channel) || !botCanSendInChannel(channel)) {
+          this.activity.warn(
+            'system',
+            `Production ${guildId}: bot lacks View/Send on resource channel`,
+          );
+          production.markPosted(guildId, now);
+          continue;
+        }
+
+        const cap = production.getStorageCap(guildId);
+        const embed = buildProductionEmbed(production.messages, lines.map((line) => ({
+          sourceName: line.source.name,
+          typeName: line.type.display_name,
+          added: line.added,
+          lost: line.lost,
+          stockAfter: line.stockAfter,
+          cap,
+        })));
+
+        await channel.send({
+          embeds: [embed],
+          flags: MessageFlags.SuppressNotifications,
+        });
+        production.markPosted(guildId, now);
+        this.activity.ok(
+          'system',
+          `Production posted for ${guildId} (${lines.length} source(s))`,
+        );
+      } catch (error) {
+        this.activity.error(
+          'system',
+          `Production tick failed for guild ${guildId}`,
+          error,
+        );
+        if (isPermanentAnnounceError(error)) {
+          production.markPosted(guildId, now);
+        }
+      }
+    }
   }
 
   private async tickStatusReport(now = new Date()): Promise<void> {

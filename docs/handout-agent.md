@@ -39,9 +39,10 @@ Lezers zijn DMs die D&D snappen, geen bot-developers. Als een zin “sorry, wat?
 1. **Overzicht** — wat doet de bot, zwaarte/afkoeling, huidige types, ritme/venster (kort)
 2. **Commando’s** — volledige lijst, gegroepeerd + filters
 3. **Tijdens de sessie** — korte “wanneer doe ik X”-tiles
-4. **Nieuw weertype** — wat aanleveren (geen formulier)
+4. **Voorraad & bouw** — guild-grondstoffen, bouwprojecten, productie (DM-uitleg + flows)
+5. **Nieuw weertype** — wat aanleveren (geen formulier)
 
-Nieuwe tab alleen als er echt een nieuw *soort* content bij komt.
+Nieuwe tab alleen als er echt een nieuw *soort* content bij komt (zoals voorraad/bouw/productie t.o.v. weer/kalender).
 
 ---
 
@@ -81,17 +82,20 @@ Eerst op **wie**, daarna op **categorie**:
 
 | Wie | Categorieën |
 |---|---|
-| Iedereen | Bekijken |
-| DM | Inrichten · Instellingen · Acties · Limieten · Berichten · Info |
+| Iedereen | Bekijken · Voorraad · Bouwen · Productie |
+| DM | Inrichten · Instellingen · Acties · Limieten · Berichten · Voorraad · Bouwen · Productie · Info |
 
 | Categorie | Voorbeelden |
 |---|---|
 | Bekijken | `/weather current`, `/world today`, `/world fullmoon` |
-| Inrichten | `/weather setup`, `/world setup`, `/world clear` |
+| Inrichten | `/weather setup`, `/world setup`, `/world clear`, `/resource setup` |
 | Instellingen | `/weather settings …` |
 | Acties | `roll`, `set`, `schedule`, `pause`, `resume` |
 | Limieten | `severity`, `magical` |
 | Berichten | `/announce schedule`, `/announce list`, `/announce cancel` |
+| Voorraad | `/resource donate`, `buy`, `stock`, `type …`, `cap`, `personal …` |
+| Bouwen | `/building create`, `cost add` / `buildtime` / `show`, `donate`, `fund`, `contribute` |
+| Productie | `/production add`, `list`, `workers`, `yield`, `remove` |
 | Info | `help`, `status`, `next` |
 
 Nieuwe commands in de juiste categorie + in de filters (`cmdCat`) houden.
@@ -110,6 +114,11 @@ Gebruik deze termen consistent:
 - **Tijdelijke magie-filter** — alleen magisch of juist geen magisch weer, voor een duur (`/weather magical`)
 - **Gepland bericht** — vrije tekst die de bot later post in een gekozen kanaal (los van het weerkanaal); via `/announce`
 - **Kalender-events kanaal** — ochtendpost (`@everyone` + today-embed) alleen bij events; avondpost bij Full Moon (Rising) (stil) en exacte volle maan (`@everyone`); via `/world setup` (los van het weerkanaal)
+- **Guild-voorraad** — gedeelde grondstoffen per server; stille berichten in het voorraadkanaal (`/resource setup`)
+- **Persoonlijke voorraad** — bak per speler, los van de guild
+- **Opslaglimiet** — max per grondstoftype (standaard 300); overflow bij spelers → persoonlijk; bij dagelijkse productie → verloren
+- **Bouwproject** — materialen verzamelen → bouwen (tijd) → voltooid; via `/building`
+- **Productiebron** — vaste bron (bijv. hut) die periodiek grondstoffen levert; samenvatting stil ~17:00; via `/production`
 - **Eryndor bot** — productnaam (repo/package mag `weather-bot` / `eryndor-bot` blijven)
 
 Defaults in de handout moeten overeenkomen met content/`weather-rules.json` en schedule-defaults. Wijzigen die in de bot → handout meenemen.
@@ -119,7 +128,7 @@ Defaults in de handout moeten overeenkomen met content/`weather-rules.json` en s
 ## Workflow: feature → handout
 
 1. Feature **implemented** in de bot (zie feature-doc + `agent.md`).
-2. Schrijf een korte briefing: `docs/handout-update-<onderwerp>.md` (zie [`handout-update-guild-schedule-settings.md`](./handout-update-guild-schedule-settings.md), [`handout-update-scheduled-announcements.md`](./handout-update-scheduled-announcements.md)).
+2. Schrijf een korte briefing: `docs/handout-update-<onderwerp>.md` (zie o.a. [`handout-update-guild-schedule-settings.md`](./handout-update-guild-schedule-settings.md), [`handout-update-guild-resources.md`](./handout-update-guild-resources.md)).
 3. Werk `docs/handout/index.html` bij volgens **dit** bestand + die briefing.
 4. Geen secrets, geen interne implementatiedetails in de handout.
 5. Proposed features (bijv. [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md)) → **geen** handout tot status = implemented.

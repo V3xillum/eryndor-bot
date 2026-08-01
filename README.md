@@ -1,8 +1,8 @@
 # Eryndor bot
 
-Discord bot for the Eryndor (West Marches) D&D server: atmospheric weather updates plus calendar commands. The bot posts weather automatically on a random interval (defaults in `.env`, overridable per guild via `/weather settings`) and gives allowlisted users slash-command control during sessions.
+Discord bot for the Eryndor (West Marches) D&D server: weather, calendar, guild resources/buildings/production. The bot posts weather automatically on a random interval (defaults in `.env`, overridable per guild via `/weather settings`) and gives allowlisted users slash-command control during sessions.
 
-DM handout (GitHub Pages, from `/docs`): [`docs/handout/`](./docs/handout/). Agent rules for that handout: [`docs/handout-agent.md`](./docs/handout-agent.md).
+DM handout (GitHub Pages, from `/docs`): [`docs/handout/`](./docs/handout/). Agent rules for that handout: [`docs/handout-agent.md`](./docs/handout-agent.md). Feature specs: `docs/feature-*.md`.
 
 ## Requirements
 
@@ -37,7 +37,7 @@ cp .env.example .env
 # per-guild overrides at runtime: /weather settings (no restart)
 
 npm install
-npm run register-commands   # register /weather, /world and /announce
+npm run register-commands   # register /weather, /world, /announce, /resource, /building, /production
 npm run build
 npm start
 ```
@@ -100,6 +100,18 @@ Data comes from the static [Calendar of Eryndor](https://v3xillum.github.io/eryn
 | `/world clear` | allowlist | Disable automatic morning calendar-event posts |
 
 Optional env: `ERYNDOR_CALENDAR_BASE_URL` / `ERYNDOR_CALENDAR_FALLBACK_URL` / `CALENDAR_EVENTS_POST_TIME` (default `08:30`) / `CALENDAR_FULLMOON_POST_TIME` (default `20:00`, see `.env.example`). Timezone for “today” and the posts follows `WEATHER_TIMEZONE` (default `Europe/Amsterdam`).
+
+### Resources, buildings & production
+
+Guild stockpile, personal stash, building projects, and production sources. Full DM-facing explanation: handout tab **Voorraad & bouw**. Specs: [`docs/feature-guild-resources.md`](./docs/feature-guild-resources.md), [`docs/feature-guild-production.md`](./docs/feature-guild-production.md).
+
+| Area | Commands (summary) |
+|---|---|
+| Resources | `/resource setup\|type\|donate\|buy\|stock\|personal\|adjust\|cap` |
+| Buildings | `/building create\|cost add\|cost buildtime\|donate\|fund\|contribute\|list\|status\|cancel` — new projects default build time **100** |
+| Production | `/production add\|list\|workers\|yield\|remove` — daily silent summary after `PRODUCTION_POST_TIME` (default `17:00`) |
+
+GC is announced only (players track balances themselves). Storage cap default **300 per type**.
 
 ## Content
 
