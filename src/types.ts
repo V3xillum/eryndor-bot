@@ -194,6 +194,19 @@ export interface Messages {
   announceModalBodyLabel: string;
   announcePostFailedDm: string;
   announcePostFailedDmIntro: string;
+  statusReportTitle: string;
+  statusReportDescription: string;
+  statusReportCadenceLabel: string;
+  statusReportUptimeMinutes: string;
+  statusReportUptimeHours: string;
+  statusReportFieldGuilds: string;
+  statusReportFieldUsage: string;
+  statusReportFieldIssues: string;
+  statusReportGuildActive: string;
+  statusReportGuildPaused: string;
+  statusReportGuildsNone: string;
+  statusReportUsageBody: string;
+  statusReportIssuesNone: string;
 }
 
 export type CalendarEvent =

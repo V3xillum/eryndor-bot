@@ -14,11 +14,13 @@ import {
   type TimeOfDay,
 } from '../utils/activeWindow.js';
 import { formatTemplate } from '../utils/helpers.js';
+import type { ActivityLogService } from './ActivityLogService.js';
 import type { AnnounceService } from './AnnounceService.js';
 import {
   CalendarFetchError,
   type EryndorCalendarService,
 } from './EryndorCalendarService.js';
+import type { StatusReportService } from './StatusReportService.js';
 import type { WeatherService } from './WeatherService.js';
 
 const CHECK_INTERVAL_MS = 30 * 1000;
@@ -40,6 +42,8 @@ export class SchedulerService {
     private readonly weather: WeatherService,
     private readonly announce: AnnounceService,
     private readonly calendar: EryndorCalendarService,
+    private readonly activity: ActivityLogService,
+    private readonly statusReport: StatusReportService | null,
     private readonly calendarEventsPostTime: TimeOfDay,
     private readonly calendarFullMoonPostTime: TimeOfDay,
     private readonly calendarTimeZone: string,
@@ -65,13 +69,36 @@ export class SchedulerService {
         const result = this.weather.rollWeather(state.guild_id);
         await this.postWeather(state.guild_id, result);
       } catch (error) {
-        console.error(`Scheduler failed for guild ${state.guild_id}:`, error);
+        this.activity.error(
+          'weather',
+          `Scheduler failed for guild ${state.guild_id}`,
+          error,
+        );
       }
     }
 
     await this.tickAnnouncements();
     await this.tickCalendarEvents();
     await this.tickCalendarFullMoon();
+    await this.tickStatusReport();
+    this.activity.pruneOld();
+  }
+
+  private async tickStatusReport(now = new Date()): Promise<void> {
+    const report = this.statusReport;
+    if (!report?.enabled()) return;
+    if (!report.isAtOrAfterPostTime(now)) return;
+
+    const period = report.periodKey(now);
+    if (report.lastPeriodHandled() === period) return;
+
+    try {
+      await report.sendReport(now);
+      report.markPeriodHandled(period);
+      this.activity.ok('system', `Status report sent (${period})`);
+    } catch (error) {
+      this.activity.error('system', 'Status report failed', error);
+    }
   }
 
   private async tickAnnouncements(): Promise<void> {
@@ -80,7 +107,8 @@ export class SchedulerService {
       try {
         const channel = await this.client.channels.fetch(post.channel_id);
         if (!channel || !channel.isTextBased() || channel.isDMBased()) {
-          console.warn(
+          this.activity.warn(
+            'announce',
             `Scheduled post ${post.id}: destination ${post.channel_id} is not a text channel`,
           );
           await this.failAnnounceWithDm(post);
@@ -88,13 +116,17 @@ export class SchedulerService {
         }
 
         if (!('send' in channel)) {
-          console.warn(`Scheduled post ${post.id}: channel does not support send`);
+          this.activity.warn(
+            'announce',
+            `Scheduled post ${post.id}: channel does not support send`,
+          );
           await this.failAnnounceWithDm(post);
           continue;
         }
 
         if (!botCanSendInChannel(channel)) {
-          console.warn(
+          this.activity.warn(
+            'announce',
             `Scheduled post ${post.id}: bot lacks View/Send in ${post.channel_id}`,
           );
           await this.failAnnounceWithDm(post);
@@ -103,8 +135,9 @@ export class SchedulerService {
 
         await channel.send({ content: post.body });
         this.announce.markPosted(post.id);
+        this.activity.ok('announce', `Scheduled post ${post.id} sent`);
       } catch (error) {
-        console.error(`Scheduled post ${post.id} failed:`, error);
+        this.activity.error('announce', `Scheduled post ${post.id} failed`, error);
         if (isPermanentAnnounceError(error)) {
           await this.failAnnounceWithDm(post);
           continue;
@@ -133,15 +166,17 @@ export class SchedulerService {
         if (day.events.length > 0) {
           const channel = await this.client.channels.fetch(state.calendar_channel_id);
           if (!channel || !channel.isTextBased() || channel.isDMBased()) {
-            console.warn(
-              `Calendar events ${state.guild_id}: destination ${state.calendar_channel_id} is not a text channel`,
+            this.activity.warn(
+              'calendar',
+              `Calendar events ${state.guild_id}: destination not a text channel`,
             );
             this.weather.markCalendarEventsHandled(state.guild_id, localDate);
             continue;
           }
 
           if (!('send' in channel)) {
-            console.warn(
+            this.activity.warn(
+              'calendar',
               `Calendar events ${state.guild_id}: channel does not support send`,
             );
             this.weather.markCalendarEventsHandled(state.guild_id, localDate);
@@ -149,8 +184,9 @@ export class SchedulerService {
           }
 
           if (!botCanSendInChannel(channel)) {
-            console.warn(
-              `Calendar events ${state.guild_id}: bot lacks View/Send in ${state.calendar_channel_id}`,
+            this.activity.warn(
+              'calendar',
+              `Calendar events ${state.guild_id}: bot lacks View/Send`,
             );
             this.weather.markCalendarEventsHandled(state.guild_id, localDate);
             continue;
@@ -161,17 +197,23 @@ export class SchedulerService {
             embeds: [this.calendar.buildTodayEmbed(day)],
             allowedMentions: { parse: ['everyone'] },
           });
+          this.activity.ok('calendar', `Calendar events posted (${localDate})`);
         }
 
         this.weather.markCalendarEventsHandled(state.guild_id, localDate);
       } catch (error) {
         if (error instanceof CalendarFetchError) {
-          console.warn(
+          this.activity.warn(
+            'calendar',
             `Calendar events ${state.guild_id}: could not load day data; will retry`,
           );
           continue;
         }
-        console.error(`Calendar events failed for guild ${state.guild_id}:`, error);
+        this.activity.error(
+          'calendar',
+          `Calendar events failed for guild ${state.guild_id}`,
+          error,
+        );
         if (isPermanentAnnounceError(error)) {
           this.weather.markCalendarEventsHandled(state.guild_id, localDate);
         }
@@ -204,15 +246,17 @@ export class SchedulerService {
         if (rising || exact) {
           const channel = await this.client.channels.fetch(state.calendar_channel_id);
           if (!channel || !channel.isTextBased() || channel.isDMBased()) {
-            console.warn(
-              `Calendar full moon ${state.guild_id}: destination ${state.calendar_channel_id} is not a text channel`,
+            this.activity.warn(
+              'calendar',
+              `Calendar full moon ${state.guild_id}: destination not a text channel`,
             );
             this.weather.markCalendarFullMoonHandled(state.guild_id, localDate);
             continue;
           }
 
           if (!('send' in channel)) {
-            console.warn(
+            this.activity.warn(
+              'calendar',
               `Calendar full moon ${state.guild_id}: channel does not support send`,
             );
             this.weather.markCalendarFullMoonHandled(state.guild_id, localDate);
@@ -220,8 +264,9 @@ export class SchedulerService {
           }
 
           if (!botCanSendInChannel(channel)) {
-            console.warn(
-              `Calendar full moon ${state.guild_id}: bot lacks View/Send in ${state.calendar_channel_id}`,
+            this.activity.warn(
+              'calendar',
+              `Calendar full moon ${state.guild_id}: bot lacks View/Send`,
             );
             this.weather.markCalendarFullMoonHandled(state.guild_id, localDate);
             continue;
@@ -240,17 +285,26 @@ export class SchedulerService {
               flags: MessageFlags.SuppressNotifications,
             });
           }
+          this.activity.ok(
+            'calendar',
+            exact ? `Exact full moon posted (${localDate})` : `Full moon rising posted (${localDate})`,
+          );
         }
 
         this.weather.markCalendarFullMoonHandled(state.guild_id, localDate);
       } catch (error) {
         if (error instanceof CalendarFetchError) {
-          console.warn(
+          this.activity.warn(
+            'calendar',
             `Calendar full moon ${state.guild_id}: could not load day data; will retry`,
           );
           continue;
         }
-        console.error(`Calendar full moon failed for guild ${state.guild_id}:`, error);
+        this.activity.error(
+          'calendar',
+          `Calendar full moon failed for guild ${state.guild_id}`,
+          error,
+        );
         if (isPermanentAnnounceError(error)) {
           this.weather.markCalendarFullMoonHandled(state.guild_id, localDate);
         }
@@ -278,7 +332,8 @@ export class SchedulerService {
         await user.send({ content: post.body.slice(0, DISCORD_CONTENT_LIMIT) });
       }
     } catch (error) {
-      console.error(
+      this.activity.error(
+        'announce',
         `Scheduled post ${post.id}: could not DM creator ${post.created_by}`,
         error,
       );
@@ -293,7 +348,8 @@ export class SchedulerService {
     const destinationId = state?.thread_id ?? state?.channel_id;
 
     if (!destinationId) {
-      console.warn(
+      this.activity.warn(
+        'weather',
         formatTemplate(this.weather.messages.skippedNoChannel, { guildId }),
       );
       return false;
@@ -301,11 +357,18 @@ export class SchedulerService {
 
     const channel = await this.client.channels.fetch(destinationId);
     if (!channel || !channel.isTextBased() || channel.isDMBased()) {
-      console.warn(`Configured destination ${destinationId} is not a text channel`);
+      this.activity.warn(
+        'weather',
+        `Configured destination ${destinationId} is not a text channel`,
+      );
       return false;
     }
 
     await sendWeatherCard(channel, result);
+    this.activity.ok(
+      'weather',
+      result.forced ? 'Weather posted (manual)' : 'Weather posted (auto)',
+    );
     return true;
   }
 }

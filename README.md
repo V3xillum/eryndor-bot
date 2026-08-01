@@ -118,6 +118,10 @@ SQLite file: `storage/world.sqlite` (gitignored). One `world_state` row per Disc
 
 On restart, if `next_update_at` is in the past and the guild is not paused, the bot posts immediately and reschedules.
 
+## Status report DMs
+
+Optional. Set `STATUS_REPORT_USER_ID` (comma-separated) plus `STATUS_REPORT_TIME` / `STATUS_REPORT_CADENCE` (`daily` | `weekly` | `monthly`). After that local time, once per period, the bot DMs a snapshot: weather **active/paused** only (no next-update spoilers), usage counts, and recent warnings/errors. Empty user list disables the feature.
+
 ## Run in the background (PM2)
 
 Keep the bot running without an open terminal (e.g. on your Mac). Requires [PM2](https://pm2.keymetrics.io/docs/usage/quick-start/) globally: `npm i -g pm2`.

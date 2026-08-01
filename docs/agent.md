@@ -55,6 +55,12 @@ CALENDAR_FULLMOON_POST_TIME=20:00
 
 # DM handout (GitHub Pages). Linked from /weather help.
 HANDOUT_URL=https://v3xillum.github.io/eryndor-bot/handout/
+
+# Optional status-report DMs (comma-separated user IDs; empty = off).
+# Snapshot: weather active/paused only (no next-update spoilers), usage counts, last issues.
+STATUS_REPORT_USER_ID=
+STATUS_REPORT_TIME=10:00
+STATUS_REPORT_CADENCE=daily
 ```
 
 **Active window behaviour:** the scheduler never auto-posts outside the **effective** window for that guild (guild override, else `.env`). If `next_update_at` falls overnight, it waits until the next window start. When scheduling the next update, candidates outside the window are clamped to the next window start. Half-open interval: `[start, end)` in `WEATHER_TIMEZONE`.
@@ -76,15 +82,15 @@ HANDOUT_URL=https://v3xillum.github.io/eryndor-bot/handout/
 src/
   commands/       # thin slash command handlers (weather.ts, announce.ts, world.ts)
   events/         # discord.js event listeners (ready, interactionCreate, etc.)
-  services/       # WeatherService, SchedulerService, AnnounceService, EryndorCalendarService
-  utils/          # helpers, activeWindow, harptos DOY helpers
+  services/       # WeatherService, SchedulerService, AnnounceService, EryndorCalendarService, ActivityLogService, StatusReportService
+  utils/          # helpers, activeWindow, harptos DOY helpers, statusReportPeriod
   db/             # SQLite connection + queries
   content/        # loaders for JSON content and images
   register-commands.ts
   index.ts
 
 storage/
-  world.sqlite
+  world.sqlite    # world_state, weather_log, scheduled_posts, activity_log, bot_meta
 
 content/
   weather-table.json
@@ -320,6 +326,7 @@ Responsible for:
 - posting due rows from `scheduled_posts` (DM announcements) to their own `channel_id` — independent of weather destination / pause / active window
 - once per day after `CALENDAR_EVENTS_POST_TIME`, posting the calendar today-embed to `calendar_channel_id` when that day has events — independent of weather destination / pause / active window
 - once per evening after `CALENDAR_FULLMOON_POST_TIME`, posting a moon-night embed for `Full Moon (Rising)` (silent) or exact Full Moon (`@everyone`) — same channel
+- once per `STATUS_REPORT_CADENCE` after `STATUS_REPORT_TIME`, DM status reports to `STATUS_REPORT_USER_ID` (active/paused + usage counts + recent issues; no next-update spoilers)
 
 Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/weather roll`, `/weather set`); the scheduler owns the recurring automatic updates, due announcements, and morning calendar-event posts.
 

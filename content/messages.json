@@ -107,5 +107,18 @@
   "announceModalTitle": "Gepland bericht",
   "announceModalBodyLabel": "Tekst (max 2000 tekens)",
   "announcePostFailedDm": "Niet gelukt dit bericht in {channel} te posten.\n\n{body}",
-  "announcePostFailedDmIntro": "Niet gelukt dit bericht in {channel} te posten.\n\nHieronder de tekst om te kopiëren:"
+  "announcePostFailedDmIntro": "Niet gelukt dit bericht in {channel} te posten.\n\nHieronder de tekst om te kopiëren:",
+  "statusReportTitle": "Eryndor bot — statusrapport",
+  "statusReportDescription": "{cadence}\nProces uptime: **{uptime}**",
+  "statusReportCadenceLabel": "Cadence: **{cadence}** · gepland rond **{time}**",
+  "statusReportUptimeMinutes": "{minutes} min",
+  "statusReportUptimeHours": "{hours}u {minutes}m",
+  "statusReportFieldGuilds": "Weer (actief / pauze)",
+  "statusReportFieldUsage": "Gebruik (deze periode)",
+  "statusReportFieldIssues": "Issues (deze periode)",
+  "statusReportGuildActive": "• **{guild}** — actief",
+  "statusReportGuildPaused": "• **{guild}** — gepauzeerd",
+  "statusReportGuildsNone": "Nog geen servers geconfigureerd.",
+  "statusReportUsageBody": "Weerposts: **{weather}**\nKalenderposts: **{calendar}**\nAnnounces: **{announce}**\nSlash commands: **{command}**",
+  "statusReportIssuesNone": "Geen warnings of errors in deze periode."
 }

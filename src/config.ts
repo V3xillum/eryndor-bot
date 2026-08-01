@@ -4,6 +4,7 @@ import {
   timeOfDayToMinutes,
   type ActiveWindow,
 } from './utils/activeWindow.js';
+import type { StatusReportCadence } from './utils/statusReportPeriod.js';
 
 /** Defaults match the original 6–18h window, expressed in minutes for easy local testing. */
 const DEFAULT_UPDATE_MIN_MINUTES = 6 * 60;
@@ -16,6 +17,7 @@ const DEFAULT_CALENDAR_FULLMOON_POST_TIME = '20:00';
 const DEFAULT_ERYNDOR_BASE_URL = 'https://v3xillum.github.io/eryndor';
 const DEFAULT_ERYNDOR_FALLBACK_URL = 'https://raw.githubusercontent.com/V3xillum/eryndor/main';
 const DEFAULT_HANDOUT_URL = 'https://v3xillum.github.io/eryndor-bot/handout/';
+const DEFAULT_STATUS_REPORT_TIME = '10:00';
 
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim();
@@ -82,11 +84,24 @@ function normalizeBaseUrl(raw: string): string {
   return raw.trim().replace(/\/+$/, '');
 }
 
-export function loadConfig() {
-  const allowedUserIds = (process.env.ALLOWED_USER_IDS ?? '')
+function parseUserIds(raw: string | undefined): string[] {
+  return (raw ?? '')
     .split(',')
     .map((id) => id.trim())
     .filter(Boolean);
+}
+
+function loadStatusReportCadence(): StatusReportCadence {
+  const raw = (process.env.STATUS_REPORT_CADENCE ?? 'daily').trim().toLowerCase();
+  if (raw === 'daily' || raw === 'weekly' || raw === 'monthly') return raw;
+  throw new Error(
+    `STATUS_REPORT_CADENCE must be daily, weekly, or monthly, got: ${process.env.STATUS_REPORT_CADENCE}`,
+  );
+}
+
+export function loadConfig() {
+  const allowedUserIds = parseUserIds(process.env.ALLOWED_USER_IDS);
+  const statusReportUserIds = parseUserIds(process.env.STATUS_REPORT_USER_ID);
 
   const updateMinMinutes = optionalPositiveInt(
     'WEATHER_UPDATE_MIN_MINUTES',
@@ -117,10 +132,19 @@ export function loadConfig() {
     throw new Error(`HANDOUT_URL must be an http(s) URL, got: ${handoutUrl}`);
   }
 
+  const statusReportTime = parseTimeOfDay(
+    process.env.STATUS_REPORT_TIME?.trim() || DEFAULT_STATUS_REPORT_TIME,
+    'STATUS_REPORT_TIME',
+  );
+  const statusReportCadence = loadStatusReportCadence();
+
   return {
     token: requireEnv('DISCORD_TOKEN'),
     clientId: requireEnv('DISCORD_CLIENT_ID'),
     allowedUserIds,
+    statusReportUserIds,
+    statusReportTime,
+    statusReportCadence,
     updateMinMinutes,
     updateMaxMinutes,
     activeWindow: loadActiveWindow(),

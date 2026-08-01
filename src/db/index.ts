@@ -98,6 +98,23 @@ function migrate(db: Database.Database): void {
   if (!names.has('calendar_fullmoon_last_handled_date')) {
     db.exec(`ALTER TABLE world_state ADD COLUMN calendar_fullmoon_last_handled_date TEXT`);
   }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS activity_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT NOT NULL,
+      level TEXT NOT NULL,
+      category TEXT NOT NULL,
+      message TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS bot_meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_activity_log_created_at ON activity_log(created_at);
+  `);
 }
 
 function nowIso(): string {
@@ -510,4 +527,73 @@ export function cancelScheduledPost(
     )
     .run(id, guildId);
   return result.changes > 0;
+}
+
+export type ActivityLevel = 'ok' | 'warn' | 'error';
+
+export function insertActivityLog(
+  db: Database.Database,
+  entry: { level: ActivityLevel; category: string; message: string; createdAt?: string },
+): void {
+  db.prepare(
+    `INSERT INTO activity_log (created_at, level, category, message) VALUES (?, ?, ?, ?)`,
+  ).run(entry.createdAt ?? nowIso(), entry.level, entry.category, entry.message);
+}
+
+export function countActivityByCategory(
+  db: Database.Database,
+  sinceIso: string,
+  level: ActivityLevel = 'ok',
+): Record<string, number> {
+  const rows = db
+    .prepare(
+      `SELECT category, COUNT(*) AS n
+       FROM activity_log
+       WHERE created_at >= ? AND level = ?
+       GROUP BY category`,
+    )
+    .all(sinceIso, level) as Array<{ category: string; n: number }>;
+
+  const out: Record<string, number> = {};
+  for (const row of rows) out[row.category] = row.n;
+  return out;
+}
+
+export function listActivityIssues(
+  db: Database.Database,
+  sinceIso: string,
+  limit: number,
+): Array<{ created_at: string; level: string; category: string; message: string }> {
+  return db
+    .prepare(
+      `SELECT created_at, level, category, message
+       FROM activity_log
+       WHERE created_at >= ? AND level IN ('warn', 'error')
+       ORDER BY id DESC
+       LIMIT ?`,
+    )
+    .all(sinceIso, limit) as Array<{
+    created_at: string;
+    level: string;
+    category: string;
+    message: string;
+  }>;
+}
+
+export function pruneActivityLog(db: Database.Database, olderThanIso: string): void {
+  db.prepare(`DELETE FROM activity_log WHERE created_at < ?`).run(olderThanIso);
+}
+
+export function getBotMeta(db: Database.Database, key: string): string | null {
+  const row = db.prepare(`SELECT value FROM bot_meta WHERE key = ?`).get(key) as
+    | { value: string }
+    | undefined;
+  return row?.value ?? null;
+}
+
+export function setBotMeta(db: Database.Database, key: string, value: string): void {
+  db.prepare(
+    `INSERT INTO bot_meta (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+  ).run(key, value);
 }

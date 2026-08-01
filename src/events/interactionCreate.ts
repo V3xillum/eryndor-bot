@@ -6,6 +6,7 @@ import {
 } from '../commands/announce.js';
 import { handleWeatherCommand } from '../commands/weather.js';
 import { handleWorldCommand } from '../commands/world.js';
+import type { ActivityLogService } from '../services/ActivityLogService.js';
 import type { AnnounceService } from '../services/AnnounceService.js';
 import type { EryndorCalendarService } from '../services/EryndorCalendarService.js';
 import type { SchedulerService } from '../services/SchedulerService.js';
@@ -18,6 +19,7 @@ export function registerInteractionHandler(
     scheduler: SchedulerService;
     calendar: EryndorCalendarService;
     announce: AnnounceService;
+    activity: ActivityLogService;
     config: AppConfig;
   },
 ): void {
@@ -29,6 +31,7 @@ export function registerInteractionHandler(
             announce: deps.announce,
             config: deps.config,
           });
+          deps.activity.ok('command', 'announce modal');
         }
         return;
       }
@@ -38,6 +41,7 @@ export function registerInteractionHandler(
       switch (interaction.commandName) {
         case 'weather':
           await handleWeatherCommand(interaction, deps);
+          deps.activity.ok('command', '/weather');
           return;
         case 'world':
           await handleWorldCommand(interaction, {
@@ -45,18 +49,20 @@ export function registerInteractionHandler(
             weather: deps.weather,
             config: deps.config,
           });
+          deps.activity.ok('command', '/world');
           return;
         case 'announce':
           await handleAnnounceCommand(interaction, {
             announce: deps.announce,
             config: deps.config,
           });
+          deps.activity.ok('command', '/announce');
           return;
         default:
           return;
       }
     } catch (error) {
-      console.error('Command error:', error);
+      deps.activity.error('command', 'Command error', error);
       const message = deps.weather.messages.commandError;
       if (interaction.isRepliable()) {
         if (interaction.deferred || interaction.replied) {
