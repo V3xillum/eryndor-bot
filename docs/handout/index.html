@@ -527,7 +527,7 @@
 
     <section id="overzicht" class="panel active" role="tabpanel">
       <h2>Wat doet de bot?</h2>
-      <p class="lead">Eryndor bot houdt de wereld levend tussen sessies: hij post weerkaarten, geeft Eryndor-datum en maan, kan kalender-events posten, plant tekstberichten, en houdt guild-voorraad, bouwprojecten en productie bij. Tussendoor dobbelt hij zelf — jij grijpt in wanneer de tafel dat vraagt.</p>
+      <p class="lead">Eryndor bot houdt de wereld levend tussen sessies: weerkaarten, kalender, geplande berichten, én guild-voorraad met bouw en productie. Tussendoor dobbelt hij zelf — jij grijpt in wanneer de tafel dat vraagt.</p>
 
       <div class="grid-2">
         <article class="tile">
@@ -536,11 +536,11 @@
         </article>
         <article class="tile">
           <h3>Jij als DM</h3>
-          <p>Weer vastzetten of laten dobbelen, automatische updates pauzeren, ritme/limieten aanpassen, kalender- of wereldberichten klaarzetten, en guild-voorraad / bouw / productie inrichten.</p>
+          <p>Aan tafel: weer vastzetten of laten dobbelen, updates pauzeren, ritme/limieten en berichten. Op Discord tussen sessies: guild-voorraad, bouw en productie inrichten.</p>
         </article>
         <article class="tile">
           <h3>Spelers</h3>
-          <p>Iedereen mag het huidige weer voor zichzelf bekijken, de kalender raadplegen, en guild-voorraad / bouw / productie <em>gebruiken</em> (doneren, kopen, meebouwen, lijsten). Alleen aangewezen DM’s richten types, limieten en bronnen in.</p>
+          <p>Iedereen mag weer en kalender raadplegen. Tussen sessies op Discord: doneren, kopen, meebouwen en productie/lijsten bekijken. Alleen aangewezen DM’s richten types, limieten en bronnen in.</p>
         </article>
         <article class="tile">
           <h3>Kalender</h3>
@@ -552,7 +552,7 @@
         </article>
         <article class="tile">
           <h3>Voorraad &amp; bouw</h3>
-          <p>Grondstoftypes, guild- en persoonlijke voorraad, bouwprojecten en productiebronnen — DMs richten het in, de tafel gebruikt het. Uitleg: tab <strong>Voorraad &amp; bouw</strong>. Kanaal: <code>/resource setup</code>.</p>
+          <p>Discord-downtime: grondstoffen, bouwprojecten en productie. Geen tafel-feature — de tafel speelt, Discord houdt de economy bij. Uitleg: tab <strong>Voorraad &amp; bouw</strong>. Kanaal: <code>/resource setup</code>.</p>
         </article>
       </div>
 
@@ -661,29 +661,13 @@
           <h3>Even checken</h3>
           <p>Wat speelt er nu? <code>/weather status</code> — weer, planning, ritme, venster, afkoeling, limieten. Alleen de volgende update: <code>/weather next</code>.</p>
         </article>
-        <article class="tile">
-          <h3>Nieuw grondstoftype</h3>
-          <p>De party ontdekte hout of steen — zet het in Discord. <code>/resource type add</code> — naam + hoeveel GC je krijgt bij doneren (<code>sell</code>); optioneel koopprijs (<code>buy</code>, anders 2× sell).</p>
-        </article>
-        <article class="tile">
-          <h3>Bouwproject starten</h3>
-          <p>Nieuwe hut of muur in de planning. <code>/building create</code> (bouwtijd standaard 100), daarna materialen met <code>/building cost add</code>. Aanpassen bouwtijd: <code>/building cost buildtime</code>.</p>
-        </article>
-        <article class="tile">
-          <h3>Productiebron</h3>
-          <p>Iets dat elke dag (of week) oplevert. <code>/production add</code> — kies type en interval, vul naam, medewerkers en opbrengst in. Avondpost rond 17:00 op het voorraadkanaal.</p>
-        </article>
-        <article class="tile">
-          <h3>Voorraad checken</h3>
-          <p>Wat ligt er op de plank? <code>/resource stock</code> (guild + limiet). Eigen bak: <code>/resource personal show</code>. Productiebronnen: <code>/production list</code>.</p>
-        </article>
       </div>
-      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code>. Kalenderposts via <code>/world setup</code>. Voorraad-/bouw-/productieberichten gaan stil naar het kanaal van <code>/resource setup</code>.</p>
+      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code>. Kalenderposts via <code>/world setup</code>. Voorraad, bouw en productie horen bij Discord tussen sessies — zie tab <strong>Voorraad &amp; bouw</strong>.</p>
     </section>
 
     <section id="voorraad" class="panel" role="tabpanel" hidden>
-      <h2>Voorraad &amp; bouw</h2>
-      <p class="lead">West Marches-achtig: DMs maken grondstoftypes, bouwprojecten en productiebronnen aan. Spelers doneren, kopen, bouwen mee. De bot houdt <strong>geen</strong> GC-saldo bij — hij meldt alleen hoeveel GC iemand ontvangt of moet betalen; iedereen houdt dat zelf bij.</p>
+      <h2>Voorraad, bouw &amp; productie</h2>
+      <p class="lead">Drie onderdelen voor Discord <strong>tussen sessies</strong>: <strong>voorraad</strong> (grondstoffen), <strong>bouw</strong> (projecten), <strong>productie</strong> (dagelijkse/wekelijkse opbrengst). De bot houdt <strong>geen</strong> GC-saldo bij — hij meldt alleen hoeveel GC iemand ontvangt of moet betalen; iedereen houdt dat zelf bij.</p>
 
       <div class="grid-2">
         <article class="tile">
@@ -692,23 +676,37 @@
         </article>
         <article class="tile">
           <h3>2. Grondstoftypes</h3>
-          <p>Nog niets ontdekt? Maak types zelf: <code>/resource type add</code> — weergavenaam (bijv. Hout) + <code>sell</code> (GC bij doneren). Optioneel <code>buy</code> (anders 2× sell). Aanpassen: <code>edit</code> / weg: <code>remove</code>. Lijst: <code>/resource type list</code>.</p>
+          <p>Maak types aan: <code>/resource type add</code> — naam (bijv. Hout) + hoeveel GC je krijgt bij doneren (veld <code>sell</code>). Optioneel koopprijs (veld <code>buy</code>; anders 2× sell). Aanpassen: <code>edit</code> / weg: <code>remove</code>. Lijst: <code>/resource type list</code>.</p>
         </article>
         <article class="tile">
           <h3>3. Guild vs persoonlijk</h3>
-          <p><strong>Guild-voorraad:</strong> <code>/resource donate</code> / <code>buy</code> / <code>stock</code>. <strong>Persoonlijk:</strong> eigen bak met <code>/resource personal add|remove|show</code> — geen GC. DM-correctie zonder GC-melding: <code>/resource adjust</code>.</p>
+          <p><strong>Guild-voorraad:</strong> <code>/resource donate</code> (inleveren, + GC-melding) / <code>/resource buy</code> (kopen, − GC-melding) / <code>/resource stock</code>. <strong>Persoonlijk:</strong> eigen bak met <code>/resource personal add|remove|show</code> — geen GC. DM-correctie zonder GC-melding: <code>/resource adjust</code>.</p>
         </article>
         <article class="tile">
           <h3>4. Opslaglimiet</h3>
-          <p>Standaard max <strong>300 per type</strong> (Hout 300 én Steen 300, niet opgeteld). Aanpassen: <code>/resource cap</code>. Zit de guild vol? Rest van een donatie/correctie gaat naar je <strong>persoonlijke</strong> bak. Dagelijkse productie die niet past is <strong>verloren</strong> — dat staat duidelijk in de avondpost.</p>
+          <p>Standaard max <strong>300 per type</strong> (Hout 300 én Steen 300, niet opgeteld). Aanpassen: <code>/resource cap</code>. Zit de guild vol? Rest van een donatie/correctie gaat naar je <strong>persoonlijke</strong> bak. Dagelijkse productie die niet past is <strong>verloren</strong> — dat staat in de avondpost.</p>
         </article>
         <article class="tile">
-          <h3>5. Bouwprojecten</h3>
-          <p><code>/building create</code> → materiaalkosten (<code>/building cost add</code>, type + aantal, “nog een toevoegen”). Fase 2-bouwtijd staat standaard op <strong>100</strong>; wijzigen met <code>/building cost buildtime</code>. Spelers: <code>donate</code> / <code>fund</code> / <code>contribute</code> via menu. Annuleren: <code>/building cancel</code>.</p>
+          <h3>5. Bouwproject — zo werkt het</h3>
+          <p><strong>1.</strong> DM: <code>/building create</code> + materiaalkosten (<code>/building cost add</code>) + eventueel bouwtijd (<code>/building cost buildtime</code>, standaard 100 eenheden werk).<br />
+          <strong>2.</strong> Materialen verzamelen tot alles binnen is.<br />
+          <strong>3.</strong> Meebouwen met <code>/building contribute</code> tot de bouwtijd vol is → klaar.<br />
+          Annuleren: <code>/building cancel</code> (materialen terug naar de guild).</p>
         </article>
         <article class="tile">
-          <h3>6. Productiebronnen</h3>
-          <p>Bijv. Houthakkershut → Hout. <code>/production add</code>: type, dagelijks of wekelijks, naam, medewerkers, opbrengst per medewerker. Opbrengst = medewerkers × opbrengst. Rond <strong>17:00</strong> één stille samenvatting (bron, type, hoeveelheid; verloren als de opslag vol zat). Beheer: <code>workers</code> / <code>yield</code> / <code>remove</code>; overzicht: <code>list</code>.</p>
+          <h3>6. Materiaal naar een project</h3>
+          <p>Drie verschillende acties — niet door elkaar halen:<br />
+          <code>/resource donate</code> — loot in de <strong>guild-voorraad</strong> (+ GC).<br />
+          <code>/building donate</code> — materiaal <strong>van buiten</strong> direct op een project (+ GC).<br />
+          <code>/building fund</code> — materiaal uit de <strong>guild-voorraad</strong> naar een project (geen extra GC).</p>
+        </article>
+        <article class="tile">
+          <h3>7. Bouwtijd</h3>
+          <p>Standaard <strong>100 eenheden werk</strong>. Elke contribute-eenheid kost <strong>1 GC</strong> (melding; zelf bijhouden). Pas de totale bouwtijd aan met <code>/building cost buildtime</code> — alleen vóór er materiaal gestort is.</p>
+        </article>
+        <article class="tile">
+          <h3>8. Productiebronnen</h3>
+          <p>Los van bouw: iets dat elke dag of week oplevert (bijv. Houthakkershut → Hout). <code>/production add</code> — type, interval, naam, medewerkers, opbrengst per medewerker. Rond <strong>17:00</strong> één stille samenvatting op het voorraadkanaal. Beheer: <code>workers</code> / <code>yield</code> / <code>remove</code>; overzicht: <code>list</code>.</p>
         </article>
       </div>
       <p class="note" style="margin-top:1rem">

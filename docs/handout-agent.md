@@ -2,7 +2,7 @@
 
 Regels voor agents (en mensen) die [`docs/handout/index.html`](./handout/index.html) bijwerken.
 
-**Bot-waarheid** (commands, data, gedrag) = [`agent.md`](./agent.md) + feature-docs.  
+**Bot-waarheid** (commands, data, gedrag) = [`agent.md`](./agent.md) + feature-docs.
 **Handout-stijl** (toon, structuur, wat wél/niet uitleggen) = **dit bestand**.
 
 GitHub Pages serveert de map `/docs`; de handout staat op `/handout/` (`docs/handout/index.html`). Logo: `docs/handout/eryndor-logo.jpg`.
