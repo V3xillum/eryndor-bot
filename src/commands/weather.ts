@@ -1,6 +1,5 @@
 import {
   ChannelType,
-  EmbedBuilder,
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
 } from 'discord.js';
@@ -46,11 +45,6 @@ export function buildWeatherCommand() {
     )
     .addSubcommand((sub) =>
       sub.setName('current').setDescription('Show the current weather (private reply)'),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName('help')
-        .setDescription('DM: short command cheat-sheet and link to the DM handout'),
     )
     .addSubcommand((sub) =>
       sub
@@ -268,7 +262,6 @@ export function buildWeatherCommand() {
 
 const ADMIN_SUBCOMMANDS = new Set([
   'setup',
-  'help',
   'status',
   'next',
   'roll',
@@ -369,9 +362,6 @@ export async function handleWeatherCommand(
     case 'current':
       await handleCurrent(interaction, weather);
       return;
-    case 'help':
-      await handleHelp(interaction, weather, config);
-      return;
     case 'status':
       await handleStatus(interaction, weather);
       return;
@@ -436,33 +426,6 @@ async function handleCurrent(
 
   await interaction.reply({
     ...buildWeatherCard(result),
-    ephemeral: true,
-  });
-}
-
-async function handleHelp(
-  interaction: ChatInputCommandInteraction,
-  weather: WeatherService,
-  config: AppConfig,
-): Promise<void> {
-  const url = config.handoutUrl;
-  const embed = new EmbedBuilder()
-    .setTitle(weather.messages.helpEmbedTitle)
-    .setURL(url)
-    .setDescription(formatTemplate(weather.messages.helpEmbedDescription, { url }))
-    .addFields(
-      {
-        name: weather.messages.helpFieldEveryone,
-        value: weather.messages.helpEveryoneBody,
-      },
-      {
-        name: weather.messages.helpFieldDm,
-        value: weather.messages.helpDmBody,
-      },
-    );
-
-  await interaction.reply({
-    embeds: [embed],
     ephemeral: true,
   });
 }

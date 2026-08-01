@@ -11,6 +11,7 @@ import {
   handleBuildingWizardModal,
   handleBuildingWizardSelect,
 } from '../commands/buildingWizard.js';
+import { handleEryndorCommand } from '../commands/eryndor.js';
 import { handleProductionCommand } from '../commands/production.js';
 import {
   PRODUCTION_WIZARD_PREFIX,
@@ -105,6 +106,13 @@ export function registerInteractionHandler(
       if (!interaction.isChatInputCommand()) return;
 
       switch (interaction.commandName) {
+        case 'eryndor':
+          await handleEryndorCommand(interaction, {
+            weather: deps.weather,
+            config: deps.config,
+          });
+          deps.activity.ok('command', '/eryndor');
+          return;
         case 'weather':
           await handleWeatherCommand(interaction, deps);
           deps.activity.ok('command', '/weather');

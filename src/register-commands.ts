@@ -2,6 +2,7 @@ import { REST, Routes } from 'discord.js';
 import { loadConfig } from './config.js';
 import { buildAnnounceCommand } from './commands/announce.js';
 import { buildBuildingCommand } from './commands/building.js';
+import { buildEryndorCommand } from './commands/eryndor.js';
 import { buildProductionCommand } from './commands/production.js';
 import { buildResourceCommand } from './commands/resource.js';
 import { buildWeatherCommand } from './commands/weather.js';
@@ -10,6 +11,7 @@ import { buildWorldCommand } from './commands/world.js';
 async function main(): Promise<void> {
   const config = loadConfig();
   const body = [
+    buildEryndorCommand().toJSON(),
     buildWeatherCommand().toJSON(),
     buildWorldCommand().toJSON(),
     buildAnnounceCommand().toJSON(),

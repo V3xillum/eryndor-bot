@@ -56,7 +56,7 @@ CALENDAR_FULLMOON_POST_TIME=20:00
 # Daily guild production summary on the resource channel (silent). Local WEATHER_TIMEZONE.
 PRODUCTION_POST_TIME=17:00
 
-# DM handout (GitHub Pages). Linked from /weather help.
+# DM handout (GitHub Pages). Linked from /eryndor help.
 HANDOUT_URL=https://v3xillum.github.io/eryndor-bot/handout/
 
 # Optional status-report DMs (comma-separated user IDs; empty = off).
@@ -83,7 +83,7 @@ STATUS_REPORT_CADENCE=daily
 ## Project Structure
 ```text
 src/
-  commands/       # thin slash command handlers (weather.ts, announce.ts, world.ts)
+  commands/       # thin slash command handlers (eryndor.ts, weather.ts, announce.ts, world.ts)
   events/         # discord.js event listeners (ready, interactionCreate, etc.)
   services/       # WeatherService, SchedulerService, AnnounceService, EryndorCalendarService, ActivityLogService, StatusReportService, ResourceService, BuildingService, ProductionService
   utils/          # helpers, activeWindow, harptos DOY helpers, statusReportPeriod
@@ -265,7 +265,8 @@ UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec de
 ## Permissions
 
 - `/weather current` — available to everyone in the guild.
-- All other `/weather` subcommands (including `help`, `status`, `next`, `settings`) — only users whose Discord user ID appears in `ALLOWED_USER_IDS`.
+- `/eryndor help` — available to everyone in the guild. Players see a short Dutch overview of player commands only (no handout link). Allowlisted users also see DM commands plus the DM handout link (`HANDOUT_URL`).
+- All other `/weather` subcommands (including `status`, `next`, `settings`) — only users whose Discord user ID appears in `ALLOWED_USER_IDS`.
 - `/world today` and `/world fullmoon` — available to everyone in the guild (world info; no weather-timer spoilers).
 - `/world setup` and `/world clear` — allowlist only (calendar-event channel).
 - `/resource donate|buy|stock|personal|type list`, `/building donate|fund|contribute|list|status`, `/production list` — everyone in the guild.
@@ -279,10 +280,12 @@ Unauthorized users get a short ephemeral denial.
 
 There is **no** `/weather post`. Anything that changes weather also broadcasts to the configured channel/thread. A separate “post current again” command is redundant with `current` and with the channel history.
 
+### Bot overview
+- `/eryndor help` — short ephemeral cheat-sheet. Everyone: player commands only (Dutch). Allowlist: everyone + DM commands plus link to the DM handout (`HANDOUT_URL`, default GitHub Pages). Does not post to the channel.
+
 ### Weather
 - `/weather setup <channel> [thread]` — configure where weather updates are sent (scheduler, `roll`, and `set`). `thread` is optional. Uses the current guild’s `guildId` from the interaction.
 - `/weather current` — show the current weather **to the invoking user** (ephemeral or command reply). Does **not** post to the weather channel — if the bot is working, the latest update is already visible there; this is a quiet status check (e.g. DM mid-session without spamming the channel).
-- `/weather help` — short ephemeral cheat-sheet (everyone + DM commands) plus link to the DM handout (`HANDOUT_URL`, default GitHub Pages). Allowlist only — the handout is DM material. Does not post to the channel.
 - `/weather status` — allowlist-only admin view: type, severity, magical flag, forced flag, since-when, remaining/next update, duration source (per-type vs guild/env fallback), effective interval + active window, severity dial, magical dial, cooldown rules (guild or content) and whether the next roll is filtered. Ephemeral; does not post to the channel.
 - `/weather severity set <min> <max> <duration>` — temporary severity band for auto-roll / `/weather roll` (e.g. min 1, max 4, `1d`). Lazy-expires; then default table + cooldown. Rejects empty bands and empty intersection with an active magical dial. Allowlist only. Does not change current weather or post.
 - `/weather severity clear` — clear the dial early. Allowlist only.

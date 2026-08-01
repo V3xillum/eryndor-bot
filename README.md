@@ -37,7 +37,7 @@ cp .env.example .env
 # per-guild overrides at runtime: /weather settings (no restart)
 
 npm install
-npm run register-commands   # register /weather, /world, /announce, /resource, /building, /production
+npm run register-commands   # register /eryndor, /weather, /world, /announce, /resource, /building, /production
 npm run build
 npm start
 ```
@@ -52,12 +52,17 @@ Global slash commands can take up to about an hour to appear after registration.
 
 ## Commands
 
+### Bot overview
+
+| Command | Who | Effect |
+|---|---|---|
+| `/eryndor help` | everyone (DM content allowlist) | Players: Dutch overview of player commands. Allowlist: + DM commands + handout link (`HANDOUT_URL`) |
+
 ### Weather
 
 | Command | Who | Effect |
 |---|---|---|
 | `/weather current` | everyone | Private status check (does not post to the weather channel) |
-| `/weather help` | allowlist | Short cheat-sheet + link to the DM handout (`HANDOUT_URL`) |
 | `/weather status` | allowlist | Admin detail: severity, magical, remaining time, duration, interval/window, cooldown, dials |
 | `/weather severity set` | allowlist | Tijdelijke severity-band (`min`/`max`/`duration`) voor rolls |
 | `/weather severity clear` | allowlist | Severity dial uitzetten → default gedrag |

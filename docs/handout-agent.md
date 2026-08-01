@@ -96,7 +96,7 @@ Eerst op **wie**, daarna op **categorie**:
 | Voorraad | `/resource donate`, `buy`, `stock`, `type …`, `cap`, `personal …` |
 | Bouwen | `/building create`, `cost add` / `buildtime` / `show`, `donate`, `fund`, `contribute` |
 | Productie | `/production add`, `list`, `workers`, `yield`, `remove` |
-| Info | `help`, `status`, `next` |
+| Info | `/eryndor help`, `status`, `next` |
 
 Nieuwe commands in de juiste categorie + in de filters (`cmdCat`) houden.
 

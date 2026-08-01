@@ -177,7 +177,9 @@ export interface Messages {
   calendarClearNone: string;
   helpEmbedTitle: string;
   helpEmbedDescription: string;
+  helpEmbedDescriptionPlayer: string;
   helpFieldEveryone: string;
+  helpFieldPlayer: string;
   helpEveryoneBody: string;
   helpFieldDm: string;
   helpDmBody: string;
