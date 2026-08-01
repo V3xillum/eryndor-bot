@@ -61,6 +61,8 @@ export interface WorldState {
   calendar_channel_id: string | null;
   /** Local calendar date (YYYY-MM-DD in WEATHER_TIMEZONE) already handled for event auto-post. */
   calendar_events_last_handled_date: string | null;
+  /** Local calendar date already handled for evening Full Moon (Rising) / exact Full Moon post. */
+  calendar_fullmoon_last_handled_date: string | null;
 }
 
 export interface WeatherResult {
@@ -169,6 +171,7 @@ export interface Messages {
   calendarViewLink: string;
   calendarFullMoonTitle: string;
   calendarFullMoonWhen: string;
+  calendarMoonNightTitle: string;
   calendarSetupSuccess: string;
   calendarClearSuccess: string;
   calendarClearNone: string;

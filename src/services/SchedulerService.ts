@@ -2,11 +2,12 @@ import type { Client, GuildChannel, TextBasedChannel } from 'discord.js';
 import {
   AttachmentBuilder,
   DiscordAPIError,
+  MessageFlags,
   PermissionFlagsBits,
   RESTJSONErrorCodes,
 } from 'discord.js';
 import { resolveImagePath } from '../content/loader.js';
-import type { ScheduledPost, WeatherResult } from '../types.js';
+import type { CalendarDay, ScheduledPost, WeatherResult } from '../types.js';
 import {
   timeOfDayToMinutes,
   zonedParts,
@@ -22,6 +23,7 @@ import type { WeatherService } from './WeatherService.js';
 
 const CHECK_INTERVAL_MS = 30 * 1000;
 const DISCORD_CONTENT_LIMIT = 2000;
+const FULL_MOON_RISING_PHASE = 'Full Moon (Rising)';
 
 /** Channel/permission errors that will not succeed on retry. */
 const PERMANENT_ANNOUNCE_ERROR_CODES = new Set<number>([
@@ -39,6 +41,7 @@ export class SchedulerService {
     private readonly announce: AnnounceService,
     private readonly calendar: EryndorCalendarService,
     private readonly calendarEventsPostTime: TimeOfDay,
+    private readonly calendarFullMoonPostTime: TimeOfDay,
     private readonly calendarTimeZone: string,
   ) {}
 
@@ -68,6 +71,7 @@ export class SchedulerService {
 
     await this.tickAnnouncements();
     await this.tickCalendarEvents();
+    await this.tickCalendarFullMoon();
   }
 
   private async tickAnnouncements(): Promise<void> {
@@ -172,6 +176,84 @@ export class SchedulerService {
           this.weather.markCalendarEventsHandled(state.guild_id, localDate);
         }
         // Transient Discord errors: leave unmarked so the next tick retries.
+      }
+    }
+  }
+
+  /**
+   * Once per local evening after calendarFullMoonPostTime:
+   * - Full Moon (Rising) → moon embed, no @everyone, suppress notifications
+   * - exact Full Moon → moon embed + @everyone
+   * Other days: silent (mark handled).
+   */
+  private async tickCalendarFullMoon(now = new Date()): Promise<void> {
+    const localDate = localDateIso(now, this.calendarTimeZone);
+    if (!isAtOrAfterPostTime(now, this.calendarFullMoonPostTime, this.calendarTimeZone)) {
+      return;
+    }
+
+    for (const state of this.weather.listGuildStates()) {
+      if (!state.calendar_channel_id) continue;
+      if (state.calendar_fullmoon_last_handled_date === localDate) continue;
+
+      try {
+        const day = await this.calendar.getToday(now);
+        const rising = isFullMoonRising(day);
+        const exact = day.moon.isExactFullMoon;
+
+        if (rising || exact) {
+          const channel = await this.client.channels.fetch(state.calendar_channel_id);
+          if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+            console.warn(
+              `Calendar full moon ${state.guild_id}: destination ${state.calendar_channel_id} is not a text channel`,
+            );
+            this.weather.markCalendarFullMoonHandled(state.guild_id, localDate);
+            continue;
+          }
+
+          if (!('send' in channel)) {
+            console.warn(
+              `Calendar full moon ${state.guild_id}: channel does not support send`,
+            );
+            this.weather.markCalendarFullMoonHandled(state.guild_id, localDate);
+            continue;
+          }
+
+          if (!botCanSendInChannel(channel)) {
+            console.warn(
+              `Calendar full moon ${state.guild_id}: bot lacks View/Send in ${state.calendar_channel_id}`,
+            );
+            this.weather.markCalendarFullMoonHandled(state.guild_id, localDate);
+            continue;
+          }
+
+          const embed = this.calendar.buildMoonNightEmbed(day);
+          if (exact) {
+            await channel.send({
+              content: '@everyone',
+              embeds: [embed],
+              allowedMentions: { parse: ['everyone'] },
+            });
+          } else {
+            await channel.send({
+              embeds: [embed],
+              flags: MessageFlags.SuppressNotifications,
+            });
+          }
+        }
+
+        this.weather.markCalendarFullMoonHandled(state.guild_id, localDate);
+      } catch (error) {
+        if (error instanceof CalendarFetchError) {
+          console.warn(
+            `Calendar full moon ${state.guild_id}: could not load day data; will retry`,
+          );
+          continue;
+        }
+        console.error(`Calendar full moon failed for guild ${state.guild_id}:`, error);
+        if (isPermanentAnnounceError(error)) {
+          this.weather.markCalendarFullMoonHandled(state.guild_id, localDate);
+        }
       }
     }
   }
@@ -297,4 +379,8 @@ function isAtOrAfterPostTime(now: Date, postTime: TimeOfDay, timeZone: string): 
   const parts = zonedParts(now, timeZone);
   const nowMinutes = parts.hours * 60 + parts.minutes;
   return nowMinutes >= timeOfDayToMinutes(postTime);
+}
+
+function isFullMoonRising(day: CalendarDay): boolean {
+  return day.moon.phase === FULL_MOON_RISING_PHASE;
 }

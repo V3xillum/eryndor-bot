@@ -50,6 +50,8 @@ ERYNDOR_CALENDAR_BASE_URL=https://v3xillum.github.io/eryndor
 ERYNDOR_CALENDAR_FALLBACK_URL=https://raw.githubusercontent.com/V3xillum/eryndor/main
 # Morning auto-post of /world today embed — only when events exist (local WEATHER_TIMEZONE).
 CALENDAR_EVENTS_POST_TIME=08:30
+# Evening Full Moon (Rising) + exact Full Moon posts to the same /world setup channel.
+CALENDAR_FULLMOON_POST_TIME=20:00
 
 # DM handout (GitHub Pages). Linked from /weather help.
 HANDOUT_URL=https://v3xillum.github.io/eryndor-bot/handout/
@@ -123,8 +125,9 @@ CREATE TABLE world_state (
   active_window_enabled INTEGER,  -- NULL = inherit .env; 0 = off; 1 = on
   active_window_start TEXT,       -- HH:mm (nullable)
   active_window_end TEXT,         -- HH:mm (nullable)
-  calendar_channel_id TEXT,       -- /world setup; morning event posts (nullable)
-  calendar_events_last_handled_date TEXT  -- YYYY-MM-DD local; additive ALTER
+  calendar_channel_id TEXT,       -- /world setup; morning event + evening moon posts (nullable)
+  calendar_events_last_handled_date TEXT,  -- YYYY-MM-DD local; additive ALTER
+  calendar_fullmoon_last_handled_date TEXT -- YYYY-MM-DD local; additive ALTER
 );
 
 CREATE TABLE weather_log (
@@ -154,6 +157,12 @@ Automated posts go to `thread_id` when set, otherwise to `channel_id`. If neithe
 Pending rows in `scheduled_posts` with `post_at` in the past are posted on the next scheduler tick (same 30s loop). Announcements ignore the weather active window and pause.
 
 Morning calendar-event posts use `calendar_channel_id` (from `/world setup`), independent of the weather destination. Once per local day after `CALENDAR_EVENTS_POST_TIME` (default `08:30` in `WEATHER_TIMEZONE`): fetch today; post `@everyone` + the same embed as `/world today` **only if** `events.length > 0`; otherwise stay silent. `calendar_events_last_handled_date` prevents duplicates (and skips empty days). Missed morning after restart → catch-up on the next tick after the post time.
+
+Evening full-moon posts use the **same** channel after `CALENDAR_FULLMOON_POST_TIME` (default `20:00`):
+- `moon.phase === "Full Moon (Rising)"` → moon-night embed, no `@everyone`, `MessageFlags.SuppressNotifications`
+- `moon.isExactFullMoon` → moon-night embed + `@everyone`
+- otherwise silent for that evening (`calendar_fullmoon_last_handled_date`)
+No rotating flavor texts — the calendar phase is the message.
 
 ## Content Format
 
@@ -310,6 +319,7 @@ Responsible for:
 - honouring each guild’s effective active posting window (guild override or `.env`)
 - posting due rows from `scheduled_posts` (DM announcements) to their own `channel_id` — independent of weather destination / pause / active window
 - once per day after `CALENDAR_EVENTS_POST_TIME`, posting the calendar today-embed to `calendar_channel_id` when that day has events — independent of weather destination / pause / active window
+- once per evening after `CALENDAR_FULLMOON_POST_TIME`, posting a moon-night embed for `Full Moon (Rising)` (silent) or exact Full Moon (`@everyone`) — same channel
 
 Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/weather roll`, `/weather set`); the scheduler owns the recurring automatic updates, due announcements, and morning calendar-event posts.
 
@@ -373,6 +383,12 @@ Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / def
 `/world setup` stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/world today` embed **only when** `events.length > 0`. Empty days stay silent. `/world clear` disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
 **Possible adjustment (not built):** post the today-embed **every** morning. Days with events: keep `@everyone` (and normal notifications). Empty days: no `@everyone`, plus Discord `MessageFlags.SuppressNotifications` (no sound/push). Current preference remains “only post on event days” — a daily date post is likely noise; anyone curious can run `/world today` on demand.
+
+### Calendar full moon evening posts — implemented
+Same `/world setup` channel. Each evening after `CALENDAR_FULLMOON_POST_TIME` (default `20:00`):
+- **Full Moon (Rising)** (avond vóór exacte volle maan) → moon embed, no ping, `SuppressNotifications`
+- **exact Full Moon** (`isExactFullMoon`) → moon embed + `@everyone`
+No flavor-text pool — phase + Harptos date + calendar link. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
 ## Non-Goals
 Do not introduce:

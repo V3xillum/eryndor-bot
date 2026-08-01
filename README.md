@@ -96,10 +96,10 @@ Data comes from the static [Calendar of Eryndor](https://v3xillum.github.io/eryn
 |---|---|---|
 | `/world today` | everyone | Current Harptos day, moon phase, and events |
 | `/world fullmoon` | everyone | Next exact Full Moon (from `full-moons.json`) |
-| `/world setup <channel>` | allowlist | Where morning calendar-event posts go (only days with events) |
+| `/world setup <channel>` | allowlist | Morning event posts + evening Rising / exact Full Moon posts |
 | `/world clear` | allowlist | Disable automatic morning calendar-event posts |
 
-Optional env: `ERYNDOR_CALENDAR_BASE_URL` / `ERYNDOR_CALENDAR_FALLBACK_URL` / `CALENDAR_EVENTS_POST_TIME` (default `08:30`, see `.env.example`). Timezone for “today” and the morning post follows `WEATHER_TIMEZONE` (default `Europe/Amsterdam`).
+Optional env: `ERYNDOR_CALENDAR_BASE_URL` / `ERYNDOR_CALENDAR_FALLBACK_URL` / `CALENDAR_EVENTS_POST_TIME` (default `08:30`) / `CALENDAR_FULLMOON_POST_TIME` (default `20:00`, see `.env.example`). Timezone for “today” and the posts follows `WEATHER_TIMEZONE` (default `Europe/Amsterdam`).
 
 ## Content
 
@@ -117,6 +117,28 @@ After severity ≥ `cooldownAfterSeverity`, the next auto-roll / `/weather roll`
 SQLite file: `storage/world.sqlite` (gitignored). One `world_state` row per Discord guild.
 
 On restart, if `next_update_at` is in the past and the guild is not paused, the bot posts immediately and reschedules.
+
+## Run in the background (PM2)
+
+Keep the bot running without an open terminal (e.g. on your Mac). Requires [PM2](https://pm2.keymetrics.io/docs/usage/quick-start/) globally: `npm i -g pm2`.
+
+| Script | Effect |
+|---|---|
+| `npm run start:bot` | Build, then start as `eryndor-bot` (first time only) |
+| `npm run reboot:bot` | Build, then restart the existing PM2 process |
+| `npm run stop:bot` | Stop the PM2 process |
+| `npm run status:bot` | Show whether `eryndor-bot` is online and process details |
+| `npm run logs:bot` | Follow PM2 logs (Ctrl+C to stop watching) |
+
+```bash
+npm run start:bot     # first launch
+npm run reboot:bot    # after code/content changes
+npm run stop:bot      # shut down
+npm run status:bot    # is it running?
+npm run logs:bot      # live logs
+```
+
+Closing the terminal is fine; putting the Mac to sleep still suspends the process. Optional: `pm2 startup` + `pm2 save` so the bot comes back after a reboot ([PM2 startup](https://pm2.keymetrics.io/docs/usage/startup/)).
 
 ## Deploy notes
 

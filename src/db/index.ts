@@ -95,6 +95,9 @@ function migrate(db: Database.Database): void {
   if (!names.has('calendar_events_last_handled_date')) {
     db.exec(`ALTER TABLE world_state ADD COLUMN calendar_events_last_handled_date TEXT`);
   }
+  if (!names.has('calendar_fullmoon_last_handled_date')) {
+    db.exec(`ALTER TABLE world_state ADD COLUMN calendar_fullmoon_last_handled_date TEXT`);
+  }
 }
 
 function nowIso(): string {
@@ -163,6 +166,20 @@ export function setCalendarEventsLastHandledDate(
   db.prepare(
     `UPDATE world_state
      SET calendar_events_last_handled_date = ?, updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(localDateIso, nowIso(), guildId);
+}
+
+/** Mark today's full-moon evening check as done (posted Rising/exact or skipped). */
+export function setCalendarFullMoonLastHandledDate(
+  db: Database.Database,
+  guildId: string,
+  localDateIso: string,
+): void {
+  ensureGuild(db, guildId);
+  db.prepare(
+    `UPDATE world_state
+     SET calendar_fullmoon_last_handled_date = ?, updated_at = ?
      WHERE guild_id = ?`,
   ).run(localDateIso, nowIso(), guildId);
 }

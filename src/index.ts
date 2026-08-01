@@ -38,6 +38,13 @@ async function main(): Promise<void> {
       `Calendar events post: ${fmt} (${config.eryndorCalendar.timeZone}), only when events exist`,
     );
   }
+  {
+    const t = config.calendarFullMoonPostTime;
+    const fmt = `${String(t.hours).padStart(2, '0')}:${String(t.minutes).padStart(2, '0')}`;
+    console.log(
+      `Calendar full moon post: ${fmt} (${config.eryndorCalendar.timeZone}), Rising (silent) + exact (@everyone)`,
+    );
+  }
 
   const client = new Client({
     intents: [GatewayIntentBits.Guilds],
@@ -49,6 +56,7 @@ async function main(): Promise<void> {
     announce,
     calendar,
     config.calendarEventsPostTime,
+    config.calendarFullMoonPostTime,
     config.eryndorCalendar.timeZone,
   );
 

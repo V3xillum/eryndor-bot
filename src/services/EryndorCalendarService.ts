@@ -85,6 +85,28 @@ export class EryndorCalendarService {
       );
   }
 
+  /** Evening full-moon post: phase + date + calendar link (no events / no flavor pool). */
+  buildMoonNightEmbed(day: CalendarDay): EmbedBuilder {
+    const gregorian = formatGregorianNl(day.gregorian.iso);
+    const viewLink = formatTemplate(this.messages.calendarViewLink, {
+      url: this.options.baseUrl,
+    });
+
+    return new EmbedBuilder()
+      .setColor(0xe8e6d9)
+      .setTitle(
+        formatTemplate(this.messages.calendarMoonNightTitle, { phase: day.moon.phase }),
+      )
+      .setDescription(
+        [
+          `${day.moon.emoji} **${day.moon.phase}**`,
+          day.harptos.label,
+          gregorian,
+          viewLink,
+        ].join('\n'),
+      );
+  }
+
   formatEventLine(event: CalendarEvent): string {
     switch (event.type) {
       case 'birthday':

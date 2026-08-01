@@ -543,7 +543,7 @@
         </article>
         <article class="tile">
           <h3>Kalender</h3>
-          <p><code>/world today</code> en <code>/world fullmoon</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — zonder te verklappen wanneer het weer wisselt. Optioneel post de bot ’s ochtends (rond 08:30) hetzelfde “vandaag”-bericht naar een apart kanaal, <strong>alleen als er events zijn</strong>. Inrichten: <code>/world setup</code>.</p>
+          <p><code>/world today</code> en <code>/world fullmoon</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — zonder te verklappen wanneer het weer wisselt. Optioneel post de bot ’s ochtends (rond 08:30) bij events, en ’s avonds (rond 20:00) bij <strong>Full Moon (Rising)</strong> en de exacte volle maan, naar een apart kanaal. Inrichten: <code>/world setup</code>.</p>
         </article>
         <article class="tile">
           <h3>Geplande berichten</h3>
@@ -647,14 +647,14 @@
         </article>
         <article class="tile">
           <h3>Kalender-events kanaal</h3>
-          <p>Wil je dat verjaardagen en feestdagen ’s ochtends in Discord verschijnen (alleen op dagen mét events)? Eenmalig: <code>/world setup</code> — kies een ander kanaal dan het weer. Uit zetten: <code>/world clear</code>.</p>
+          <p>Events ’s ochtends, en Rising-/volle-maan ’s avonds (exacte volle maan met @everyone)? Eenmalig: <code>/world setup</code> — kies een ander kanaal dan het weer. Uit zetten: <code>/world clear</code>.</p>
         </article>
         <article class="tile">
           <h3>Even checken</h3>
           <p>Wat speelt er nu? <code>/weather status</code> — weer, planning, ritme, venster, afkoeling, limieten. Alleen de volgende update: <code>/weather next</code>.</p>
         </article>
       </div>
-      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code> naar het kanaal dat jij kiest. Kalender-ochtendposts (alleen bij events) gaan via <code>/world setup</code> naar hun eigen kanaal.</p>
+      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code> naar het kanaal dat jij kiest. Kalenderposts (ochtend bij events, avond bij Rising/volle maan) gaan via <code>/world setup</code> naar hun eigen kanaal.</p>
     </section>
 
     <section id="aanleveren" class="panel" role="tabpanel" hidden>
@@ -764,8 +764,8 @@
         cmd: "/world setup",
         who: "dm",
         cat: "inrichten",
-        what: "Kies in welk kanaal ochtend-kalenderposts komen. De bot post rond 08:30 @everyone plus hetzelfde bericht als /world today — maar alleen op dagen mét events. Los van het weerkanaal.",
-        when: "Eenmalig als je feestdagen/verjaardagen automatisch wilt laten zien.",
+        what: "Kies in welk kanaal kalenderposts komen. Ochtend (~08:30): @everyone + /world today-embed alleen bij events. Avond (~20:00): Full Moon (Rising) stil, exacte volle maan met @everyone. Los van het weerkanaal.",
+        when: "Eenmalig als je feestdagen/verjaardagen en volle-maan-avonden automatisch wilt laten zien.",
       },
       {
         cmd: "/world clear",

@@ -739,6 +739,10 @@ export class WeatherService {
     dbQueries.setCalendarEventsLastHandledDate(this.db, guildId, localDateIso);
   }
 
+  markCalendarFullMoonHandled(guildId: string, localDateIso: string): void {
+    dbQueries.setCalendarFullMoonLastHandledDate(this.db, guildId, localDateIso);
+  }
+
   isGuildPaused(guildId: string, now = new Date()): boolean {
     const state = dbQueries.getWorldState(this.db, guildId);
     return isPaused(state?.paused_until ?? null, now);

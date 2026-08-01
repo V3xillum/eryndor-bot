@@ -12,6 +12,7 @@ const DEFAULT_ACTIVE_START = '06:00';
 const DEFAULT_ACTIVE_END = '23:00';
 const DEFAULT_TIMEZONE = 'Europe/Amsterdam';
 const DEFAULT_CALENDAR_EVENTS_POST_TIME = '08:30';
+const DEFAULT_CALENDAR_FULLMOON_POST_TIME = '20:00';
 const DEFAULT_ERYNDOR_BASE_URL = 'https://v3xillum.github.io/eryndor';
 const DEFAULT_ERYNDOR_FALLBACK_URL = 'https://raw.githubusercontent.com/V3xillum/eryndor/main';
 const DEFAULT_HANDOUT_URL = 'https://v3xillum.github.io/eryndor-bot/handout/';
@@ -107,6 +108,10 @@ export function loadConfig() {
     process.env.CALENDAR_EVENTS_POST_TIME?.trim() || DEFAULT_CALENDAR_EVENTS_POST_TIME,
     'CALENDAR_EVENTS_POST_TIME',
   );
+  const calendarFullMoonPostTime = parseTimeOfDay(
+    process.env.CALENDAR_FULLMOON_POST_TIME?.trim() || DEFAULT_CALENDAR_FULLMOON_POST_TIME,
+    'CALENDAR_FULLMOON_POST_TIME',
+  );
   const handoutUrl = normalizeBaseUrl(process.env.HANDOUT_URL || DEFAULT_HANDOUT_URL);
   if (!/^https?:\/\//i.test(handoutUrl)) {
     throw new Error(`HANDOUT_URL must be an http(s) URL, got: ${handoutUrl}`);
@@ -121,6 +126,7 @@ export function loadConfig() {
     activeWindow: loadActiveWindow(),
     handoutUrl,
     calendarEventsPostTime,
+    calendarFullMoonPostTime,
     eryndorCalendar: {
       baseUrl: normalizeBaseUrl(
         process.env.ERYNDOR_CALENDAR_BASE_URL || DEFAULT_ERYNDOR_BASE_URL,

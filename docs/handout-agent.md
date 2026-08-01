@@ -109,7 +109,7 @@ Gebruik deze termen consistent:
 - **Tijdelijke zwaarte-limiet** — worpen alleen binnen min–max zwaarte, voor een duur (`/weather severity`)
 - **Tijdelijke magie-filter** — alleen magisch of juist geen magisch weer, voor een duur (`/weather magical`)
 - **Gepland bericht** — vrije tekst die de bot later post in een gekozen kanaal (los van het weerkanaal); via `/announce`
-- **Kalender-events kanaal** — ochtendpost (`@everyone` +zelfde embed als `/world today`) alleen op dagen mét events; via `/world setup` (los van het weerkanaal)
+- **Kalender-events kanaal** — ochtendpost (`@everyone` + today-embed) alleen bij events; avondpost bij Full Moon (Rising) (stil) en exacte volle maan (`@everyone`); via `/world setup` (los van het weerkanaal)
 - **Eryndor bot** — productnaam (repo/package mag `weather-bot` / `eryndor-bot` blijven)
 
 Defaults in de handout moeten overeenkomen met content/`weather-rules.json` en schedule-defaults. Wijzigen die in de bot → handout meenemen.
