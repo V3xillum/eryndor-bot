@@ -1,6 +1,9 @@
 import { REST, Routes } from 'discord.js';
 import { loadConfig } from './config.js';
 import { buildAnnounceCommand } from './commands/announce.js';
+import { buildBuildingCommand } from './commands/building.js';
+import { buildProductionCommand } from './commands/production.js';
+import { buildResourceCommand } from './commands/resource.js';
 import { buildWeatherCommand } from './commands/weather.js';
 import { buildWorldCommand } from './commands/world.js';
 
@@ -10,6 +13,9 @@ async function main(): Promise<void> {
     buildWeatherCommand().toJSON(),
     buildWorldCommand().toJSON(),
     buildAnnounceCommand().toJSON(),
+    buildResourceCommand().toJSON(),
+    buildBuildingCommand().toJSON(),
+    buildProductionCommand().toJSON(),
   ];
 
   const rest = new REST({ version: '10' }).setToken(config.token);

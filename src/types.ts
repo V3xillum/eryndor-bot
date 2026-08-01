@@ -207,6 +207,257 @@ export interface Messages {
   statusReportGuildsNone: string;
   statusReportUsageBody: string;
   statusReportIssuesNone: string;
+  statusReportFieldStock: string;
+  statusReportFieldBuildings: string;
+  statusReportFieldLedger: string;
+  statusReportStockNone: string;
+  statusReportStockLine: string;
+  statusReportBuildingsNone: string;
+  statusReportBuildingLine: string;
+  statusReportLedgerNone: string;
+  statusReportLedgerLine: string;
+  statusReportLedgerMore: string;
+  resourceSetupSuccess: string;
+  resourceClearSuccess: string;
+  resourceClearNone: string;
+  resourceNotConfigured: string;
+  resourceTypeAddSuccess: string;
+  resourceTypeEditSuccess: string;
+  resourceTypeRemoveSuccess: string;
+  resourceTypeExists: string;
+  resourceTypeUnknown: string;
+  resourceTypeInUse: string;
+  resourceTypeInvalidKey: string;
+  resourceTypeListEmpty: string;
+  resourceTypeListTitle: string;
+  resourceTypeListItem: string;
+  resourceTypeNothingSet: string;
+  resourceStockEmpty: string;
+  resourceStockTitle: string;
+  resourceStockCapNote: string;
+  resourceStockLine: string;
+  resourceDonateSuccess: string;
+  resourceDonateOverflowNote: string;
+  resourceBuySuccess: string;
+  resourceAdjustSuccess: string;
+  resourceAdjustOverflowNote: string;
+  resourceInsufficientStock: string;
+  resourceInsufficientPersonal: string;
+  resourceInvalidAmount: string;
+  resourceInvalidGc: string;
+  resourceInvalidCap: string;
+  resourceCapSuccess: string;
+  resourceCapShow: string;
+  resourcePersonalAddSuccess: string;
+  resourcePersonalRemoveSuccess: string;
+  resourcePersonalEmpty: string;
+  resourcePersonalTitle: string;
+  resourcePersonalLine: string;
+  resourceEmbedDonateTitle: string;
+  resourceEmbedBuyTitle: string;
+  resourceEmbedBuildingDonateTitle: string;
+  resourceEmbedBuildingFundTitle: string;
+  resourceEmbedContributeTitle: string;
+  resourceEmbedPersonalAddTitle: string;
+  resourceEmbedPersonalRemoveTitle: string;
+  resourceEmbedDonateDesc: string;
+  resourceEmbedDonateOverflow: string;
+  resourceEmbedBuyDesc: string;
+  resourceEmbedBuildingDonateDesc: string;
+  resourceEmbedBuildingFundDesc: string;
+  resourceEmbedContributeDesc: string;
+  resourceEmbedPersonalAddDesc: string;
+  resourceEmbedPersonalRemoveDesc: string;
+  resourceEmbedProductionTitle: string;
+  resourceEmbedProductionLine: string;
+  resourceEmbedProductionLostLine: string;
+  resourceEmbedProductionFooter: string;
+  productionAddSuccess: string;
+  productionExists: string;
+  productionUnknown: string;
+  productionInvalidName: string;
+  productionInvalidWorkers: string;
+  productionInvalidYield: string;
+  productionInvalidInterval: string;
+  productionListEmpty: string;
+  productionListTitle: string;
+  productionListItem: string;
+  productionWorkersSuccess: string;
+  productionYieldSuccess: string;
+  productionRemoveSuccess: string;
+  productionWizardPickResource: string;
+  productionWizardPickInterval: string;
+  productionWizardPickSource: string;
+  productionWizardResourcePlaceholder: string;
+  productionWizardIntervalPlaceholder: string;
+  productionWizardSourcePlaceholder: string;
+  productionWizardNoTypes: string;
+  productionWizardNoSources: string;
+  productionWizardNotYours: string;
+  productionWizardAddModalTitle: string;
+  productionWizardNameLabel: string;
+  productionWizardWorkersLabel: string;
+  productionWizardYieldLabel: string;
+  productionWizardMaxWorkersLabel: string;
+  productionWizardWorkersModalTitle: string;
+  productionWizardWorkersModalLabel: string;
+  productionWizardYieldModalTitle: string;
+  productionWizardYieldModalLabel: string;
+  productionIntervalDaily: string;
+  productionIntervalWeekly: string;
+  statusReportFieldPersonal: string;
+  statusReportPersonalNone: string;
+  statusReportPersonalLine: string;
+  buildingCreateSuccess: string;
+  buildingExists: string;
+  buildingUnknown: string;
+  buildingInvalidName: string;
+  buildingCostAddSuccess: string;
+  buildingCostSetTimeSuccess: string;
+  buildingCostBuildtimeSuccess: string;
+  buildingCostLocked: string;
+  buildingCostShowTitle: string;
+  buildingCostShowEmpty: string;
+  buildingCostShowLine: string;
+  buildingCostShowTime: string;
+  buildingListEmpty: string;
+  buildingListTitle: string;
+  buildingListItem: string;
+  buildingStatusTitle: string;
+  buildingStatusFunding: string;
+  buildingStatusBuilding: string;
+  buildingStatusComplete: string;
+  buildingStatusCancelled: string;
+  buildingFundSuccess: string;
+  buildingDonateSuccess: string;
+  buildingContributeSuccess: string;
+  buildingWrongPhase: string;
+  buildingNoCostForType: string;
+  buildingCancelSuccess: string;
+  buildingCancelWrongStatus: string;
+  buildingPhaseFundingDone: string;
+  buildingPhaseComplete: string;
+  buildingWizardPickBuilding: string;
+  buildingWizardPickBuildingTime: string;
+  buildingWizardPickResource: string;
+  buildingWizardBuildingPlaceholder: string;
+  buildingWizardResourcePlaceholder: string;
+  buildingWizardNoFunding: string;
+  buildingWizardNoBuilding: string;
+  buildingWizardNoMissing: string;
+  buildingWizardBuildingGone: string;
+  buildingWizardNotYours: string;
+  buildingWizardStillNeeded: string;
+  buildingWizardTimeLeft: string;
+  buildingWizardPickBuildingCost: string;
+  buildingWizardPickResourceCost: string;
+  buildingWizardPickBuildingTimeSet: string;
+  buildingWizardPickBuildingBuildtime: string;
+  buildingWizardPickBuildingShow: string;
+  buildingWizardNoCostEditable: string;
+  buildingWizardTypePrices: string;
+  buildingWizardAmountModalTitle: string;
+  buildingWizardAmountModalLabel: string;
+  buildingWizardTimeModalTitle: string;
+  buildingWizardTimeModalLabel: string;
+  buildingWizardBuildtimeModalTitle: string;
+  buildingWizardBuildtimeModalLabel: string;
+  buildingWizardCostModalTitle: string;
+  buildingWizardCostTypeLabel: string;
+  buildingWizardCostAmountLabel: string;
+  buildingWizardCostAddAnother: string;
+  buildingWizardMaterialModalTitle: string;
+  buildingWizardMaterialModalLabel: string;
+  buildingWizardContributeModalTitle: string;
+  buildingWizardContributeModalLabel: string;
+}
+
+/** Per-guild channel for public resource/building posts. */
+export interface ResourceSettings {
+  guild_id: string;
+  channel_id: string;
+  updated_at: string;
+  storage_cap: number;
+  production_last_post_date: string | null;
+}
+
+export type ProductionInterval = 'daily' | 'weekly';
+
+export interface ProductionSource {
+  id: number;
+  guild_id: string;
+  name: string;
+  name_key: string;
+  resource_key: string;
+  workers: number;
+  max_workers: number;
+  yield_per_worker: number;
+  interval: ProductionInterval;
+  last_paid_period: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResourceType {
+  guild_id: string;
+  key: string;
+  display_name: string;
+  sell_gc: number;
+  buy_gc: number;
+  created_at: string;
+}
+
+export interface GuildStockRow {
+  guild_id: string;
+  resource_key: string;
+  quantity: number;
+}
+
+export interface PlayerStockRow {
+  guild_id: string;
+  user_id: string;
+  resource_key: string;
+  quantity: number;
+}
+
+export type BuildingStatus = 'funding' | 'building' | 'complete' | 'cancelled';
+
+export interface Building {
+  id: number;
+  guild_id: string;
+  name: string;
+  name_key: string;
+  status: BuildingStatus;
+  time_required: number;
+  time_spent: number;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface BuildingCost {
+  building_id: number;
+  resource_key: string;
+  required_qty: number;
+}
+
+export interface BuildingFunding {
+  building_id: number;
+  resource_key: string;
+  deposited_qty: number;
+}
+
+export interface ResourceLedgerEntry {
+  id: number;
+  guild_id: string;
+  created_at: string;
+  actor_user_id: string;
+  actor_nickname: string;
+  action: string;
+  resource_key: string | null;
+  amount: number;
+  gc_delta: number;
+  building_id: number | null;
+  stock_after: number | null;
 }
 
 export type CalendarEvent =

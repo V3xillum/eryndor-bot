@@ -5,7 +5,10 @@ import { registerInteractionHandler } from './events/interactionCreate.js';
 import { registerReadyHandler } from './events/ready.js';
 import { ActivityLogService } from './services/ActivityLogService.js';
 import { AnnounceService } from './services/AnnounceService.js';
+import { BuildingService } from './services/BuildingService.js';
 import { EryndorCalendarService } from './services/EryndorCalendarService.js';
+import { ProductionService } from './services/ProductionService.js';
+import { ResourceService } from './services/ResourceService.js';
 import { SchedulerService } from './services/SchedulerService.js';
 import { StatusReportService } from './services/StatusReportService.js';
 import { WeatherService } from './services/WeatherService.js';
@@ -21,6 +24,13 @@ async function main(): Promise<void> {
     timeZone: config.eryndorCalendar.timeZone,
   });
   const announce = new AnnounceService(db, weather.messages);
+  const resources = new ResourceService(db, weather.messages);
+  const buildings = new BuildingService(db, weather.messages);
+  const production = new ProductionService(
+    db,
+    weather.messages,
+    config.eryndorCalendar.timeZone,
+  );
   const calendar = new EryndorCalendarService(config.eryndorCalendar, weather.messages);
   const activity = new ActivityLogService(db);
 
@@ -42,6 +52,9 @@ async function main(): Promise<void> {
   console.log(
     `Calendar full moon post: ${formatTimeOfDay(config.calendarFullMoonPostTime)} (${config.eryndorCalendar.timeZone}), Rising (silent) + exact (@everyone)`,
   );
+  console.log(
+    `Production post: ${formatTimeOfDay(config.productionPostTime)} (${config.eryndorCalendar.timeZone}), silent on resource channel`,
+  );
   if (config.statusReportUserIds.length > 0) {
     console.log(
       `Status report: ${config.statusReportCadence} at ${formatTimeOfDay(config.statusReportTime)} → ${config.statusReportUserIds.length} user(s)`,
@@ -61,6 +74,8 @@ async function main(): Promise<void> {
           client,
           weather,
           activity,
+          resources,
+          buildings,
           weather.messages,
           config.statusReportUserIds,
           config.statusReportTime,
@@ -76,8 +91,10 @@ async function main(): Promise<void> {
     calendar,
     activity,
     statusReport,
+    production,
     config.calendarEventsPostTime,
     config.calendarFullMoonPostTime,
+    config.productionPostTime,
     config.eryndorCalendar.timeZone,
   );
 
@@ -87,6 +104,9 @@ async function main(): Promise<void> {
     scheduler,
     calendar,
     announce,
+    resources,
+    buildings,
+    production,
     activity,
     config,
   });

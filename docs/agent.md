@@ -53,6 +53,9 @@ CALENDAR_EVENTS_POST_TIME=08:30
 # Evening Full Moon (Rising) + exact Full Moon posts to the same /world setup channel.
 CALENDAR_FULLMOON_POST_TIME=20:00
 
+# Daily guild production summary on the resource channel (silent). Local WEATHER_TIMEZONE.
+PRODUCTION_POST_TIME=17:00
+
 # DM handout (GitHub Pages). Linked from /weather help.
 HANDOUT_URL=https://v3xillum.github.io/eryndor-bot/handout/
 
@@ -82,7 +85,7 @@ STATUS_REPORT_CADENCE=daily
 src/
   commands/       # thin slash command handlers (weather.ts, announce.ts, world.ts)
   events/         # discord.js event listeners (ready, interactionCreate, etc.)
-  services/       # WeatherService, SchedulerService, AnnounceService, EryndorCalendarService, ActivityLogService, StatusReportService
+  services/       # WeatherService, SchedulerService, AnnounceService, EryndorCalendarService, ActivityLogService, StatusReportService, ResourceService, BuildingService, ProductionService
   utils/          # helpers, activeWindow, harptos DOY helpers, statusReportPeriod
   db/             # SQLite connection + queries
   content/        # loaders for JSON content and images
@@ -265,6 +268,8 @@ UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec de
 - All other `/weather` subcommands (including `help`, `status`, `next`, `settings`) — only users whose Discord user ID appears in `ALLOWED_USER_IDS`.
 - `/world today` and `/world fullmoon` — available to everyone in the guild (world info; no weather-timer spoilers).
 - `/world setup` and `/world clear` — allowlist only (calendar-event channel).
+- `/resource donate|buy|stock|personal|type list`, `/building donate|fund|contribute|list|status`, `/production list` — everyone in the guild.
+- `/resource setup|clear|type add|edit|remove|adjust|cap`, `/building create|cost|cancel`, `/production add|workers|yield|remove` — allowlist only.
 
 Do **not** require Discord “Manage Server” or a DM role. The operator may not have those permissions; user-ID allowlist is the intended gate. Later this can be extended with role IDs; do not build role support now unless trivial.
 
@@ -306,6 +311,26 @@ There is **no** `/weather post`. Anything that changes weather also broadcasts t
 - `/announce list` — pending posts (ephemeral). Allowlist only.
 - `/announce cancel <id>` — cancel a pending post. Allowlist only.
 
+### Resources & buildings
+- `/resource setup <channel>` — channel for silent resource/building/production posts. Allowlist only.
+- `/resource clear` — clear that setup. Allowlist only.
+- `/resource type add|edit|remove|list` — manage types (display name + sell/buy GC). add/edit/remove allowlist; list everyone.
+- `/resource donate|buy|stock` — guild stock (everyone). Overflow past storage cap on donate → personal.
+- `/resource personal add|remove|show` — personal stash (everyone).
+- `/resource adjust` — stock correction without public GC (allowlist); positive overflow → personal.
+- `/resource cap [amount]` — show/set per-type storage cap (default 300). Allowlist only.
+- `/building create` — new project; phase-2 build time defaults to **100**. Allowlist only.
+- `/building cost add` — material cost wizard (type + amount; “add another”). Allowlist only.
+- `/building cost buildtime` — set/override phase-2 build time (menu + modal). Allowlist only.
+- `/building cost show` / `/building status` — progress via menu (everyone).
+- `/building cancel` — cancel project; funded materials return to stock (overflow → personal). Allowlist only.
+- `/building donate|fund|contribute|list` — contribute materials/time via menus + amount modal; silent posts show **all** material progress. Everyone.
+
+### Production
+- `/production add|workers|yield|remove` — production sources (allowlist). Wizard menus.
+- `/production list` — overview (everyone).
+- Daily silent summary on the resource channel after `PRODUCTION_POST_TIME` (default 17:00); overflow past cap is **lost** and shown in that post.
+
 Slash commands are registered globally via `npm run register-commands` (`Routes.applicationCommands`). Global commands can take up to ~1 hour to appear in Discord clients; guild-scoped registration is faster for single-server testing if needed later.
 
 ## Post format
@@ -326,6 +351,7 @@ Responsible for:
 - posting due rows from `scheduled_posts` (DM announcements) to their own `channel_id` — independent of weather destination / pause / active window
 - once per day after `CALENDAR_EVENTS_POST_TIME`, posting the calendar today-embed to `calendar_channel_id` when that day has events — independent of weather destination / pause / active window
 - once per evening after `CALENDAR_FULLMOON_POST_TIME`, posting a moon-night embed for `Full Moon (Rising)` (silent) or exact Full Moon (`@everyone`) — same channel
+- once per day after `PRODUCTION_POST_TIME`, paying due production sources and posting one silent summary on the resource channel (lost overflow shown) — same-day catch-up if the bot starts late
 - once per `STATUS_REPORT_CADENCE` after `STATUS_REPORT_TIME`, DM status reports to `STATUS_REPORT_USER_ID` (active/paused + usage counts + recent issues; no next-update spoilers)
 
 Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/weather roll`, `/weather set`); the scheduler owns the recurring automatic updates, due announcements, and morning calendar-event posts.
@@ -385,6 +411,12 @@ Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / def
 
 ### Scheduled announcements — implemented
 `/announce schedule|list|cancel` stores free-text posts in `scheduled_posts` and posts them via the existing 30s scheduler to a chosen channel (not the weather destination). Relative or absolute `when` in `WEATHER_TIMEZONE`. Modal body max 2000 chars. Allowlist only. See [`feature-scheduled-announcements.md`](./feature-scheduled-announcements.md).
+
+### Guild resources & buildings — implemented
+`/resource` (types, donate/buy/stock, setup, cap) and `/building` (create/cost add|buildtime|show/fund/donate/contribute). Flexible resource types per guild, two-phase building projects (materials → build time, default **100**), public silent embeds (donate/fund show full material progress), ledger + status-report backup. No player GC balance in DB. See [`feature-guild-resources.md`](./feature-guild-resources.md).
+
+### Guild production & storage cap — implemented
+`/production` (add/list/workers/yield/remove) and `/resource cap`. Per-type `storage_cap` (default 300). Interactive overflow → personal stock; auto production overflow → **lost**, shown clearly on the daily silent post after `PRODUCTION_POST_TIME` (default `17:00`). Same same-day catch-up as calendar posts if the bot starts late. See [`feature-guild-production.md`](./feature-guild-production.md).
 
 ### Calendar events channel — implemented
 `/world setup` stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/world today` embed **only when** `events.length > 0`. Empty days stay silent. `/world clear` disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).

@@ -2,11 +2,11 @@
 
 Guild-voorraad van flexibele resource-types (hout, steen, …), publieke donate/buy met GC-melding (spelers houden GC zelf bij), ledger + dagelijkse DM-backup, en gebouwen met twee fasen (materialen → bouwtijd). Meerdere bouwprojecten tegelijk.
 
-**Status:** spec — nog niet geïmplementeerd.
+**Status:** implemented (v1).
 
 **Doel:** West Marches-tafel kan ontdekte grondstoffen en bouwprojecten in Discord bijhouden zonder aparte spreadsheet, met een audit-trail voor als de SQLite corrupt raakt.
 
-Zie ook: [`agent.md`](./agent.md), Discord [slash commands](https://discord.com/developers/docs/interactions/application-commands), [`MessageFlags.SuppressNotifications`](https://discord.com/developers/docs/resources/message#message-object-message-flags).
+Zie ook: [`agent.md`](./agent.md), [`feature-guild-production.md`](./feature-guild-production.md) (opslaglimiet + productie), Discord [slash commands](https://discord.com/developers/docs/interactions/application-commands), [`MessageFlags.SuppressNotifications`](https://discord.com/developers/docs/resources/message#message-object-message-flags).
 
 ---
 
@@ -14,9 +14,9 @@ Zie ook: [`agent.md`](./agent.md), Discord [slash commands](https://discord.com/
 
 - **GC zit niet in de bot.** De bot meldt alleen hoeveel GC iemand ontvangt of moet betalen; spelers houden hun eigen balans bij.
 - **Publiek + stil:** donate/buy (en vergelijkbare economy-acties) posten in een geconfigureerd kanaal met `SuppressNotifications` (geen ping/sound), zodat de tafel het kan zien zonder ruis.
-- **Flexibele types:** de wereld is nog niet volledig ontdekt → DM voegt types runtime toe, geen hardcoded catalogus in `content/`.
+- **Flexibele types:** de wereld is nog niet volledig ontdekt → DM voegt types runtime toe via een weergavenaam; interne `key` is een vaste slug daarvan.
 - **Gebouwen = projecten**, niet alleen catalogus: `funding` → `building` → `complete`. Meerdere tegelijk.
-- **Time is progress, geen stock-item:** 1 time-unit = 1 GC bij contribute. Geen “time op voorraad”.
+- **Persoonlijke voorraad:** per Discord-user (snowflake) een aparte bak — toevoegen/weghalen voor eigen gebruik; los van guild-donaties.
 
 ---
 
@@ -35,9 +35,9 @@ Zelfde patroon als `/weather setup` / `/world setup`: per Discord-guild één de
 
 | Command | Effect |
 |---|---|
-| `/resource type add key name sell:[n] [buy]` | Nieuw type. `key` = slash-vriendelijk id (`hout`). `buy` optioneel; default `2 × sell` |
-| `/resource type edit key [name] [sell] [buy]` | Aanpassen |
-| `/resource type remove key` | Alleen als stock = 0 en niet in actieve building costs/funding |
+| `/resource type add name sell:[n] [buy]` | Nieuw type. Interne `key` = slug van `name` (vast na create). `buy` optioneel; default `2 × sell` |
+| `/resource type edit name [rename] [sell] [buy]` | Aanpassen. `name` = huidige naam of slug; `rename` wijzigt alleen de weergavenaam |
+| `/resource type remove name` | Alleen als stock = 0 en niet in actieve building costs/funding |
 | `/resource type list` | Alle types + sell/buy |
 
 ### Voorraad (iedereen in de guild)
@@ -47,6 +47,9 @@ Zelfde patroon als `/weather setup` / `/world setup`: per Discord-guild één de
 | `/resource donate type amount` | Stock += amount. Publieke silent post + ephemeral bevestiging. GC = `amount × sell` (melding) |
 | `/resource buy type amount` | Stock moet ≥ amount. Stock −= amount. Publieke silent post. Kosten = `amount × buy` (melding) |
 | `/resource stock` | Overzicht huidige voorraad |
+| `/resource personal add type amount` | Persoonlijke voorraad += amount. Publieke silent embed. Geen GC |
+| `/resource personal remove type amount` | Persoonlijke voorraad −= amount. Publieke silent embed. Geen GC |
+| `/resource personal show` | Eigen persoonlijke voorraad (ephemeral) |
 | `/resource adjust type amount` | Allowlist: correctie zonder publieke GC-post (positief/negatief); wél ledger |
 
 `amount` limiet: **1–9999** per command (anti-typo).
@@ -57,15 +60,15 @@ Create/cost/cancel = allowlist. Fund/donate/contribute/list/status = iedereen in
 
 | Command | Effect |
 |---|---|
-| `/building create name` | Nieuw project, status `funding`. Meerdere tegelijk OK |
-| `/building cost add name type amount` | Materiaalkost toevoegen/overschrijven. Alleen zolang status `funding` **én** er nog niets is gestort (`building_funding` leeg / alles 0) |
-| `/building cost set-time name units` | Time-units voor fase 2. Zelfde restrictie als `cost add` |
-| `/building cost show name` | Benodigde materialen + time + voortgang |
+| `/building create name` | Nieuw project, status `funding`. `time_required` default **100** (fase 2). Meerdere tegelijk OK |
+| `/building cost add` | Menu: project → modal (grondstof + aantal) → knop “nog een toevoegen” |
+| `/building cost buildtime` | Menu: project → modal bouwtijd (fase 2). Corrigeert de default 100 |
+| `/building cost show` | Menu: project → kosten + voortgang |
 | `/building list` | Alle projecten + status |
-| `/building fund name type amount` | Uit **guild-stock** → project. Geen extra GC (al beloond bij donate). Silent post |
-| `/building donate name type amount` | **Direct** naar project (stock wordt niet aangeraakt). GC = `amount × sell`. Silent post |
-| `/building contribute name amount` | Alleen status `building`. `time_spent += amount` (cap op remaining). GC = `amount × 1`. Silent post |
-| `/building status [name]` | Detail: missing materials / time left / complete |
+| `/building fund` | Menu: project → grondstof → modal aantal. Uit guild-stock. Geen extra GC. Silent post toont voortgang van **alle** materialen |
+| `/building donate` | Menu: project → grondstof → modal aantal. Direct, GC = sell. Silent post toont voortgang van **alle** materialen |
+| `/building contribute` | Menu: project → modal tijd. GC = amount × 1 |
+| `/building status` | Menu: project → detail (missing materials / time / fase) |
 | `/building cancel name` | Allowlist. Funding terug naar guild-stock. Ledger `building_cancel`. Geen GC-terugdraai (GC was al “betaald” aan spelers) |
 
 **Fase-overgangen (automatisch bij mutatie):**
@@ -79,7 +82,7 @@ Create/cost/cancel = allowlist. Fund/donate/contribute/list/status = iedereen in
 - `building donate` = speler brengt materialen “van buiten”; beloning sell-GC; funding += ; stock ongemoeid.
 - `building fund` = verplaatsing stock → project; geen GC.
 
-**Costs wijzigen na funding:** verboden via `cost add` / `set-time`. Correcties alleen via allowlist-paden (`adjust` op stock + eventueel cancel/herstart), niet door costs te herschrijven onder een lopend project.
+**Costs wijzigen na funding:** verboden via `cost add` / `buildtime`. Correcties alleen via allowlist-paden (`adjust` op stock + eventueel cancel/herstart), niet door costs te herschrijven onder een lopend project.
 
 ---
 
@@ -87,16 +90,16 @@ Create/cost/cancel = allowlist. Fund/donate/contribute/list/status = iedereen in
 
 Kanaal: uit `/resource setup`.
 
-Flags: `MessageFlags.SuppressNotifications` (Discord “silent”).
+Flags: `MessageFlags.SuppressNotifications` (Discord “silent”). Posts are **embeds** (title, description), niet plain text. Bij building donate/fund toont **Voortgang** alle materiaalkosten (`funded / required` per type), niet alleen het type van deze actie.
 
-Templates (via `content/messages.json`), o.a.:
+Templates (via `content/messages.json`) — **description-only** embeds (geen inline field-tabel), o.a.:
 
 ```text
-{nickname} heeft {amount} {type} gedoneerd. Je ontvangt {gc} GC
-{nickname} heeft {amount} {type} gekocht voor {gc} GC
-{nickname} heeft {amount} {type} bijgedragen aan {building}. Je ontvangt {gc} GC
-{nickname} heeft {amount} {type} uit de voorraad in {building} gestopt
-{nickname} heeft {amount} tijd besteed aan {building}. Je ontvangt {gc} GC
+{nickname} heeft {amount} {type} gedoneerd.
+Je ontvangt {gc} GC voor je bijdrage aan de guild.
+
+Voorraad nu
+{stock} {type}
 ```
 
 `{nickname}` = Discord **server nickname** (guild display name), fallback global display name / username.
@@ -132,6 +135,7 @@ Velden: `id`, `guild_id`, `created_at`, `actor_user_id`, `actor_nickname`, `acti
 **Dagelijkse backup:** uitbreiding van bestaande status-report DM naar `STATUS_REPORT_USER_ID` (zelfde cadence/time als nu):
 
 - Snapshot: alle resource types + stock quantities per guild
+- Persoonlijke voorraden per user
 - Open buildings: naam, status, funding progress, time progress
 - Ledger sinds vorige report-window: entries in de periode; bij Discord-limiet truncaten met “+N meer”
 
@@ -165,6 +169,14 @@ CREATE TABLE IF NOT EXISTS guild_stock (
   resource_key TEXT NOT NULL,
   quantity INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (guild_id, resource_key)
+);
+
+CREATE TABLE IF NOT EXISTS player_stock (
+  guild_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  resource_key TEXT NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (guild_id, user_id, resource_key)
 );
 
 CREATE TABLE IF NOT EXISTS buildings (
@@ -223,6 +235,8 @@ Unieke building-namen per guild via `(guild_id, name_key)`.
 |---|---|
 | `src/commands/resource.ts` | Slash resource tree |
 | `src/commands/building.ts` | Slash building tree |
+| `src/commands/buildingWizard.ts` | Select-menu flow donate/fund/contribute |
+| `src/commands/resourceEmbeds.ts` | Publieke silent embeds |
 | `src/services/ResourceService.ts` | types, stock, donate/buy/adjust, channel setup |
 | `src/services/BuildingService.ts` | CRUD project, fund/donate/contribute, fase-overgangen, cancel |
 | `src/db/index.ts` | queries |
@@ -241,7 +255,7 @@ Domain-logica Discord-agnostisch houden waar mogelijk (zelfde scheiding als weat
 ## Non-goals (v1)
 
 - Player GC-balans in DB
-- Player-eigen inventory (alleen guild-stock + building funding)
+- Player-eigen building-projecten in de bot (personal stock is alleen een bak)
 - Hardcoded resource/building catalogus in JSON
 - Automatische time-ticks zonder contribute
 - Withdraw zonder buy (buy dekt “uit voorraad halen”)
@@ -252,7 +266,7 @@ Domain-logica Discord-agnostisch houden waar mogelijk (zelfde scheiding als weat
 ## Testplan
 
 1. `npm run register-commands`
-2. Allowlist: `/resource setup` + `/resource type add hout Hout sell:1` → buy default 2
+2. Allowlist: `/resource setup` + `/resource type add name:Hout sell:1` → key `hout`, buy default 2
 3. Speler: `/resource donate hout 7` → stock 7, silent post met nickname + 7 GC, ledger-rij
 4. Speler: `/resource buy hout 2` → stock 5, silent post “voor 4 GC”
 5. Buy met te weinig stock → ephemeral fout, geen post

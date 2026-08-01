@@ -18,6 +18,7 @@ const DEFAULT_ERYNDOR_BASE_URL = 'https://v3xillum.github.io/eryndor';
 const DEFAULT_ERYNDOR_FALLBACK_URL = 'https://raw.githubusercontent.com/V3xillum/eryndor/main';
 const DEFAULT_HANDOUT_URL = 'https://v3xillum.github.io/eryndor-bot/handout/';
 const DEFAULT_STATUS_REPORT_TIME = '10:00';
+const DEFAULT_PRODUCTION_POST_TIME = '17:00';
 
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim();
@@ -137,6 +138,10 @@ export function loadConfig() {
     'STATUS_REPORT_TIME',
   );
   const statusReportCadence = loadStatusReportCadence();
+  const productionPostTime = parseTimeOfDay(
+    process.env.PRODUCTION_POST_TIME?.trim() || DEFAULT_PRODUCTION_POST_TIME,
+    'PRODUCTION_POST_TIME',
+  );
 
   return {
     token: requireEnv('DISCORD_TOKEN'),
@@ -145,6 +150,7 @@ export function loadConfig() {
     statusReportUserIds,
     statusReportTime,
     statusReportCadence,
+    productionPostTime,
     updateMinMinutes,
     updateMaxMinutes,
     activeWindow: loadActiveWindow(),

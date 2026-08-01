@@ -4,11 +4,28 @@ import {
   handleAnnounceCommand,
   handleAnnounceModal,
 } from '../commands/announce.js';
+import { handleBuildingCommand } from '../commands/building.js';
+import {
+  BUILDING_WIZARD_PREFIX,
+  handleBuildingWizardButton,
+  handleBuildingWizardModal,
+  handleBuildingWizardSelect,
+} from '../commands/buildingWizard.js';
+import { handleProductionCommand } from '../commands/production.js';
+import {
+  PRODUCTION_WIZARD_PREFIX,
+  handleProductionWizardModal,
+  handleProductionWizardSelect,
+} from '../commands/productionWizard.js';
+import { handleResourceCommand } from '../commands/resource.js';
 import { handleWeatherCommand } from '../commands/weather.js';
 import { handleWorldCommand } from '../commands/world.js';
 import type { ActivityLogService } from '../services/ActivityLogService.js';
 import type { AnnounceService } from '../services/AnnounceService.js';
+import type { BuildingService } from '../services/BuildingService.js';
 import type { EryndorCalendarService } from '../services/EryndorCalendarService.js';
+import type { ProductionService } from '../services/ProductionService.js';
+import type { ResourceService } from '../services/ResourceService.js';
 import type { SchedulerService } from '../services/SchedulerService.js';
 import type { WeatherService } from '../services/WeatherService.js';
 
@@ -19,6 +36,9 @@ export function registerInteractionHandler(
     scheduler: SchedulerService;
     calendar: EryndorCalendarService;
     announce: AnnounceService;
+    resources: ResourceService;
+    buildings: BuildingService;
+    production: ProductionService;
     activity: ActivityLogService;
     config: AppConfig;
   },
@@ -32,6 +52,52 @@ export function registerInteractionHandler(
             config: deps.config,
           });
           deps.activity.ok('command', 'announce modal');
+          return;
+        }
+        if (interaction.customId.startsWith(BUILDING_WIZARD_PREFIX)) {
+          await handleBuildingWizardModal(interaction, {
+            buildings: deps.buildings,
+            resources: deps.resources,
+          });
+          deps.activity.ok('command', 'building wizard modal');
+          return;
+        }
+        if (interaction.customId.startsWith(PRODUCTION_WIZARD_PREFIX)) {
+          await handleProductionWizardModal(interaction, {
+            production: deps.production,
+            resources: deps.resources,
+          });
+          deps.activity.ok('command', 'production wizard modal');
+        }
+        return;
+      }
+
+      if (interaction.isButton()) {
+        if (interaction.customId.startsWith(BUILDING_WIZARD_PREFIX)) {
+          await handleBuildingWizardButton(interaction, {
+            buildings: deps.buildings,
+            resources: deps.resources,
+          });
+          deps.activity.ok('command', 'building wizard button');
+        }
+        return;
+      }
+
+      if (interaction.isStringSelectMenu()) {
+        if (interaction.customId.startsWith(BUILDING_WIZARD_PREFIX)) {
+          await handleBuildingWizardSelect(interaction, {
+            buildings: deps.buildings,
+            resources: deps.resources,
+          });
+          deps.activity.ok('command', 'building wizard');
+          return;
+        }
+        if (interaction.customId.startsWith(PRODUCTION_WIZARD_PREFIX)) {
+          await handleProductionWizardSelect(interaction, {
+            production: deps.production,
+            resources: deps.resources,
+          });
+          deps.activity.ok('command', 'production wizard');
         }
         return;
       }
@@ -57,6 +123,29 @@ export function registerInteractionHandler(
             config: deps.config,
           });
           deps.activity.ok('command', '/announce');
+          return;
+        case 'resource':
+          await handleResourceCommand(interaction, {
+            resources: deps.resources,
+            config: deps.config,
+          });
+          deps.activity.ok('command', '/resource');
+          return;
+        case 'building':
+          await handleBuildingCommand(interaction, {
+            buildings: deps.buildings,
+            resources: deps.resources,
+            config: deps.config,
+          });
+          deps.activity.ok('command', '/building');
+          return;
+        case 'production':
+          await handleProductionCommand(interaction, {
+            production: deps.production,
+            resources: deps.resources,
+            config: deps.config,
+          });
+          deps.activity.ok('command', '/production');
           return;
         default:
           return;

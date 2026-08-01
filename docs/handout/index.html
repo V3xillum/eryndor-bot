@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Eryndor bot — DM-handout</title>
-  <meta name="description" content="Handleiding voor Dungeon Masters: weer- en wereldcommando’s van Eryndor bot, en hoe je nieuwe weertypes aanlevert." />
+  <meta name="description" content="Handleiding voor Dungeon Masters: weer, kalender, guild-voorraad, bouw en productie van Eryndor bot." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -514,19 +514,20 @@
         <img src="eryndor-logo.jpg" alt="Eryndor Campaign" width="220" height="220" />
       </div>
       <h1 class="hero-brand">Eryndor bot<span>DM-handout</span></h1>
-      <p>Wat de bot voor jullie tafel doet, welke Discord-commando’s je hebt, en wat je doorgeeft als er een nieuw weertype bij komt.</p>
+      <p>Wat de bot voor jullie tafel doet: weer en kalender, guild-voorraad en bouw, en wat je doorgeeft als er een nieuw weertype bij komt.</p>
     </header>
 
     <nav class="nav" role="tablist" aria-label="Handout secties">
       <button type="button" role="tab" aria-selected="true" data-panel="overzicht">Overzicht</button>
       <button type="button" role="tab" aria-selected="false" data-panel="commands">Commando’s</button>
       <button type="button" role="tab" aria-selected="false" data-panel="sessie">Tijdens de sessie</button>
+      <button type="button" role="tab" aria-selected="false" data-panel="voorraad">Voorraad &amp; bouw</button>
       <button type="button" role="tab" aria-selected="false" data-panel="aanleveren">Nieuw weertype</button>
     </nav>
 
     <section id="overzicht" class="panel active" role="tabpanel">
       <h2>Wat doet de bot?</h2>
-      <p class="lead">Eryndor bot houdt de wereld levend tussen sessies: hij post weerkaarten in jullie weerkanaal, geeft op verzoek de Eryndor-datum en maan, kan ’s ochtends kalender-events posten (alleen als er die dag iets speelt), en kan een tekstbericht klaarzetten voor later. Tussendoor dobbelt hij zelf — jij grijpt in wanneer de tafel dat vraagt.</p>
+      <p class="lead">Eryndor bot houdt de wereld levend tussen sessies: hij post weerkaarten, geeft Eryndor-datum en maan, kan kalender-events posten, plant tekstberichten, en houdt guild-voorraad, bouwprojecten en productie bij. Tussendoor dobbelt hij zelf — jij grijpt in wanneer de tafel dat vraagt.</p>
 
       <div class="grid-2">
         <article class="tile">
@@ -535,11 +536,11 @@
         </article>
         <article class="tile">
           <h3>Jij als DM</h3>
-          <p>Weer vastzetten of laten dobbelen, automatische updates pauzeren tijdens de sessie, tijdelijk zwaarder of milder weer forceren, ritme aanpassen, kalender-events naar een kanaal sturen, of een wereldbericht klaarzetten voor later.</p>
+          <p>Weer vastzetten of laten dobbelen, automatische updates pauzeren, ritme/limieten aanpassen, kalender- of wereldberichten klaarzetten, en guild-voorraad / bouw / productie inrichten.</p>
         </article>
         <article class="tile">
           <h3>Spelers</h3>
-          <p>Iedereen mag het huidige weer alleen voor zichzelf bekijken en de kalender raadplegen. Alleen aangewezen DM’s sturen de bot aan.</p>
+          <p>Iedereen mag het huidige weer voor zichzelf bekijken, de kalender raadplegen, en guild-voorraad / bouw / productie <em>gebruiken</em> (doneren, kopen, meebouwen, lijsten). Alleen aangewezen DM’s richten types, limieten en bronnen in.</p>
         </article>
         <article class="tile">
           <h3>Kalender</h3>
@@ -548,6 +549,10 @@
         <article class="tile">
           <h3>Geplande berichten</h3>
           <p>Zet sfeer- of wereldtekst klaar; de bot post die op het gekozen moment in een <strong>ander kanaal</strong> dan het weer. Commando: <code>/announce schedule</code>.</p>
+        </article>
+        <article class="tile">
+          <h3>Voorraad &amp; bouw</h3>
+          <p>Grondstoftypes, guild- en persoonlijke voorraad, bouwprojecten en productiebronnen — DMs richten het in, de tafel gebruikt het. Uitleg: tab <strong>Voorraad &amp; bouw</strong>. Kanaal: <code>/resource setup</code>.</p>
         </article>
       </div>
 
@@ -589,7 +594,7 @@
       <h2>Commando’s</h2>
       <p class="lead">Gegroepeerd op wie mag gebruiken, daarna op soort. Zoek op woord of kies wie/categorie om iets terug te vinden.</p>
       <div class="toolbar">
-        <input type="search" id="cmdSearch" placeholder="Zoek (bijv. pauze, zwaarte, announce…)" aria-label="Zoek commando" />
+        <input type="search" id="cmdSearch" placeholder="Zoek (bijv. voorraad, bouw, productie…)" aria-label="Zoek commando" />
         <select id="cmdWho" aria-label="Filter op wie">
           <option value="all">Iedereen + DM</option>
           <option value="everyone">Alleen iedereen</option>
@@ -603,6 +608,9 @@
           <option value="acties">Acties</option>
           <option value="limieten">Limieten</option>
           <option value="berichten">Berichten</option>
+          <option value="voorraad">Voorraad</option>
+          <option value="bouwen">Bouwen</option>
+          <option value="productie">Productie</option>
           <option value="info">Info</option>
         </select>
       </div>
@@ -653,8 +661,60 @@
           <h3>Even checken</h3>
           <p>Wat speelt er nu? <code>/weather status</code> — weer, planning, ritme, venster, afkoeling, limieten. Alleen de volgende update: <code>/weather next</code>.</p>
         </article>
+        <article class="tile">
+          <h3>Nieuw grondstoftype</h3>
+          <p>De party ontdekte hout of steen — zet het in Discord. <code>/resource type add</code> — naam + hoeveel GC je krijgt bij doneren (<code>sell</code>); optioneel koopprijs (<code>buy</code>, anders 2× sell).</p>
+        </article>
+        <article class="tile">
+          <h3>Bouwproject starten</h3>
+          <p>Nieuwe hut of muur in de planning. <code>/building create</code> (bouwtijd standaard 100), daarna materialen met <code>/building cost add</code>. Aanpassen bouwtijd: <code>/building cost buildtime</code>.</p>
+        </article>
+        <article class="tile">
+          <h3>Productiebron</h3>
+          <p>Iets dat elke dag (of week) oplevert. <code>/production add</code> — kies type en interval, vul naam, medewerkers en opbrengst in. Avondpost rond 17:00 op het voorraadkanaal.</p>
+        </article>
+        <article class="tile">
+          <h3>Voorraad checken</h3>
+          <p>Wat ligt er op de plank? <code>/resource stock</code> (guild + limiet). Eigen bak: <code>/resource personal show</code>. Productiebronnen: <code>/production list</code>.</p>
+        </article>
       </div>
-      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code> naar het kanaal dat jij kiest. Kalenderposts (ochtend bij events, avond bij Rising/volle maan) gaan via <code>/world setup</code> naar hun eigen kanaal.</p>
+      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/announce</code>. Kalenderposts via <code>/world setup</code>. Voorraad-/bouw-/productieberichten gaan stil naar het kanaal van <code>/resource setup</code>.</p>
+    </section>
+
+    <section id="voorraad" class="panel" role="tabpanel" hidden>
+      <h2>Voorraad &amp; bouw</h2>
+      <p class="lead">West Marches-achtig: DMs maken grondstoftypes, bouwprojecten en productiebronnen aan. Spelers doneren, kopen, bouwen mee. De bot houdt <strong>geen</strong> GC-saldo bij — hij meldt alleen hoeveel GC iemand ontvangt of moet betalen; iedereen houdt dat zelf bij.</p>
+
+      <div class="grid-2">
+        <article class="tile">
+          <h3>1. Voorraadkanaal</h3>
+          <p>Eenmalig: <code>/resource setup</code> — kies een kanaal voor stille berichten (geen ping). Donaties, aankopen, bouw en de dagelijkse productiesamenvatting landen daar. Uit: <code>/resource clear</code>.</p>
+        </article>
+        <article class="tile">
+          <h3>2. Grondstoftypes</h3>
+          <p>Nog niets ontdekt? Maak types zelf: <code>/resource type add</code> — weergavenaam (bijv. Hout) + <code>sell</code> (GC bij doneren). Optioneel <code>buy</code> (anders 2× sell). Aanpassen: <code>edit</code> / weg: <code>remove</code>. Lijst: <code>/resource type list</code>.</p>
+        </article>
+        <article class="tile">
+          <h3>3. Guild vs persoonlijk</h3>
+          <p><strong>Guild-voorraad:</strong> <code>/resource donate</code> / <code>buy</code> / <code>stock</code>. <strong>Persoonlijk:</strong> eigen bak met <code>/resource personal add|remove|show</code> — geen GC. DM-correctie zonder GC-melding: <code>/resource adjust</code>.</p>
+        </article>
+        <article class="tile">
+          <h3>4. Opslaglimiet</h3>
+          <p>Standaard max <strong>300 per type</strong> (Hout 300 én Steen 300, niet opgeteld). Aanpassen: <code>/resource cap</code>. Zit de guild vol? Rest van een donatie/correctie gaat naar je <strong>persoonlijke</strong> bak. Dagelijkse productie die niet past is <strong>verloren</strong> — dat staat duidelijk in de avondpost.</p>
+        </article>
+        <article class="tile">
+          <h3>5. Bouwprojecten</h3>
+          <p><code>/building create</code> → materiaalkosten (<code>/building cost add</code>, type + aantal, “nog een toevoegen”). Fase 2-bouwtijd staat standaard op <strong>100</strong>; wijzigen met <code>/building cost buildtime</code>. Spelers: <code>donate</code> / <code>fund</code> / <code>contribute</code> via menu. Annuleren: <code>/building cancel</code>.</p>
+        </article>
+        <article class="tile">
+          <h3>6. Productiebronnen</h3>
+          <p>Bijv. Houthakkershut → Hout. <code>/production add</code>: type, dagelijks of wekelijks, naam, medewerkers, opbrengst per medewerker. Opbrengst = medewerkers × opbrengst. Rond <strong>17:00</strong> één stille samenvatting (bron, type, hoeveelheid; verloren als de opslag vol zat). Beheer: <code>workers</code> / <code>yield</code> / <code>remove</code>; overzicht: <code>list</code>.</p>
+        </article>
+      </div>
+      <p class="note" style="margin-top:1rem">
+        Details van elk commando staan onder <strong>Commando’s</strong> (filter op Voorraad, Bouwen of Productie).
+        Alleen aangewezen DM’s beheren types, limiet, projecten aanmaken/annuleren en productiebronnen.
+      </p>
     </section>
 
     <section id="aanleveren" class="panel" role="tabpanel" hidden>
@@ -728,6 +788,9 @@
       { id: "acties", label: "Acties" },
       { id: "limieten", label: "Limieten" },
       { id: "berichten", label: "Berichten" },
+      { id: "voorraad", label: "Voorraad" },
+      { id: "bouwen", label: "Bouwen" },
+      { id: "productie", label: "Productie" },
       { id: "info", label: "Info" },
     ];
 
@@ -913,6 +976,209 @@
         cat: "info",
         what: "Wanneer de volgende automatische update gepland staat (alleen voor jou zichtbaar).",
         when: "Planning tussen scenes.",
+      },
+      {
+        cmd: "/resource donate",
+        who: "everyone",
+        cat: "voorraad",
+        what: "Doneer grondstoffen aan de guild-voorraad. Stil bericht in het voorraadkanaal. Bot meldt hoeveel GC je ontvangt (zelf bijhouden). Past de opslag niet? Rest gaat naar je persoonlijke bak.",
+        when: "Loot of crafting-opbrengst in de gedeelde voorraad stoppen.",
+      },
+      {
+        cmd: "/resource buy",
+        who: "everyone",
+        cat: "voorraad",
+        what: "Koop uit de guild-voorraad. Stil bericht. Bot meldt hoeveel GC het kost (zelf betalen).",
+        when: "Iets uit de gemeenschappelijke voorraad halen.",
+      },
+      {
+        cmd: "/resource stock",
+        who: "everyone",
+        cat: "voorraad",
+        what: "Toon de guild-voorraad en de opslaglimiet per type.",
+        when: "Even kijken wat er nog ligt.",
+      },
+      {
+        cmd: "/resource personal add",
+        who: "everyone",
+        cat: "voorraad",
+        what: "Zet grondstoffen in je persoonlijke bak. Stil bericht. Geen GC.",
+        when: "Eigen voorraad bijhouden, los van de guild.",
+      },
+      {
+        cmd: "/resource personal remove",
+        who: "everyone",
+        cat: "voorraad",
+        what: "Haal iets uit je persoonlijke bak. Stil bericht. Geen GC.",
+        when: "Persoonlijke voorraad gebruiken of corrigeren.",
+      },
+      {
+        cmd: "/resource personal show",
+        who: "everyone",
+        cat: "voorraad",
+        what: "Toon jouw persoonlijke voorraad (alleen voor jou zichtbaar).",
+        when: "Even checken wat jij nog hebt.",
+      },
+      {
+        cmd: "/resource type list",
+        who: "everyone",
+        cat: "voorraad",
+        what: "Lijst van grondstoftypes met sell- en buy-GC.",
+        when: "Welke types bestaan er, en tegen welke GC?",
+      },
+      {
+        cmd: "/resource setup",
+        who: "dm",
+        cat: "inrichten",
+        what: "Kies het kanaal voor stille voorraad-, bouw- en productieberichten (geen ping).",
+        when: "Eenmalig bij start van de economy, of als het kanaal wijzigt.",
+      },
+      {
+        cmd: "/resource clear",
+        who: "dm",
+        cat: "inrichten",
+        what: "Wis de voorraadkanaal-setup. Acties die daar posten werken pas weer na opnieuw setup.",
+        when: "Economy-posts tijdelijk uitzetten of verplaatsen.",
+      },
+      {
+        cmd: "/resource type add",
+        who: "dm",
+        cat: "voorraad",
+        what: "Nieuw grondstoftype: weergavenaam (bijv. Hout) + sell (GC bij doneren). Optioneel buy (anders 2× sell). Interne id volgt uit de naam en blijft daarna vast.",
+        when: "De party ontdekte een nieuwe grondstof.",
+      },
+      {
+        cmd: "/resource type edit",
+        who: "dm",
+        cat: "voorraad",
+        what: "Pas weergavenaam (rename) en/of sell/buy aan. De interne id blijft hetzelfde.",
+        when: "Prijzen of weergavenaam bijstellen.",
+      },
+      {
+        cmd: "/resource type remove",
+        who: "dm",
+        cat: "voorraad",
+        what: "Verwijder een type — alleen als guild- en persoonlijke voorraad leeg zijn en het niet in een actief bouwproject of productiebron zit.",
+        when: "Type was een vergissing of verdwijnt uit de wereld.",
+      },
+      {
+        cmd: "/resource adjust",
+        who: "dm",
+        cat: "voorraad",
+        what: "Corrigeer de guild-voorraad met een positief of negatief aantal, zonder publieke GC-melding. Overflow bij volle opslag → jouw persoonlijke bak.",
+        when: "DM-correctie of housekeeping.",
+      },
+      {
+        cmd: "/resource cap",
+        who: "dm",
+        cat: "voorraad",
+        what: "Toon of zet de opslaglimiet per type (standaard 300). Geldt per grondstof, niet als som van alles.",
+        when: "Meer of minder opslagruimte voor de guild.",
+      },
+      {
+        cmd: "/building donate",
+        who: "everyone",
+        cat: "bouwen",
+        what: "Breng materialen “van buiten” naar een open project (menu: project → grondstof → aantal). Stil bericht met voortgang van alle materialen. GC = sell × aantal.",
+        when: "Zelf materiaal aandragen voor een bouw.",
+      },
+      {
+        cmd: "/building fund",
+        who: "everyone",
+        cat: "bouwen",
+        what: "Verplaats materialen uit de guild-voorraad naar een open project (menu: project → grondstof → aantal). Stil bericht met voortgang van alle materialen. Geen extra GC.",
+        when: "Gemeenschappelijke voorraad inzetten voor een project.",
+      },
+      {
+        cmd: "/building contribute",
+        who: "everyone",
+        cat: "bouwen",
+        what: "Besteed tijd aan een project in de bouwfase (menu: project → aantal tijd-units). Stil bericht. GC = aantal × 1.",
+        when: "Meebouwen zodra de materialen compleet zijn.",
+      },
+      {
+        cmd: "/building list",
+        who: "everyone",
+        cat: "bouwen",
+        what: "Overzicht van bouwprojecten en hun status (materialen / in aanbouw / klaar).",
+        when: "Wat staat er open?",
+      },
+      {
+        cmd: "/building status",
+        who: "everyone",
+        cat: "bouwen",
+        what: "Detail van een project via menu: ontbrekende materialen, tijd, fase.",
+        when: "Voortgang van één project checken.",
+      },
+      {
+        cmd: "/building cost show",
+        who: "everyone",
+        cat: "bouwen",
+        what: "Toon kosten en voortgang van een project (menu).",
+        when: "Wat is er nog nodig?",
+      },
+      {
+        cmd: "/building create",
+        who: "dm",
+        cat: "bouwen",
+        what: "Nieuw bouwproject. Start in de materialen-fase; bouwtijd (fase 2) staat standaard op 100. Meerdere projecten tegelijk mag.",
+        when: "De tafel plant een hut, muur, of ander bouwwerk.",
+      },
+      {
+        cmd: "/building cost add",
+        who: "dm",
+        cat: "bouwen",
+        what: "Voeg een materiaalkost toe: kies project → vul grondstof (bijv. Hout) en aantal in. Daarna knop om nog een kost toe te voegen. Alleen zolang er nog niets gestort is.",
+        when: "Kostenlijst van een nieuw project vullen.",
+      },
+      {
+        cmd: "/building cost buildtime",
+        who: "dm",
+        cat: "bouwen",
+        what: "Zet de bouwtijd voor fase 2 (menu → modal). Nieuwe projecten starten op 100. Eén tijd-unit = 1 GC bij contribute. Alleen vóór stortingen.",
+        when: "Andere bouwtijd dan de standaard 100.",
+      },
+      {
+        cmd: "/building cancel",
+        who: "dm",
+        cat: "bouwen",
+        what: "Annuleer een open project. Gestorte materialen gaan terug naar de guild-voorraad; past dat niet → rest naar jouw persoonlijke bak. GC die spelers al kregen, draait niet terug.",
+        when: "Project gaat niet door.",
+      },
+      {
+        cmd: "/production list",
+        who: "everyone",
+        cat: "productie",
+        what: "Overzicht productiebronnen: medewerkers, max, opbrengst, interval (dagelijks/wekelijks).",
+        when: "Wat produceert de guild nu?",
+      },
+      {
+        cmd: "/production add",
+        who: "dm",
+        cat: "productie",
+        what: "Nieuwe productiebron: kies grondstoftype → dagelijks of wekelijks → vul naam, medewerkers, opbrengst per medewerker (en optioneel max medewerkers, standaard 5).",
+        when: "Bijv. Houthakkershut die Hout oplevert.",
+      },
+      {
+        cmd: "/production workers",
+        who: "dm",
+        cat: "productie",
+        what: "Zet het aantal medewerkers op een bron (menu → modal), 0 tot max van die bron.",
+        when: "Meer of minder mensen aan het werk zetten.",
+      },
+      {
+        cmd: "/production yield",
+        who: "dm",
+        cat: "productie",
+        what: "Zet de opbrengst per medewerker per interval (menu → modal).",
+        when: "Bron efficiënter of zuiniger maken.",
+      },
+      {
+        cmd: "/production remove",
+        who: "dm",
+        cat: "productie",
+        what: "Verwijder een productiebron (menu).",
+        when: "Bron bestaat niet meer in de wereld.",
       },
     ];
 
