@@ -5,19 +5,13 @@ import {
   SlashCommandSubcommandGroupBuilder,
   type ChatInputCommandInteraction,
   type GuildMember,
-  type GuildTextBasedChannel,
 } from 'discord.js';
 import type { AppConfig } from '../config.js';
+import type { BuildingService } from '../services/BuildingService.js';
 import type { ResourceService } from '../services/ResourceService.js';
 import { formatTemplate } from '../utils/helpers.js';
-import {
-  buildBuyEmbed,
-  buildDonateEmbed,
-  buildPersonalAddEmbed,
-  buildPersonalRemoveEmbed,
-  guildNickname,
-  postSilentEmbed,
-} from './resourceEmbeds.js';
+import { guildNickname } from './resourceEmbeds.js';
+import { startResourceAmountWizard } from './resourceWizard.js';
 
 export function buildResourceCommand() {
   return new SlashCommandBuilder()
@@ -34,37 +28,22 @@ export function buildResourceCommand() {
     .addSubcommand((sub) =>
       sub
         .setName('donate')
-        .setDescription('Donate resources to the guild stockpile')
-        .addStringOption((opt) =>
-          opt.setName('type').setDescription('Resource name (e.g. Hout)').setRequired(true),
-        )
-        .addIntegerOption((opt) =>
-          opt
-            .setName('amount')
-            .setDescription('How many to donate')
-            .setRequired(true)
-            .setMinValue(1)
-            .setMaxValue(9999),
-        ),
+        .setDescription('Donate to the guild stockpile (form: type + amount)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('buy')
-        .setDescription('Buy resources from the guild stockpile')
-        .addStringOption((opt) =>
-          opt.setName('type').setDescription('Resource name').setRequired(true),
-        )
-        .addIntegerOption((opt) =>
-          opt
-            .setName('amount')
-            .setDescription('How many to buy')
-            .setRequired(true)
-            .setMinValue(1)
-            .setMaxValue(9999),
-        ),
+        .setDescription('Buy from the guild stockpile (form: type + amount)'),
     )
     .addSubcommand((sub) =>
       sub.setName('stock').setDescription('Show the guild stockpile'),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('overview')
+        .setDescription(
+          'Private overview: guild stock, your stash, and building progress',
+        ),
     )
     .addSubcommandGroup((group) =>
       group
@@ -73,34 +52,12 @@ export function buildResourceCommand() {
         .addSubcommand((sub) =>
           sub
             .setName('add')
-            .setDescription('Add resources to your personal stash')
-            .addStringOption((opt) =>
-              opt.setName('type').setDescription('Resource name').setRequired(true),
-            )
-            .addIntegerOption((opt) =>
-              opt
-                .setName('amount')
-                .setDescription('How many to add')
-                .setRequired(true)
-                .setMinValue(1)
-                .setMaxValue(9999),
-            ),
+            .setDescription('Add to your personal stash (form: type + amount)'),
         )
         .addSubcommand((sub) =>
           sub
             .setName('remove')
-            .setDescription('Remove resources from your personal stash')
-            .addStringOption((opt) =>
-              opt.setName('type').setDescription('Resource name').setRequired(true),
-            )
-            .addIntegerOption((opt) =>
-              opt
-                .setName('amount')
-                .setDescription('How many to remove')
-                .setRequired(true)
-                .setMinValue(1)
-                .setMaxValue(9999),
-            ),
+            .setDescription('Remove from your personal stash (form: type + amount)'),
         )
         .addSubcommand((sub) =>
           sub.setName('show').setDescription('Show your personal stash'),
@@ -130,17 +87,8 @@ export function buildResourceAdminSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('adjust')
-        .setDescription('Adjust stock without GC')
-        .addStringOption((opt) =>
-          opt.setName('type').setDescription('Resource name').setRequired(true),
-        )
-        .addIntegerOption((opt) =>
-          opt
-            .setName('amount')
-            .setDescription('Delta (can be negative)')
-            .setRequired(true)
-            .setMinValue(-9999)
-            .setMaxValue(9999),
+        .setDescription(
+          'Correct guild stock without a public GC post (add or remove via form)',
         ),
     )
     .addSubcommand((sub) =>
@@ -235,10 +183,11 @@ export async function handleResourceCommand(
   interaction: ChatInputCommandInteraction,
   deps: {
     resources: ResourceService;
+    buildings: BuildingService;
     config: AppConfig;
   },
 ): Promise<void> {
-  const { resources } = deps;
+  const { resources, buildings } = deps;
   const group = interaction.options.getSubcommandGroup(false);
   const sub = interaction.options.getSubcommand();
 
@@ -269,6 +218,9 @@ export async function handleResourceCommand(
       return;
     case 'stock':
       await handleStock(interaction, resources);
+      return;
+    case 'overview':
+      await handleOverview(interaction, resources, buildings);
       return;
     default:
       await interaction.reply({
@@ -470,141 +422,14 @@ async function handleDonate(
   interaction: ChatInputCommandInteraction,
   resources: ResourceService,
 ): Promise<void> {
-  const settings = resources.getSettings(interaction.guildId!);
-  if (!settings) {
-    await interaction.reply({
-      content: resources.messages.resourceNotConfigured,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  const member =
-    interaction.member && 'displayName' in interaction.member
-      ? (interaction.member as GuildMember)
-      : null;
-  const apiNick =
-    interaction.member && 'nick' in interaction.member
-      ? (interaction.member.nick as string | null | undefined)
-      : null;
-  const nickname = guildNickname(member, interaction.user, apiNick);
-
-  const result = resources.donate({
-    guildId: interaction.guildId!,
-    keyRaw: interaction.options.getString('type', true),
-    amount: interaction.options.getInteger('amount', true),
-    actorUserId: interaction.user.id,
-    actorNickname: nickname,
-  });
-  if (!result.ok) {
-    await interaction.reply({ content: result.message, ephemeral: true });
-    return;
-  }
-
-  const embed = buildDonateEmbed(resources.messages, {
-    nickname,
-    amount: result.amount,
-    typeName: result.type.display_name,
-    gc: result.gc,
-    stockAfter: result.stockAfter,
-    overflow: result.overflow,
-  });
-
-  const channel = await fetchResourceChannel(interaction, settings.channel_id);
-  const posted = await postSilentEmbed(channel, embed);
-  if (!posted) {
-    await interaction.reply({
-      content: resources.messages.resourceNotConfigured,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  let reply = formatTemplate(resources.messages.resourceDonateSuccess, {
-    amount: String(result.amount),
-    name: result.type.display_name,
-    added: String(result.added),
-    gc: String(result.gc),
-    stock: String(result.stockAfter),
-  });
-  if (result.overflow > 0) {
-    reply +=
-      '\n' +
-      formatTemplate(resources.messages.resourceDonateOverflowNote, {
-        overflow: String(result.overflow),
-        name: result.type.display_name,
-        personal: String(result.personalAfter ?? 0),
-      });
-  }
-
-  await interaction.reply({
-    content: reply,
-    ephemeral: true,
-  });
+  await startResourceAmountWizard(interaction, resources, 'donate');
 }
 
 async function handleBuy(
   interaction: ChatInputCommandInteraction,
   resources: ResourceService,
 ): Promise<void> {
-  const settings = resources.getSettings(interaction.guildId!);
-  if (!settings) {
-    await interaction.reply({
-      content: resources.messages.resourceNotConfigured,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  const member =
-    interaction.member && 'displayName' in interaction.member
-      ? (interaction.member as GuildMember)
-      : null;
-  const apiNick =
-    interaction.member && 'nick' in interaction.member
-      ? (interaction.member.nick as string | null | undefined)
-      : null;
-  const nickname = guildNickname(member, interaction.user, apiNick);
-
-  const result = resources.buy({
-    guildId: interaction.guildId!,
-    keyRaw: interaction.options.getString('type', true),
-    amount: interaction.options.getInteger('amount', true),
-    actorUserId: interaction.user.id,
-    actorNickname: nickname,
-  });
-  if (!result.ok) {
-    await interaction.reply({ content: result.message, ephemeral: true });
-    return;
-  }
-
-  const embed = buildBuyEmbed(resources.messages, {
-    nickname,
-    amount: result.amount,
-    typeName: result.type.display_name,
-    gc: result.gc,
-    stockAfter: result.stockAfter,
-  });
-
-  const channel = await fetchResourceChannel(interaction, settings.channel_id);
-  const posted = await postSilentEmbed(channel, embed);
-  if (!posted) {
-    await interaction.reply({
-      content: resources.messages.resourceNotConfigured,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  await interaction.reply({
-    content: formatTemplate(resources.messages.resourceBuySuccess, {
-      amount: String(result.amount),
-      name: result.type.display_name,
-      gc: String(result.gc),
-      stock: String(result.stockAfter),
-    }),
-    ephemeral: true,
-  });
+  await startResourceAmountWizard(interaction, resources, 'buy');
 }
 
 async function handleStock(
@@ -709,92 +534,13 @@ async function handlePersonalGroup(
     return;
   }
 
-  const settings = resources.getSettings(interaction.guildId!);
-  if (!settings) {
-    await interaction.reply({
-      content: resources.messages.resourceNotConfigured,
-      ephemeral: true,
-    });
-    return;
-  }
-
   if (sub === 'add') {
-    const result = resources.personalAdd({
-      guildId: interaction.guildId!,
-      userId: interaction.user.id,
-      keyRaw: interaction.options.getString('type', true),
-      amount: interaction.options.getInteger('amount', true),
-      actorNickname: nickname,
-    });
-    if (!result.ok) {
-      await interaction.reply({ content: result.message, ephemeral: true });
-      return;
-    }
-
-    const embed = buildPersonalAddEmbed(resources.messages, {
-      nickname,
-      amount: result.amount,
-      typeName: result.type.display_name,
-      stockAfter: result.stockAfter,
-    });
-    const channel = await fetchResourceChannel(interaction, settings.channel_id);
-    const posted = await postSilentEmbed(channel, embed);
-    if (!posted) {
-      await interaction.reply({
-        content: resources.messages.resourceNotConfigured,
-        ephemeral: true,
-      });
-      return;
-    }
-
-    await interaction.reply({
-      content: formatTemplate(resources.messages.resourcePersonalAddSuccess, {
-        amount: String(result.amount),
-        name: result.type.display_name,
-        stock: String(result.stockAfter),
-      }),
-      ephemeral: true,
-    });
+    await startResourceAmountWizard(interaction, resources, 'personal_add');
     return;
   }
 
   if (sub === 'remove') {
-    const result = resources.personalRemove({
-      guildId: interaction.guildId!,
-      userId: interaction.user.id,
-      keyRaw: interaction.options.getString('type', true),
-      amount: interaction.options.getInteger('amount', true),
-      actorNickname: nickname,
-    });
-    if (!result.ok) {
-      await interaction.reply({ content: result.message, ephemeral: true });
-      return;
-    }
-
-    const embed = buildPersonalRemoveEmbed(resources.messages, {
-      nickname,
-      amount: result.amount,
-      typeName: result.type.display_name,
-      stockAfter: result.stockAfter,
-    });
-    const channel = await fetchResourceChannel(interaction, settings.channel_id);
-    const posted = await postSilentEmbed(channel, embed);
-    if (!posted) {
-      await interaction.reply({
-        content: resources.messages.resourceNotConfigured,
-        ephemeral: true,
-      });
-      return;
-    }
-
-    await interaction.reply({
-      content: formatTemplate(resources.messages.resourcePersonalRemoveSuccess, {
-        amount: String(result.amount),
-        name: result.type.display_name,
-        stock: String(result.stockAfter),
-      }),
-      ephemeral: true,
-    });
+    await startResourceAmountWizard(interaction, resources, 'personal_remove');
     return;
   }
 
@@ -804,39 +550,118 @@ async function handlePersonalGroup(
   });
 }
 
+async function handleOverview(
+  interaction: ChatInputCommandInteraction,
+  resources: ResourceService,
+  buildings: BuildingService,
+): Promise<void> {
+  const guildId = interaction.guildId!;
+  const nickname = resolveNicknameSync(interaction);
+  const embeds: EmbedBuilder[] = [];
+
+  const cap = resources.getStorageCap(guildId);
+  const stockRows = resources.stockOverview(guildId);
+  const stockLines =
+    stockRows.length === 0
+      ? [resources.messages.resourceStockEmpty]
+      : stockRows.map((row) =>
+          formatTemplate(resources.messages.resourceStockLine, {
+            name: row.type.display_name,
+            qty: String(row.quantity),
+            cap: String(cap),
+          }),
+        );
+  embeds.push(
+    new EmbedBuilder()
+      .setTitle(resources.messages.resourceOverviewGuildTitle)
+      .setDescription(
+        (
+          formatTemplate(resources.messages.resourceStockCapNote, {
+            cap: String(cap),
+          }) +
+          '\n\n' +
+          stockLines.join('\n')
+        ).slice(0, 4000),
+      ),
+  );
+
+  const personalRows = resources.personalOverview(guildId, interaction.user.id);
+  const personalLines =
+    personalRows.length === 0
+      ? [resources.messages.resourcePersonalEmpty]
+      : personalRows.map((row) =>
+          formatTemplate(resources.messages.resourcePersonalLine, {
+            name: row.type.display_name,
+            qty: String(row.quantity),
+          }),
+        );
+  embeds.push(
+    new EmbedBuilder()
+      .setTitle(
+        formatTemplate(resources.messages.resourceOverviewPersonalTitle, {
+          nickname,
+        }),
+      )
+      .setDescription(personalLines.join('\n').slice(0, 4000)),
+  );
+
+  const buildingList = buildings
+    .list(guildId)
+    .filter((b) => b.status !== 'cancelled');
+  const buildingBlocks: string[] = [];
+  if (buildingList.length === 0) {
+    buildingBlocks.push(buildings.messages.buildingListEmpty);
+  } else {
+    for (const b of buildingList.slice(0, 15)) {
+      const detail = buildings.detailById(guildId, b.id);
+      if (!detail.ok) continue;
+      const materialLines =
+        detail.materials.length === 0
+          ? [buildings.messages.buildingCostShowEmpty]
+          : detail.materials.map((m) =>
+              formatTemplate(buildings.messages.buildingCostShowLine, {
+                type: m.displayName,
+                funded: String(m.funded),
+                required: String(m.required),
+              }),
+            );
+      const phaseLine = formatTemplate(
+        resources.messages.resourceOverviewBuildingPhase,
+        { phase: detail.statusLabel },
+      );
+      const timeLine = formatTemplate(
+        resources.messages.resourceOverviewBuildingTime,
+        {
+          spent: String(detail.building.time_spent),
+          required: String(detail.building.time_required),
+        },
+      );
+      buildingBlocks.push(
+        [
+          formatTemplate(resources.messages.resourceOverviewBuildingHeader, {
+            name: detail.building.name,
+          }),
+          phaseLine,
+          ...materialLines,
+          timeLine,
+        ].join('\n'),
+      );
+    }
+  }
+  embeds.push(
+    new EmbedBuilder()
+      .setTitle(resources.messages.resourceOverviewBuildingsTitle)
+      .setDescription(buildingBlocks.join('\n\n').slice(0, 4000)),
+  );
+
+  await interaction.reply({ embeds, ephemeral: true });
+}
+
 async function handleAdjust(
   interaction: ChatInputCommandInteraction,
   resources: ResourceService,
 ): Promise<void> {
-  const nickname = resolveNicknameSync(interaction);
-  const result = resources.adjust({
-    guildId: interaction.guildId!,
-    keyRaw: interaction.options.getString('type', true),
-    delta: interaction.options.getInteger('amount', true),
-    actorUserId: interaction.user.id,
-    actorNickname: nickname,
-  });
-  if (!result.ok) {
-    await interaction.reply({ content: result.message, ephemeral: true });
-    return;
-  }
-  let reply = formatTemplate(resources.messages.resourceAdjustSuccess, {
-    key: result.type.key,
-    delta: String(result.delta),
-    stock: String(result.stockAfter),
-  });
-  if (result.overflow > 0) {
-    reply +=
-      '\n' +
-      formatTemplate(resources.messages.resourceAdjustOverflowNote, {
-        overflow: String(result.overflow),
-        personal: String(result.personalAfter ?? 0),
-      });
-  }
-  await interaction.reply({
-    content: reply,
-    ephemeral: true,
-  });
+  await startResourceAmountWizard(interaction, resources, 'adjust');
 }
 
 function resolveNicknameSync(interaction: ChatInputCommandInteraction): string {
@@ -849,23 +674,4 @@ function resolveNicknameSync(interaction: ChatInputCommandInteraction): string {
       ? (interaction.member.nick as string | null | undefined)
       : null;
   return guildNickname(member, interaction.user, apiNick);
-}
-
-async function fetchResourceChannel(
-  interaction: ChatInputCommandInteraction,
-  channelId: string,
-): Promise<GuildTextBasedChannel | null> {
-  const cached = interaction.guild?.channels.cache.get(channelId);
-  if (cached?.isTextBased() && !cached.isDMBased()) {
-    return cached;
-  }
-  try {
-    const fetched = await interaction.guild?.channels.fetch(channelId);
-    if (fetched?.isTextBased() && !fetched.isDMBased()) {
-      return fetched;
-    }
-  } catch {
-    return null;
-  }
-  return null;
 }

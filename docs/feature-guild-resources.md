@@ -44,13 +44,14 @@ Zelfde patroon als `/weather setup` / `/dm calendar setup`: per Discord-guild é
 
 | Command | Effect |
 |---|---|
-| `/resource donate type amount` | Stock += amount. Publieke silent post + ephemeral bevestiging. GC = `amount × sell` (melding) |
-| `/resource buy type amount` | Stock moet ≥ amount. Stock −= amount. Publieke silent post. Kosten = `amount × buy` (melding) |
-| `/resource stock` | Overzicht huidige voorraad |
-| `/resource personal add type amount` | Persoonlijke voorraad += amount. Publieke silent embed. Geen GC |
-| `/resource personal remove type amount` | Persoonlijke voorraad −= amount. Publieke silent embed. Geen GC |
+| `/resource donate` | Modal: grondstof-dropdown + aantal. Stock += amount. Publieke silent post + ephemeral bevestiging. GC = `amount × sell` (melding) |
+| `/resource buy` | Modal: grondstof-dropdown + aantal. Stock moet ≥ amount. Stock −= amount. Publieke silent post. Kosten = `amount × buy` (melding) |
+| `/resource stock` | Overzicht huidige voorraad (ephemeral) |
+| `/resource overview` | Ephemeral: guild-voorraad + persoonlijke bak + bouwprojecten met voortgang |
+| `/resource personal add` | Modal: type + aantal. Persoonlijke voorraad += amount. Publieke silent embed. Geen GC |
+| `/resource personal remove` | Modal: type + aantal (alleen wat je hebt). Persoonlijke voorraad −= amount. Publieke silent embed. Geen GC |
 | `/resource personal show` | Eigen persoonlijke voorraad (ephemeral) |
-| `/resource adjust type amount` | Allowlist: correctie zonder publieke GC-post (positief/negatief); wél ledger |
+| `/resource adjust` | Modal: type + toevoegen/verminderen + aantal. Allowlist: correctie zonder publieke GC-post; wél ledger |
 
 `amount` limiet: **1–9999** per command (anti-typo).
 
@@ -65,9 +66,9 @@ Create/cost/cancel = allowlist. Fund/donate/contribute/list/status = iedereen in
 | `/building cost buildtime` | Menu: project → modal bouwtijd (fase 2). Corrigeert de default 100 |
 | `/building cost show` | Menu: project → kosten + voortgang |
 | `/building list` | Alle projecten + status |
-| `/building fund` | Menu: project → grondstof → modal aantal. Uit guild-stock. Geen extra GC. Silent post toont voortgang van **alle** materialen |
-| `/building donate` | Menu: project → grondstof → modal aantal. Direct, GC = sell. Silent post toont voortgang van **alle** materialen |
-| `/building contribute` | Menu: project → modal tijd. GC = amount × 1 |
+| `/building fund` | Modal: project + grondstof + aantal. Uit guild-stock. Geen extra GC. Silent post toont voortgang van **alle** materialen |
+| `/building donate` | Modal: project + grondstof + aantal. Direct, GC = sell. Silent post toont voortgang van **alle** materialen |
+| `/building contribute` | Modal: project + tijd. GC = amount × 1 |
 | `/building status` | Menu: project → detail (missing materials / time / fase) |
 | `/building cancel name` | Allowlist. Funding terug naar guild-stock. Ledger `building_cancel`. Geen GC-terugdraai (GC was al “betaald” aan spelers) |
 
@@ -234,6 +235,7 @@ Unieke building-namen per guild via `(guild_id, name_key)`.
 | Stuk | Rol |
 |---|---|
 | `src/commands/resource.ts` | Slash resource tree |
+| `src/commands/resourceWizard.ts` | Modal flows donate/buy/personal (type-select + amount) |
 | `src/commands/building.ts` | Slash building tree |
 | `src/commands/buildingWizard.ts` | Select-menu flow donate/fund/contribute |
 | `src/commands/resourceEmbeds.ts` | Publieke silent embeds |
@@ -267,7 +269,7 @@ Domain-logica Discord-agnostisch houden waar mogelijk (zelfde scheiding als weat
 
 1. `npm run register-commands`
 2. Allowlist: `/resource setup` + `/resource type add name:Hout sell:1` → key `hout`, buy default 2
-3. Speler: `/resource donate hout 7` → stock 7, silent post met nickname + 7 GC, ledger-rij
+3. Speler: `/resource donate` → modal (type + aantal, bijv. hout 7) → stock 7, silent post met nickname + 7 GC, ledger-rij
 4. Speler: `/resource buy hout 2` → stock 5, silent post “voor 4 GC”
 5. Buy met te weinig stock → ephemeral fout, geen post
 6. `/building create Houthakkershut` + costs hout 10 + time 5

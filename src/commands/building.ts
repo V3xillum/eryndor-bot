@@ -15,7 +15,9 @@ import {
   startCostAddWizard,
   startCostShowWizard,
   startCostTimeWizard,
+  startFundingAdjustWizard,
   startMaterialWizard,
+  startSpentAdjustWizard,
 } from './buildingWizard.js';
 
 export function buildBuildingCommand() {
@@ -39,17 +41,17 @@ export function buildBuildingCommand() {
     .addSubcommand((sub) =>
       sub
         .setName('fund')
-        .setDescription('Move materials from guild stock into a project (menu + amount)'),
+        .setDescription('Move guild stock into a project (form: project + type + amount)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('donate')
-        .setDescription('Donate materials directly into a project (menu + amount)'),
+        .setDescription('Donate materials into a project (form: project + type + amount)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('contribute')
-        .setDescription('Spend time on a building project (menu + amount, 1 GC per unit)'),
+        .setDescription('Spend time on a project (form: project + amount, 1 GC per unit)'),
     );
 }
 
@@ -82,12 +84,26 @@ export function buildBuildingCostAdminSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('add')
-        .setDescription('Add a material cost (menu → type + amount; can add more)'),
+        .setDescription('Add a material cost (form: project + type + amount)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('buildtime')
-        .setDescription('Set build time for phase 2 (default 100; 1 unit = 1 GC)'),
+        .setDescription(
+          'Set phase-2 build time (any open project; not when complete)',
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('funding')
+        .setDescription(
+          'DM correct deposited materials (add/remove, no GC)',
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('spent')
+        .setDescription('DM correct time spent on a building project (no GC)'),
     );
 }
 
@@ -232,6 +248,12 @@ async function handleCostGroup(
       return;
     case 'buildtime':
       await startCostTimeWizard(interaction, { buildings, resources });
+      return;
+    case 'funding':
+      await startFundingAdjustWizard(interaction, { buildings, resources });
+      return;
+    case 'spent':
+      await startSpentAdjustWizard(interaction, { buildings, resources });
       return;
     default:
       await interaction.reply({

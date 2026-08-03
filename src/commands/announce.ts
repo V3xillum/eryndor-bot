@@ -1,6 +1,6 @@
 import {
-  ActionRowBuilder,
   ChannelType,
+  LabelBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
@@ -11,6 +11,7 @@ import {
 import type { AppConfig } from '../config.js';
 import type { AnnounceService } from '../services/AnnounceService.js';
 import { formatTemplate, parseScheduleWhen, parseZonedDateTime } from '../utils/helpers.js';
+import { addModalIntro } from '../utils/modalIntro.js';
 
 const MODAL_PREFIX = 'announce:';
 const BODY_MAX = 2000;
@@ -205,18 +206,20 @@ async function handleSchedule(
 
   const modal = new ModalBuilder()
     .setCustomId(buildAnnounceModalId(channel.id, postAt.getTime()))
-    .setTitle(announce.messages.announceModalTitle)
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
+    .setTitle(announce.messages.announceModalTitle);
+  addModalIntro(modal, announce.messages.announceModalIntro);
+  modal.addLabelComponents(
+    new LabelBuilder()
+      .setLabel(announce.messages.announceModalBodyLabel.slice(0, 45))
+      .setTextInputComponent(
         new TextInputBuilder()
           .setCustomId('body')
-          .setLabel(announce.messages.announceModalBodyLabel)
           .setStyle(TextInputStyle.Paragraph)
           .setRequired(true)
           .setMinLength(1)
           .setMaxLength(BODY_MAX),
       ),
-    );
+  );
 
   await interaction.showModal(modal);
 }

@@ -55,7 +55,7 @@ Formule: `workers × yield_per_worker`.
 
 | Command | Wie | Effect |
 |---|---|---|
-| `/production add` | allowlist | Wizard: resource → interval → modal (naam, workers, yield, max_workers) |
+| `/production add` | allowlist | Modal: resource + interval + naam/workers/yield (max_workers = default 5) |
 | `/production list` | iedereen | Overzicht bronnen |
 | `/production workers` | allowlist | Menu + modal |
 | `/production yield` | allowlist | Menu + modal |

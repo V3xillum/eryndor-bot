@@ -17,6 +17,10 @@ import {
   handleProductionWizardSelect,
 } from '../commands/productionWizard.js';
 import { handleResourceCommand } from '../commands/resource.js';
+import {
+  RESOURCE_WIZARD_PREFIX,
+  handleResourceWizardModal,
+} from '../commands/resourceWizard.js';
 import { handleWeatherCommand } from '../commands/weather.js';
 import type { ActivityLogService } from '../services/ActivityLogService.js';
 import type { AnnounceService } from '../services/AnnounceService.js';
@@ -58,6 +62,11 @@ export function registerInteractionHandler(
             resources: deps.resources,
           });
           deps.activity.ok('command', 'building wizard modal');
+          return;
+        }
+        if (interaction.customId.startsWith(RESOURCE_WIZARD_PREFIX)) {
+          await handleResourceWizardModal(interaction, deps.resources);
+          deps.activity.ok('command', 'resource wizard modal');
           return;
         }
         if (interaction.customId.startsWith(PRODUCTION_WIZARD_PREFIX)) {
@@ -122,6 +131,7 @@ export function registerInteractionHandler(
         case 'resource':
           await handleResourceCommand(interaction, {
             resources: deps.resources,
+            buildings: deps.buildings,
             config: deps.config,
           });
           deps.activity.ok('command', '/resource');

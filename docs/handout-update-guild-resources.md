@@ -12,11 +12,12 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 
 | Command | Wat het doet (DM-taal) | Categorie | Wie |
 |---|---|---|---|
-| `/resource donate` | Doneer grondstoffen aan de guild-voorraad. Stil bericht in het voorraadkanaal. Bot meldt hoeveel GC je ontvangt (zelf bijhouden). | Voorraad | Iedereen |
-| `/resource buy` | Koop uit de guild-voorraad. Stil bericht. Bot meldt hoeveel GC het kost. | Voorraad | Iedereen |
-| `/resource stock` | Toon guild-voorraad + opslaglimiet per type. | Voorraad | Iedereen |
-| `/resource personal add` | Zet iets in je persoonlijke bak. Stil bericht. Geen GC. | Voorraad | Iedereen |
-| `/resource personal remove` | Haal iets uit je persoonlijke bak. Stil bericht. | Voorraad | Iedereen |
+| `/resource donate` | Modal: grondstof + aantal. Doneer aan de guild-voorraad. Stil bericht. Bot meldt GC (zelf bijhouden). | Voorraad | Iedereen |
+| `/resource buy` | Modal: grondstof + aantal. Koop uit de guild-voorraad. Stil bericht. Bot meldt kosten. | Voorraad | Iedereen |
+| `/resource stock` | Toon guild-voorraad + opslaglimiet per type (alleen voor jou). | Voorraad | Iedereen |
+| `/resource overview` | Alles-in-één (alleen voor jou): guild-voorraad, jouw bak, bouwprojecten + voortgang. | Voorraad | Iedereen |
+| `/resource personal add` | Modal: type + aantal. Zet iets in je persoonlijke bak. Stil bericht. Geen GC. | Voorraad | Iedereen |
+| `/resource personal remove` | Modal: type + aantal. Haal iets uit je persoonlijke bak. Stil bericht. | Voorraad | Iedereen |
 | `/resource personal show` | Toon jouw persoonlijke voorraad (alleen voor jou). | Voorraad | Iedereen |
 | `/dm resource setup` | Kies het kanaal voor stille voorraad-/bouw-/productieberichten. | Inrichten | DM |
 | `/dm resource clear` | Wis die kanaal-setup. | Inrichten | DM |
@@ -24,22 +25,24 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 | `/dm resource-type edit` | Pas weergavenaam of GC-prijzen aan (interne id blijft). | Voorraad | DM |
 | `/dm resource-type remove` | Verwijder type (alleen als nergens meer in gebruik). | Voorraad | DM |
 | `/resource type list` | Lijst van types + sell/buy. | Voorraad | Iedereen |
-| `/dm resource adjust` | Corrigeer guild-voorraad zonder GC-melding (positief of negatief). | Voorraad | DM |
+| `/dm resource adjust` | Modal: type + toevoegen/verminderen + aantal. Corrigeer guild-voorraad zonder GC-melding. | Voorraad | DM |
 | `/dm resource cap` | Toon of zet de opslaglimiet per type (standaard 300). | Voorraad | DM |
 
 ### Bouwen (`/building`)
 
 | Command | Wat het doet (DM-taal) | Categorie | Wie |
 |---|---|---|---|
-| `/building donate` | Menu: project → grondstof → modal. Silent post toont alle materialen. GC = sell. | Bouwen | Iedereen |
-| `/building fund` | Menu: project → grondstof → modal. Uit guild-voorraad. Silent post toont alle materialen. | Bouwen | Iedereen |
-| `/building contribute` | Menu: project → modal tijd. GC = tijd × 1. | Bouwen | Iedereen |
+| `/building donate` | Modal: project + grondstof + aantal. Silent post toont alle materialen. GC = sell. | Bouwen | Iedereen |
+| `/building fund` | Modal: project + grondstof + aantal. Uit guild-voorraad. Silent post toont alle materialen. | Bouwen | Iedereen |
+| `/building contribute` | Modal: project + tijd. GC = tijd × 1. | Bouwen | Iedereen |
 | `/building list` | Overzicht bouwprojecten + status. | Bouwen | Iedereen |
 | `/building status` | Menu: project → kosten/voortgang. | Bouwen | Iedereen |
 | `/building cost show` | Zelfde als status (menu). | Bouwen | Iedereen |
 | `/dm building create` | Nieuw project; bouwtijd fase 2 default **100**. | Bouwen | DM |
-| `/dm building-cost add` | Menu: project → modal type+aantal → “nog een toevoegen”. | Bouwen | DM |
-| `/dm building-cost buildtime` | Menu: project → modal bouwtijd (fase 2). | Bouwen | DM |
+| `/dm building-cost add` | Modal: project + type + aantal → knop “nog een toevoegen”. | Bouwen | DM |
+| `/dm building-cost buildtime` | Modal: project + bouwtijd. Altijd tot voltooid (niet locked na stortingen). | Bouwen | DM |
+| `/dm building-cost funding` | Modal: corrigeer gestorte materialen (toevoegen/verminderen, geen GC). | Bouwen | DM |
+| `/dm building-cost spent` | Modal: corrigeer bestede tijd in bouwfase (toevoegen/verminderen, geen GC). | Bouwen | DM |
 | `/dm building cancel` | Annuleer project; gestorte materialen terug naar voorraad (overflow → persoonlijk). | Bouwen | DM |
 
 ### Productie (`/production`)
@@ -47,9 +50,9 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 | Command | Wat het doet (DM-taal) | Categorie | Wie |
 |---|---|---|---|
 | `/production list` | Overzicht productiebronnen (medewerkers, opbrengst, interval). | Productie | Iedereen |
-| `/dm production add` | Nieuwe bron (menu: type → dagelijks/wekelijks → naam/medewerkers/opbrengst). | Productie | DM |
-| `/dm production workers` | Zet aantal medewerkers (menu → modal). | Productie | DM |
-| `/dm production yield` | Zet opbrengst per medewerker (menu → modal). | Productie | DM |
+| `/dm production add` | Modal: type + interval + naam/medewerkers/opbrengst. | Productie | DM |
+| `/dm production workers` | Modal: bron + medewerkers. | Productie | DM |
+| `/dm production yield` | Modal: bron + opbrengst. | Productie | DM |
 | `/dm production remove` | Verwijder een bron (menu). | Productie | DM |
 
 ---

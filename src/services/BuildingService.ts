@@ -160,7 +160,7 @@ export class BuildingService {
     timeUnits: number;
     actorUserId: string;
     actorNickname: string;
-  }): BuildingResult<{ building: Building; time: number }> {
+  }): BuildingResult<{ building: Building; time: number; phaseNote: string }> {
     if (
       !Number.isInteger(input.timeUnits) ||
       input.timeUnits < AMOUNT_MIN ||
@@ -173,11 +173,14 @@ export class BuildingService {
     if (!buildingResult.ok) return buildingResult;
     const building = buildingResult.building;
 
-    if (!this.costsEditable(building)) {
-      return { ok: false, message: this.messages.buildingCostLocked };
+    if (!this.timeRequiredEditable(building)) {
+      return { ok: false, message: this.messages.buildingBuildtimeLocked };
     }
 
     dbQueries.updateBuildingTimeRequired(this.db, building.id, input.timeUnits);
+    if (building.time_spent > input.timeUnits) {
+      dbQueries.updateBuildingTimeSpent(this.db, building.id, input.timeUnits);
+    }
     dbQueries.insertResourceLedger(this.db, {
       guildId: input.guildId,
       actorUserId: input.actorUserId,
@@ -187,8 +190,12 @@ export class BuildingService {
       buildingId: building.id,
     });
 
-    const updated = dbQueries.getBuildingById(this.db, building.id)!;
-    return { ok: true, building: updated, time: input.timeUnits };
+    let updated = dbQueries.getBuildingById(this.db, building.id)!;
+    const phaseNote = this.maybeComplete(updated);
+    if (phaseNote) {
+      updated = dbQueries.getBuildingById(this.db, building.id)!;
+    }
+    return { ok: true, building: updated, time: input.timeUnits, phaseNote };
   }
 
   setTimeById(input: {
@@ -197,7 +204,7 @@ export class BuildingService {
     timeUnits: number;
     actorUserId: string;
     actorNickname: string;
-  }): BuildingResult<{ building: Building; time: number }> {
+  }): BuildingResult<{ building: Building; time: number; phaseNote: string }> {
     const building = this.getInGuild(input.guildId, input.buildingId);
     if (!building) {
       return {
@@ -210,11 +217,201 @@ export class BuildingService {
     return this.setTime({ ...input, buildingName: building.name });
   }
 
-  /** Projects whose costs/time can still be edited (funding, nothing deposited). */
+  /** DM: correct deposited materials on a funding project (no GC). */
+  adjustFunding(input: {
+    guildId: string;
+    buildingId: number;
+    keyRaw: string;
+    delta: number;
+    actorUserId: string;
+    actorNickname: string;
+  }): BuildingResult<{
+    building: Building;
+    type: ResourceType;
+    delta: number;
+    fundedAfter: number;
+    phaseNote: string;
+  }> {
+    if (
+      !Number.isInteger(input.delta) ||
+      input.delta === 0 ||
+      input.delta < -AMOUNT_MAX ||
+      input.delta > AMOUNT_MAX
+    ) {
+      return { ok: false, message: this.messages.resourceInvalidAmount };
+    }
+
+    const building = this.getInGuild(input.guildId, input.buildingId);
+    if (!building) {
+      return {
+        ok: false,
+        message: formatTemplate(this.messages.buildingUnknown, {
+          name: String(input.buildingId),
+        }),
+      };
+    }
+    if (building.status !== 'funding') {
+      return { ok: false, message: this.messages.buildingFundingAdjustLocked };
+    }
+
+    const typeResult = this.requireType(input.guildId, input.keyRaw);
+    if (!typeResult.ok) return typeResult;
+    const type = typeResult.type;
+
+    const costs = dbQueries.listBuildingCosts(this.db, building.id);
+    if (!costs.some((c) => c.resource_key === type.key)) {
+      return {
+        ok: false,
+        message: formatTemplate(this.messages.buildingFundingTypeNotOnProject, {
+          type: type.display_name,
+          building: building.name,
+        }),
+      };
+    }
+
+    const current = dbQueries.getBuildingFundingQty(this.db, building.id, type.key);
+    if (input.delta < 0 && current + input.delta < 0) {
+      return {
+        ok: false,
+        message: formatTemplate(this.messages.buildingFundingInsufficient, {
+          type: type.display_name,
+          funded: String(current),
+        }),
+      };
+    }
+
+    const fundedAfter = dbQueries.addBuildingFunding(
+      this.db,
+      building.id,
+      type.key,
+      input.delta,
+    );
+    dbQueries.insertResourceLedger(this.db, {
+      guildId: input.guildId,
+      actorUserId: input.actorUserId,
+      actorNickname: input.actorNickname,
+      action: 'building_funding_adjust',
+      resourceKey: type.key,
+      amount: input.delta,
+      buildingId: building.id,
+    });
+
+    let updated = dbQueries.getBuildingById(this.db, building.id)!;
+    const phaseNote = this.maybeAdvanceFromFunding(updated);
+    if (phaseNote) {
+      updated = dbQueries.getBuildingById(this.db, building.id)!;
+    }
+
+    return {
+      ok: true,
+      building: updated,
+      type,
+      delta: input.delta,
+      fundedAfter,
+      phaseNote,
+    };
+  }
+
+  /** DM: correct time_spent on a project (no GC). */
+  adjustTimeSpent(input: {
+    guildId: string;
+    buildingId: number;
+    delta: number;
+    actorUserId: string;
+    actorNickname: string;
+  }): BuildingResult<{
+    building: Building;
+    delta: number;
+    spentAfter: number;
+    phaseNote: string;
+  }> {
+    if (
+      !Number.isInteger(input.delta) ||
+      input.delta === 0 ||
+      input.delta < -AMOUNT_MAX ||
+      input.delta > AMOUNT_MAX
+    ) {
+      return { ok: false, message: this.messages.resourceInvalidAmount };
+    }
+
+    const building = this.getInGuild(input.guildId, input.buildingId);
+    if (!building) {
+      return {
+        ok: false,
+        message: formatTemplate(this.messages.buildingUnknown, {
+          name: String(input.buildingId),
+        }),
+      };
+    }
+    if (building.status !== 'building') {
+      return { ok: false, message: this.messages.buildingSpentAdjustLocked };
+    }
+    if (building.time_required <= 0) {
+      return { ok: false, message: this.messages.buildingBuildtimeLocked };
+    }
+
+    const next = building.time_spent + input.delta;
+    if (next < 0) {
+      return {
+        ok: false,
+        message: formatTemplate(this.messages.buildingSpentInsufficient, {
+          spent: String(building.time_spent),
+        }),
+      };
+    }
+
+    const clamped = Math.min(next, building.time_required);
+    dbQueries.updateBuildingTimeSpent(this.db, building.id, clamped);
+    dbQueries.insertResourceLedger(this.db, {
+      guildId: input.guildId,
+      actorUserId: input.actorUserId,
+      actorNickname: input.actorNickname,
+      action: 'building_spent_adjust',
+      amount: input.delta,
+      buildingId: building.id,
+    });
+
+    let updated = dbQueries.getBuildingById(this.db, building.id)!;
+    const phaseNote = this.maybeComplete(updated);
+    if (phaseNote) {
+      updated = dbQueries.getBuildingById(this.db, building.id)!;
+    }
+
+    return {
+      ok: true,
+      building: updated,
+      delta: input.delta,
+      spentAfter: updated.time_spent,
+      phaseNote,
+    };
+  }
+
+  /** Projects whose material costs can still be edited (funding, nothing deposited). */
   listCostEditableBuildings(guildId: string): Building[] {
     return dbQueries
       .listBuildings(this.db, guildId)
       .filter((b) => b.status === 'funding' && this.costsEditable(b));
+  }
+
+  /** DM: set phase-2 duration — any open project (not complete/cancelled). */
+  listBuildtimeEditableBuildings(guildId: string): Building[] {
+    return dbQueries
+      .listBuildings(this.db, guildId)
+      .filter((b) => this.timeRequiredEditable(b));
+  }
+
+  /** DM: funding correction — projects still gathering materials. */
+  listFundingAdjustBuildings(guildId: string): Building[] {
+    return dbQueries
+      .listBuildings(this.db, guildId)
+      .filter((b) => b.status === 'funding');
+  }
+
+  /** DM: time_spent correction — projects in build phase. */
+  listSpentAdjustBuildings(guildId: string): Building[] {
+    return dbQueries
+      .listBuildings(this.db, guildId)
+      .filter((b) => b.status === 'building' && b.time_required > 0);
   }
 
   detail(guildId: string, buildingName: string): BuildingResult<BuildingDetail> {
@@ -662,6 +859,10 @@ export class BuildingService {
   private costsEditable(building: Building): boolean {
     if (building.status !== 'funding') return false;
     return !dbQueries.buildingHasAnyFunding(this.db, building.id);
+  }
+
+  private timeRequiredEditable(building: Building): boolean {
+    return building.status === 'funding' || building.status === 'building';
   }
 
   private buildDetail(building: Building): BuildingDetail {

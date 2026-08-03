@@ -3,6 +3,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  LabelBuilder,
   ModalBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
@@ -18,6 +19,7 @@ import {
 import type { BuildingService } from '../services/BuildingService.js';
 import type { ResourceService } from '../services/ResourceService.js';
 import { formatTemplate } from '../utils/helpers.js';
+import { addModalIntro } from '../utils/modalIntro.js';
 import {
   buildBuildingDonateEmbed,
   buildBuildingFundEmbed,
@@ -66,9 +68,9 @@ export async function startMaterialWizard(
   deps: { buildings: BuildingService; resources: ResourceService },
   action: MaterialAction,
 ): Promise<void> {
-  const { buildings, resources } = deps;
+  const { buildings } = deps;
 
-  if (!(await ensureResourceChannel(interaction, resources))) return;
+  if (!(await ensureResourceChannel(interaction, deps.resources))) return;
 
   const choices = buildings.listFundingChoices(interaction.guildId!);
   if (choices.length === 0) {
@@ -79,7 +81,7 @@ export async function startMaterialWizard(
     return;
   }
 
-  const options = choices.map((b) => {
+  const buildingOptions = choices.slice(0, 25).map((b) => {
     const missing = buildings.listMissingMaterials(b.id);
     const summary = missing
       .slice(0, 3)
@@ -91,18 +93,94 @@ export async function startMaterialWizard(
       .setDescription((summary || 'Materialen').slice(0, 100));
   });
 
-  const customId = `${BUILDING_WIZARD_PREFIX}${action}:bldg:${interaction.user.id}`;
-  await interaction.reply({
-    content: buildings.messages.buildingWizardPickBuilding,
-    components: [
-      buildingSelectRow(
-        customId,
-        buildings.messages.buildingWizardBuildingPlaceholder,
-        options,
-      ),
-    ],
-    ephemeral: true,
-  });
+  const resourceByKey = new Map<
+    string,
+    { displayName: string; left: number; required: number }
+  >();
+  for (const b of choices) {
+    for (const m of buildings.listMissingMaterials(b.id)) {
+      const left = m.required - m.funded;
+      const prev = resourceByKey.get(m.resourceKey);
+      if (!prev || left > prev.left) {
+        resourceByKey.set(m.resourceKey, {
+          displayName: m.displayName,
+          left,
+          required: m.required,
+        });
+      }
+    }
+  }
+
+  if (resourceByKey.size === 0) {
+    await interaction.reply({
+      content: buildings.messages.buildingWizardNoMissing,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const resourceOptions = [...resourceByKey.entries()]
+    .slice(0, 25)
+    .map(([key, m]) =>
+      new StringSelectMenuOptionBuilder()
+        .setLabel(m.displayName.slice(0, 100))
+        .setValue(key)
+        .setDescription(
+          formatTemplate(buildings.messages.buildingWizardStillNeeded, {
+            left: String(m.left),
+            required: String(m.required),
+          }).slice(0, 100),
+        ),
+    );
+
+  const modal = new ModalBuilder()
+    .setCustomId(
+      `${BUILDING_WIZARD_PREFIX}${action}:form:${interaction.user.id}`,
+    )
+    .setTitle(buildings.messages.buildingWizardMaterialModalTitle.slice(0, 45));
+  addModalIntro(
+    modal,
+    action === 'donate'
+      ? buildings.messages.buildingWizardDonateIntro
+      : buildings.messages.buildingWizardFundIntro,
+  );
+  modal.addLabelComponents(
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardBuildingLabel.slice(0, 45))
+        .setStringSelectMenuComponent(
+          new StringSelectMenuBuilder()
+            .setCustomId('building')
+            .setPlaceholder(
+              buildings.messages.buildingWizardBuildingPlaceholder.slice(0, 150),
+            )
+            .setRequired(true)
+            .addOptions(buildingOptions),
+        ),
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardResourceLabel.slice(0, 45))
+        .setStringSelectMenuComponent(
+          new StringSelectMenuBuilder()
+            .setCustomId('type')
+            .setPlaceholder(
+              buildings.messages.buildingWizardResourcePlaceholder.slice(0, 150),
+            )
+            .setRequired(true)
+            .addOptions(resourceOptions),
+        ),
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardAmountLabel.slice(0, 45))
+        .setTextInputComponent(
+          new TextInputBuilder()
+            .setCustomId('amount')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setMinLength(1)
+            .setMaxLength(4)
+            .setPlaceholder('1'),
+        ),
+    );
+
+  await interaction.showModal(modal);
 }
 
 export async function startContributeWizard(
@@ -122,7 +200,7 @@ export async function startContributeWizard(
     return;
   }
 
-  const options = choices.map((b) => {
+  const buildingOptions = choices.slice(0, 25).map((b) => {
     const left = b.time_required - b.time_spent;
     return new StringSelectMenuOptionBuilder()
       .setLabel(b.name.slice(0, 100))
@@ -135,18 +213,40 @@ export async function startContributeWizard(
       );
   });
 
-  const customId = `${BUILDING_WIZARD_PREFIX}contribute:bldg:${interaction.user.id}`;
-  await interaction.reply({
-    content: buildings.messages.buildingWizardPickBuildingTime,
-    components: [
-      buildingSelectRow(
-        customId,
-        buildings.messages.buildingWizardBuildingPlaceholder,
-        options,
-      ),
-    ],
-    ephemeral: true,
-  });
+  const modal = new ModalBuilder()
+    .setCustomId(
+      `${BUILDING_WIZARD_PREFIX}contribute:form:${interaction.user.id}`,
+    )
+    .setTitle(
+      buildings.messages.buildingWizardContributeModalTitle.slice(0, 45),
+    );
+  addModalIntro(modal, buildings.messages.buildingWizardContributeIntro);
+  modal.addLabelComponents(
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardBuildingLabel.slice(0, 45))
+        .setStringSelectMenuComponent(
+          new StringSelectMenuBuilder()
+            .setCustomId('building')
+            .setPlaceholder(
+              buildings.messages.buildingWizardBuildingPlaceholder.slice(0, 150),
+            )
+            .setRequired(true)
+            .addOptions(buildingOptions),
+        ),
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardAmountLabel.slice(0, 45))
+        .setTextInputComponent(
+          new TextInputBuilder()
+            .setCustomId('amount')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setMinLength(1)
+            .setMaxLength(4)
+            .setPlaceholder('1'),
+        ),
+    );
+
+  await interaction.showModal(modal);
 }
 
 export async function startCostAddWizard(
@@ -173,25 +273,68 @@ export async function startCostAddWizard(
     return;
   }
 
-  const options = buildingsList.map((b) =>
+  const buildingOptions = buildingsList.slice(0, 25).map((b) =>
     new StringSelectMenuOptionBuilder()
       .setLabel(b.name.slice(0, 100))
       .setValue(String(b.id))
       .setDescription(buildings.messages.buildingStatusFunding.slice(0, 100)),
   );
 
-  const customId = `${BUILDING_WIZARD_PREFIX}costadd:bldg:${interaction.user.id}`;
-  await interaction.reply({
-    content: buildings.messages.buildingWizardPickBuildingCost,
-    components: [
-      buildingSelectRow(
-        customId,
-        buildings.messages.buildingWizardBuildingPlaceholder,
-        options,
+  const typeOptions = types.slice(0, 25).map((t) =>
+    new StringSelectMenuOptionBuilder()
+      .setLabel(t.display_name.slice(0, 100))
+      .setValue(t.key)
+      .setDescription(
+        formatTemplate(buildings.messages.buildingWizardTypePrices, {
+          sell: String(t.sell_gc),
+          buy: String(t.buy_gc),
+        }).slice(0, 100),
       ),
-    ],
-    ephemeral: true,
-  });
+  );
+
+  const modal = new ModalBuilder()
+    .setCustomId(
+      `${BUILDING_WIZARD_PREFIX}costadd:form:${interaction.user.id}`,
+    )
+    .setTitle(buildings.messages.buildingWizardAmountModalTitle.slice(0, 45));
+  addModalIntro(modal, buildings.messages.buildingWizardCostAddIntro);
+  modal.addLabelComponents(
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardBuildingLabel.slice(0, 45))
+        .setStringSelectMenuComponent(
+          new StringSelectMenuBuilder()
+            .setCustomId('building')
+            .setPlaceholder(
+              buildings.messages.buildingWizardBuildingPlaceholder.slice(0, 150),
+            )
+            .setRequired(true)
+            .addOptions(buildingOptions),
+        ),
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardResourceLabel.slice(0, 45))
+        .setStringSelectMenuComponent(
+          new StringSelectMenuBuilder()
+            .setCustomId('type')
+            .setPlaceholder(
+              buildings.messages.buildingWizardResourcePlaceholder.slice(0, 150),
+            )
+            .setRequired(true)
+            .addOptions(typeOptions),
+        ),
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardAmountLabel.slice(0, 45))
+        .setTextInputComponent(
+          new TextInputBuilder()
+            .setCustomId('amount')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setMinLength(1)
+            .setMaxLength(4)
+            .setPlaceholder('80'),
+        ),
+    );
+
+  await interaction.showModal(modal);
 }
 
 export async function startCostTimeWizard(
@@ -200,34 +343,267 @@ export async function startCostTimeWizard(
 ): Promise<void> {
   const { buildings } = deps;
 
-  const buildingsList = buildings.listCostEditableBuildings(interaction.guildId!);
+  const buildingsList = buildings.listBuildtimeEditableBuildings(
+    interaction.guildId!,
+  );
   if (buildingsList.length === 0) {
     await interaction.reply({
-      content: buildings.messages.buildingWizardNoCostEditable,
+      content: buildings.messages.buildingWizardNoBuildtimeEditable,
       ephemeral: true,
     });
     return;
   }
 
-  const options = buildingsList.map((b) =>
+  const buildingOptions = buildingsList.slice(0, 25).map((b) =>
     new StringSelectMenuOptionBuilder()
       .setLabel(b.name.slice(0, 100))
       .setValue(String(b.id))
-      .setDescription(buildings.messages.buildingStatusFunding.slice(0, 100)),
+      .setDescription(
+        formatTemplate(buildings.messages.buildingWizardBuildtimeOptionDesc, {
+          time: String(b.time_required),
+          status: buildings.statusLabel(b.status),
+        }).slice(0, 100),
+      ),
   );
 
-  const customId = `${BUILDING_WIZARD_PREFIX}costtime:bldg:${interaction.user.id}`;
-  await interaction.reply({
-    content: buildings.messages.buildingWizardPickBuildingBuildtime,
-    components: [
-      buildingSelectRow(
-        customId,
-        buildings.messages.buildingWizardBuildingPlaceholder,
-        options,
-      ),
-    ],
-    ephemeral: true,
+  const modal = new ModalBuilder()
+    .setCustomId(
+      `${BUILDING_WIZARD_PREFIX}costtime:form:${interaction.user.id}`,
+    )
+    .setTitle(buildings.messages.buildingWizardBuildtimeModalTitle.slice(0, 45));
+  addModalIntro(modal, buildings.messages.buildingWizardBuildtimeIntro);
+  modal.addLabelComponents(
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardBuildingLabel.slice(0, 45))
+        .setStringSelectMenuComponent(
+          new StringSelectMenuBuilder()
+            .setCustomId('building')
+            .setPlaceholder(
+              buildings.messages.buildingWizardBuildingPlaceholder.slice(0, 150),
+            )
+            .setRequired(true)
+            .addOptions(buildingOptions),
+        ),
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardAmountLabel.slice(0, 45))
+        .setTextInputComponent(
+          new TextInputBuilder()
+            .setCustomId('amount')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setMinLength(1)
+            .setMaxLength(4)
+            .setPlaceholder('100'),
+        ),
+    );
+
+  await interaction.showModal(modal);
+}
+
+/** DM: correct deposited materials (funding phase). */
+export async function startFundingAdjustWizard(
+  interaction: ChatInputCommandInteraction,
+  deps: { buildings: BuildingService; resources: ResourceService },
+): Promise<void> {
+  const { buildings, resources } = deps;
+  const buildingsList = buildings.listFundingAdjustBuildings(interaction.guildId!);
+
+  // Prefer projects that have cost rows
+  const choices = buildingsList.filter((b) => {
+    const d = buildings.detailById(interaction.guildId!, b.id);
+    return d.ok && d.materials.length > 0;
   });
+  if (choices.length === 0) {
+    await interaction.reply({
+      content: buildings.messages.buildingWizardNoFundingAdjust,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const resourceByKey = new Map<string, { displayName: string; funded: number; required: number }>();
+  for (const b of choices) {
+    const d = buildings.detailById(interaction.guildId!, b.id);
+    if (!d.ok) continue;
+    for (const m of d.materials) {
+      const prev = resourceByKey.get(m.resourceKey);
+      if (!prev) {
+        resourceByKey.set(m.resourceKey, {
+          displayName: m.displayName,
+          funded: m.funded,
+          required: m.required,
+        });
+      }
+    }
+  }
+
+  const buildingOptions = choices.slice(0, 25).map((b) => {
+    const d = buildings.detailById(interaction.guildId!, b.id);
+    const summary =
+      d.ok && d.materials.length > 0
+        ? d.materials
+            .slice(0, 3)
+            .map((m) => `${m.funded}/${m.required} ${m.displayName}`)
+            .join(', ')
+        : buildings.statusLabel(b.status);
+    return new StringSelectMenuOptionBuilder()
+      .setLabel(b.name.slice(0, 100))
+      .setValue(String(b.id))
+      .setDescription(summary.slice(0, 100));
+  });
+
+  const typeOptions = [...resourceByKey.entries()].slice(0, 25).map(([key, m]) =>
+    new StringSelectMenuOptionBuilder()
+      .setLabel(m.displayName.slice(0, 100))
+      .setValue(key)
+      .setDescription(
+        formatTemplate(buildings.messages.buildingWizardFundingOptionDesc, {
+          funded: String(m.funded),
+          required: String(m.required),
+        }).slice(0, 100),
+      ),
+  );
+
+  const modal = new ModalBuilder()
+    .setCustomId(
+      `${BUILDING_WIZARD_PREFIX}fundadj:form:${interaction.user.id}`,
+    )
+    .setTitle(buildings.messages.buildingWizardFundingAdjustTitle.slice(0, 45));
+  addModalIntro(modal, buildings.messages.buildingWizardFundingAdjustIntro);
+  modal.addLabelComponents(
+    new LabelBuilder()
+      .setLabel(buildings.messages.buildingWizardBuildingLabel.slice(0, 45))
+      .setStringSelectMenuComponent(
+        new StringSelectMenuBuilder()
+          .setCustomId('building')
+          .setPlaceholder(
+            buildings.messages.buildingWizardBuildingPlaceholder.slice(0, 150),
+          )
+          .setRequired(true)
+          .addOptions(buildingOptions),
+      ),
+    new LabelBuilder()
+      .setLabel(buildings.messages.buildingWizardResourceLabel.slice(0, 45))
+      .setStringSelectMenuComponent(
+        new StringSelectMenuBuilder()
+          .setCustomId('type')
+          .setPlaceholder(
+            buildings.messages.buildingWizardResourcePlaceholder.slice(0, 150),
+          )
+          .setRequired(true)
+          .addOptions(typeOptions),
+      ),
+    new LabelBuilder()
+      .setLabel(resources.messages.resourceWizardAdjustDirectionLabel.slice(0, 45))
+      .setStringSelectMenuComponent(
+        new StringSelectMenuBuilder()
+          .setCustomId('direction')
+          .setPlaceholder(
+            resources.messages.resourceWizardAdjustDirectionPlaceholder.slice(0, 150),
+          )
+          .setRequired(true)
+          .addOptions(
+            new StringSelectMenuOptionBuilder()
+              .setLabel(resources.messages.resourceWizardAdjustDirectionAdd)
+              .setValue('add'),
+            new StringSelectMenuOptionBuilder()
+              .setLabel(resources.messages.resourceWizardAdjustDirectionRemove)
+              .setValue('remove'),
+          ),
+      ),
+    new LabelBuilder()
+      .setLabel(buildings.messages.buildingWizardAmountLabel.slice(0, 45))
+      .setTextInputComponent(
+        new TextInputBuilder()
+          .setCustomId('amount')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+          .setMinLength(1)
+          .setMaxLength(4)
+          .setPlaceholder('1'),
+      ),
+  );
+
+  await interaction.showModal(modal);
+}
+
+/** DM: correct time_spent (building phase). */
+export async function startSpentAdjustWizard(
+  interaction: ChatInputCommandInteraction,
+  deps: { buildings: BuildingService; resources: ResourceService },
+): Promise<void> {
+  const { buildings, resources } = deps;
+  const choices = buildings.listSpentAdjustBuildings(interaction.guildId!);
+  if (choices.length === 0) {
+    await interaction.reply({
+      content: buildings.messages.buildingWizardNoSpentAdjust,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const buildingOptions = choices.slice(0, 25).map((b) =>
+    new StringSelectMenuOptionBuilder()
+      .setLabel(b.name.slice(0, 100))
+      .setValue(String(b.id))
+      .setDescription(
+        formatTemplate(buildings.messages.buildingWizardSpentOptionDesc, {
+          spent: String(b.time_spent),
+          required: String(b.time_required),
+        }).slice(0, 100),
+      ),
+  );
+
+  const modal = new ModalBuilder()
+    .setCustomId(
+      `${BUILDING_WIZARD_PREFIX}spentadj:form:${interaction.user.id}`,
+    )
+    .setTitle(buildings.messages.buildingWizardSpentAdjustTitle.slice(0, 45));
+  addModalIntro(modal, buildings.messages.buildingWizardSpentAdjustIntro);
+  modal.addLabelComponents(
+    new LabelBuilder()
+      .setLabel(buildings.messages.buildingWizardBuildingLabel.slice(0, 45))
+      .setStringSelectMenuComponent(
+        new StringSelectMenuBuilder()
+          .setCustomId('building')
+          .setPlaceholder(
+            buildings.messages.buildingWizardBuildingPlaceholder.slice(0, 150),
+          )
+          .setRequired(true)
+          .addOptions(buildingOptions),
+      ),
+    new LabelBuilder()
+      .setLabel(resources.messages.resourceWizardAdjustDirectionLabel.slice(0, 45))
+      .setStringSelectMenuComponent(
+        new StringSelectMenuBuilder()
+          .setCustomId('direction')
+          .setPlaceholder(
+            resources.messages.resourceWizardAdjustDirectionPlaceholder.slice(0, 150),
+          )
+          .setRequired(true)
+          .addOptions(
+            new StringSelectMenuOptionBuilder()
+              .setLabel(resources.messages.resourceWizardAdjustDirectionAdd)
+              .setValue('add'),
+            new StringSelectMenuOptionBuilder()
+              .setLabel(resources.messages.resourceWizardAdjustDirectionRemove)
+              .setValue('remove'),
+          ),
+      ),
+    new LabelBuilder()
+      .setLabel(buildings.messages.buildingWizardAmountLabel.slice(0, 45))
+      .setTextInputComponent(
+        new TextInputBuilder()
+          .setCustomId('amount')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+          .setMinLength(1)
+          .setMaxLength(4)
+          .setPlaceholder('1'),
+      ),
+  );
+
+  await interaction.showModal(modal);
 }
 
 export async function startCostShowWizard(
@@ -363,16 +739,260 @@ export async function handleBuildingWizardModal(
     return;
   }
 
-  if (action === 'costadd' && step === 'amount') {
-    let typeRaw = '';
-    try {
-      typeRaw = interaction.fields.getTextInputValue('type').trim();
-    } catch {
+  if (
+    (action === 'donate' || action === 'fund') &&
+    step === 'form'
+  ) {
+    const buildingId = Number(
+      interaction.fields.getStringSelectValues('building')[0],
+    );
+    const resourceKey = interaction.fields.getStringSelectValues('type')[0];
+    const amountRaw = interaction.fields.getTextInputValue('amount').trim();
+    const amount = Number(amountRaw);
+    if (!Number.isInteger(buildingId) || buildingId < 1) {
+      await interaction.reply({
+        content: deps.buildings.messages.buildingWizardBuildingGone,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (!resourceKey) {
+      await interaction.reply({
+        content: deps.buildings.messages.resourceTypeUnknown.replace(
+          '{key}',
+          '?',
+        ),
+        ephemeral: true,
+      });
+      return;
+    }
+    if (!Number.isInteger(amount) || amount < 1 || amount > 9999) {
+      await interaction.reply({
+        content: deps.buildings.messages.resourceInvalidAmount,
+        ephemeral: true,
+      });
+      return;
+    }
+    await finishMaterialAction(
+      interaction,
+      deps,
+      action,
+      buildingId,
+      resourceKey,
+      amount,
+    );
+    return;
+  }
+
+  if (action === 'contribute' && step === 'form') {
+    const buildingId = Number(
+      interaction.fields.getStringSelectValues('building')[0],
+    );
+    const amountRaw = interaction.fields.getTextInputValue('amount').trim();
+    const amount = Number(amountRaw);
+    if (!Number.isInteger(buildingId) || buildingId < 1) {
+      await interaction.reply({
+        content: deps.buildings.messages.buildingWizardBuildingGone,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (!Number.isInteger(amount) || amount < 1 || amount > 9999) {
+      await interaction.reply({
+        content: deps.buildings.messages.resourceInvalidAmount,
+        ephemeral: true,
+      });
+      return;
+    }
+    await finishContribute(interaction, deps, buildingId, amount);
+    return;
+  }
+
+  if (action === 'costadd' && step === 'form') {
+    const buildingId = Number(
+      interaction.fields.getStringSelectValues('building')[0],
+    );
+    const typeRaw = interaction.fields.getStringSelectValues('type')[0] ?? '';
+    const amount = Number(interaction.fields.getTextInputValue('amount').trim());
+    if (!Number.isInteger(buildingId) || buildingId < 1) {
+      await interaction.reply({
+        content: deps.buildings.messages.buildingWizardBuildingGone,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (!typeRaw) {
       await interaction.reply({
         content: deps.buildings.messages.resourceTypeUnknown.replace('{key}', '?'),
         ephemeral: true,
       });
       return;
+    }
+    if (!Number.isInteger(amount) || amount < 1 || amount > 9999) {
+      await interaction.reply({
+        content: deps.buildings.messages.resourceInvalidAmount,
+        ephemeral: true,
+      });
+      return;
+    }
+    await finishCostAdd(interaction, deps, buildingId, typeRaw, amount);
+    return;
+  }
+
+  if (action === 'costtime' && step === 'form') {
+    const buildingId = Number(
+      interaction.fields.getStringSelectValues('building')[0],
+    );
+    const amount = Number(interaction.fields.getTextInputValue('amount').trim());
+    if (!Number.isInteger(buildingId) || buildingId < 1) {
+      await interaction.reply({
+        content: deps.buildings.messages.buildingWizardBuildingGone,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (!Number.isInteger(amount) || amount < 1 || amount > 9999) {
+      await interaction.reply({
+        content: deps.buildings.messages.resourceInvalidAmount,
+        ephemeral: true,
+      });
+      return;
+    }
+    await finishCostTime(interaction, deps, buildingId, amount);
+    return;
+  }
+
+  if (action === 'fundadj' && step === 'form') {
+    const buildingId = Number(
+      interaction.fields.getStringSelectValues('building')[0],
+    );
+    const resourceKey = interaction.fields.getStringSelectValues('type')[0];
+    const direction = interaction.fields.getStringSelectValues('direction')[0];
+    const amount = Number(interaction.fields.getTextInputValue('amount').trim());
+    if (!Number.isInteger(buildingId) || buildingId < 1 || !resourceKey) {
+      await interaction.reply({
+        content: deps.buildings.messages.buildingWizardBuildingGone,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (direction !== 'add' && direction !== 'remove') {
+      await interaction.reply({
+        content: deps.resources.messages.resourceWizardAdjustDirectionInvalid,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (!Number.isInteger(amount) || amount < 1 || amount > 9999) {
+      await interaction.reply({
+        content: deps.buildings.messages.resourceInvalidAmount,
+        ephemeral: true,
+      });
+      return;
+    }
+    const delta = direction === 'remove' ? -amount : amount;
+    const nickname = nicknameFrom(interaction);
+    const result = deps.buildings.adjustFunding({
+      guildId: interaction.guildId!,
+      buildingId,
+      keyRaw: resourceKey,
+      delta,
+      actorUserId: interaction.user.id,
+      actorNickname: nickname,
+    });
+    if (!result.ok) {
+      await interaction.reply({ content: result.message, ephemeral: true });
+      return;
+    }
+    const verb =
+      direction === 'remove'
+        ? deps.buildings.messages.buildingFundingAdjustRemoved
+        : deps.buildings.messages.buildingFundingAdjustAdded;
+    let reply = formatTemplate(deps.buildings.messages.buildingFundingAdjustSuccess, {
+      verb,
+      amount: String(amount),
+      type: result.type.display_name,
+      building: result.building.name,
+      funded: String(result.fundedAfter),
+    });
+    if (result.phaseNote) reply += `\n${result.phaseNote}`;
+    await interaction.reply({ content: reply, ephemeral: true });
+    return;
+  }
+
+  if (action === 'spentadj' && step === 'form') {
+    const buildingId = Number(
+      interaction.fields.getStringSelectValues('building')[0],
+    );
+    const direction = interaction.fields.getStringSelectValues('direction')[0];
+    const amount = Number(interaction.fields.getTextInputValue('amount').trim());
+    if (!Number.isInteger(buildingId) || buildingId < 1) {
+      await interaction.reply({
+        content: deps.buildings.messages.buildingWizardBuildingGone,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (direction !== 'add' && direction !== 'remove') {
+      await interaction.reply({
+        content: deps.resources.messages.resourceWizardAdjustDirectionInvalid,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (!Number.isInteger(amount) || amount < 1 || amount > 9999) {
+      await interaction.reply({
+        content: deps.buildings.messages.resourceInvalidAmount,
+        ephemeral: true,
+      });
+      return;
+    }
+    const delta = direction === 'remove' ? -amount : amount;
+    const nickname = nicknameFrom(interaction);
+    const result = deps.buildings.adjustTimeSpent({
+      guildId: interaction.guildId!,
+      buildingId,
+      delta,
+      actorUserId: interaction.user.id,
+      actorNickname: nickname,
+    });
+    if (!result.ok) {
+      await interaction.reply({ content: result.message, ephemeral: true });
+      return;
+    }
+    const verb =
+      direction === 'remove'
+        ? deps.buildings.messages.buildingSpentAdjustRemoved
+        : deps.buildings.messages.buildingSpentAdjustAdded;
+    let reply = formatTemplate(deps.buildings.messages.buildingSpentAdjustSuccess, {
+      verb,
+      amount: String(amount),
+      building: result.building.name,
+      spent: String(result.spentAfter),
+      required: String(result.building.time_required),
+    });
+    if (result.phaseNote) reply += `\n${result.phaseNote}`;
+    await interaction.reply({ content: reply, ephemeral: true });
+    return;
+  }
+
+  if (action === 'costadd' && step === 'amount') {
+    let typeRaw = '';
+    try {
+      typeRaw = interaction.fields.getStringSelectValues('type')[0] ?? '';
+    } catch {
+      typeRaw = '';
+    }
+    if (!typeRaw) {
+      try {
+        typeRaw = interaction.fields.getTextInputValue('type').trim();
+      } catch {
+        await interaction.reply({
+          content: deps.buildings.messages.resourceTypeUnknown.replace('{key}', '?'),
+          ephemeral: true,
+        });
+        return;
+      }
     }
     const raw = interaction.fields.getTextInputValue('amount').trim();
     const amount = Number(raw);
@@ -476,7 +1096,7 @@ async function showCostTypeAmountModal(
   deps: { buildings: BuildingService; resources: ResourceService },
   buildingId: number,
 ): Promise<void> {
-  const { buildings } = deps;
+  const { buildings, resources } = deps;
   const building = buildings.getInGuild(interaction.guildId!, buildingId);
   if (!building || building.status !== 'funding') {
     if (interaction.isStringSelectMenu()) {
@@ -493,6 +1113,29 @@ async function showCostTypeAmountModal(
     return;
   }
 
+  const types = resources.listTypes(interaction.guildId!);
+  if (types.length === 0) {
+    const msg = resources.messages.resourceTypeListEmpty;
+    if (interaction.isStringSelectMenu()) {
+      await interaction.update({ content: msg, components: [] });
+    } else {
+      await interaction.reply({ content: msg, ephemeral: true });
+    }
+    return;
+  }
+
+  const typeOptions = types.slice(0, 25).map((t) =>
+    new StringSelectMenuOptionBuilder()
+      .setLabel(t.display_name.slice(0, 100))
+      .setValue(t.key)
+      .setDescription(
+        formatTemplate(buildings.messages.buildingWizardTypePrices, {
+          sell: String(t.sell_gc),
+          buy: String(t.buy_gc),
+        }).slice(0, 100),
+      ),
+  );
+
   const modal = new ModalBuilder()
     .setCustomId(
       `${BUILDING_WIZARD_PREFIX}costadd:amount:${interaction.user.id}:${buildingId}`,
@@ -501,27 +1144,31 @@ async function showCostTypeAmountModal(
       formatTemplate(buildings.messages.buildingWizardCostModalTitle, {
         building: building.name,
       }).slice(0, 45),
-    )
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId('type')
-          .setLabel(buildings.messages.buildingWizardCostTypeLabel.slice(0, 45))
-          .setStyle(TextInputStyle.Short)
-          .setRequired(true)
-          .setMaxLength(32)
-          .setPlaceholder('Hout'),
-      ),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId('amount')
-          .setLabel(buildings.messages.buildingWizardCostAmountLabel.slice(0, 45))
-          .setStyle(TextInputStyle.Short)
-          .setRequired(true)
-          .setMinLength(1)
-          .setMaxLength(4)
-          .setPlaceholder('80'),
-      ),
+    );
+  addModalIntro(modal, buildings.messages.buildingWizardCostAddIntro);
+  modal.addLabelComponents(
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardResourceLabel.slice(0, 45))
+        .setStringSelectMenuComponent(
+          new StringSelectMenuBuilder()
+            .setCustomId('type')
+            .setPlaceholder(
+              buildings.messages.buildingWizardResourcePlaceholder.slice(0, 150),
+            )
+            .setRequired(true)
+            .addOptions(typeOptions),
+        ),
+      new LabelBuilder()
+        .setLabel(buildings.messages.buildingWizardAmountLabel.slice(0, 45))
+        .setTextInputComponent(
+          new TextInputBuilder()
+            .setCustomId('amount')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setMinLength(1)
+            .setMaxLength(4)
+            .setPlaceholder('80'),
+        ),
     );
 
   await interaction.showModal(modal);
@@ -539,8 +1186,9 @@ async function showCostTimeModal(
     .setCustomId(
       `${BUILDING_WIZARD_PREFIX}costtime:amount:${interaction.user.id}:${buildingId}`,
     )
-    .setTitle(buildings.messages.buildingWizardBuildtimeModalTitle.slice(0, 45))
-    .addComponents(
+    .setTitle(buildings.messages.buildingWizardBuildtimeModalTitle.slice(0, 45));
+  addModalIntro(modal, buildings.messages.buildingWizardBuildtimeIntro);
+  modal.addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
           .setCustomId('amount')
@@ -623,10 +1271,11 @@ async function finishCostTime(
     return;
   }
   await interaction.reply({
-    content: formatTemplate(buildings.messages.buildingCostBuildtimeSuccess, {
-      building: result.building.name,
-      time: String(result.time),
-    }),
+    content:
+      formatTemplate(buildings.messages.buildingCostBuildtimeSuccess, {
+        building: result.building.name,
+        time: String(result.time),
+      }) + (result.phaseNote ? `\n${result.phaseNote}` : ''),
     ephemeral: true,
   });
 }
@@ -658,7 +1307,9 @@ async function finishCostShow(
   const timeLine = formatTemplate(buildings.messages.buildingCostShowTime, {
     spent: String(building.time_spent),
     required: String(building.time_required),
-    status: statusLabel,
+  });
+  const phaseLine = formatTemplate(buildings.messages.buildingCostShowPhase, {
+    phase: statusLabel,
   });
 
   const embed = new EmbedBuilder()
@@ -667,7 +1318,9 @@ async function finishCostShow(
         name: building.name,
       }),
     )
-    .setDescription([...materialLines, '', timeLine].join('\n').slice(0, 4000));
+    .setDescription(
+      [phaseLine, ...materialLines, '', timeLine].join('\n').slice(0, 4000),
+    );
 
   await interaction.update({
     content: null,

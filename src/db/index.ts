@@ -232,6 +232,14 @@ function migrate(db: Database.Database): void {
       WHERE status != 'cancelled'
   `);
 
+  // Older rows used schema default 0; new inserts use DEFAULT_BUILD_TIME (100).
+  db.prepare(
+    `UPDATE buildings
+     SET time_required = 100
+     WHERE time_required = 0
+       AND status IN ('funding', 'building')`,
+  ).run();
+
   // Additive columns on resource_settings (older DBs).
   const resourceSettingsCols = db
     .prepare(`PRAGMA table_info(resource_settings)`)
