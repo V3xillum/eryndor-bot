@@ -27,18 +27,18 @@ Beide handouts linken naar elkaar (footer / hero).
 ### Wat erin hoort
 - **Even kijken** — overview, weer, kalender, losse lijsten (`stock`, `personal show`, `building list/status`, `production list`)
 - **Guild-voorraad** — donate / buy / persoonlijke voorraad (add|remove|show); GC zelf bijhouden; opslaglimiet + overflow → persoonlijk
-- **Meebouwen** — donate (bronkeuze), fund, contribute
+- **Meebouwen** — deliver (bronkeuze), use-guild-stock, contribute
 - Korte tip: `/eryndor help` + formulieren met dropdowns
 
-### Donate-bronnen (vaste uitleg)
-Bij `/building donate` altijd **beide** bronnen noemen:
+### Deliver-bronnen (vaste uitleg)
+Bij `/building deliver` altijd **beide** bronnen noemen:
 
 | Bron in Discord | Campaign-taal | GC | Voorraad |
 |---|---|---|---|
 | Van buiten | Net gehakt/gevonden; bot hield het nog niet bij | + sell | onaangeroerd |
 | Mijn voorraad | Uit je persoonlijke voorraad | + sell | persoonlijk − |
 
-`/building fund` = alleen uit de **guild**-voorraad, **geen** GC. Niet door elkaar halen.
+`/building use-guild-stock` = alleen uit de **guild**-voorraad, **geen** GC. Niet door elkaar halen.
 
 ### Wat er níet in hoort
 - `/dm …`, setup, types aanmaken, costs, cancel, adjust, cap zetten
@@ -47,7 +47,7 @@ Bij `/building donate` altijd **beide** bronnen noemen:
 
 ### Toon
 - Alsof je aan de speeltafel uitlegt, niet aan een developer
-- Slash-commands wél exact (`/building donate`)
+- Slash-commands wél exact (`/building deliver`)
 - Termen: **persoonlijke voorraad** (niet “bak”), **guild-voorraad**, **Guild Credits (GC)**
 - Zelfde visuele taal als de DM-handout (fonts/kleuren/logo) mag; geen tabs nodig — één scrollbare pagina
 

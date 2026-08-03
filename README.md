@@ -60,7 +60,7 @@ Global slash commands can take up to about an hour to appear after registration.
 | `/eryndor today` / `fullmoon` | Harptos day / next exact Full Moon |
 | `/weather current` | Private current weather |
 | `/resource …` | `donate` / `buy` / `stock` / `personal` / `type list` |
-| `/building …` | `donate` / `fund` / `contribute` / `list` / `status` / `cost show` |
+| `/building …` | `deliver` / `use-guild-stock` / `contribute` / `list` / `status` / `cost show` |
 | `/production list` | Production sources overview |
 
 ### DM (`/dm` — hidden from players by default)

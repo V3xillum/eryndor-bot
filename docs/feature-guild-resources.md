@@ -26,7 +26,7 @@ Zie ook: [`agent.md`](./agent.md), [`feature-guild-production.md`](./feature-gui
 
 | Command | Effect |
 |---|---|
-| `/resource setup channel` | Kanaal voor publieke silent posts (donate/buy/fund/contribute) |
+| `/resource setup channel` | Kanaal voor publieke silent posts (donate/buy/deliver/use-guild-stock/contribute) |
 | `/resource clear` | Setup wissen (commands die posten falen tot opnieuw setup) |
 
 Zelfde patroon als `/weather setup` / `/dm calendar setup`: per Discord-guild één destination.
@@ -57,7 +57,7 @@ Zelfde patroon als `/weather setup` / `/dm calendar setup`: per Discord-guild é
 
 ### Gebouwen
 
-Create/cost/cancel = allowlist. Fund/donate/contribute/list/status = iedereen in de guild.
+Create/cost/cancel = allowlist. deliver / use-guild-stock / contribute / list / status = iedereen in de guild.
 
 | Command | Effect |
 |---|---|
@@ -66,8 +66,8 @@ Create/cost/cancel = allowlist. Fund/donate/contribute/list/status = iedereen in
 | `/building cost buildtime` | Menu: project → modal bouwtijd (fase 2). Corrigeert de default 100 |
 | `/building cost show` | Menu: project → kosten + voortgang |
 | `/building list` | Alle projecten + status |
-| `/building fund` | Modal: project + grondstof + aantal. Uit guild-stock. Geen extra GC. Silent post toont voortgang van **alle** materialen |
-| `/building donate` | Modal: project + **bron** (van buiten / persoonlijke voorraad) + grondstof + aantal. GC = sell. Silent post toont voortgang van **alle** materialen |
+| `/building use-guild-stock` | Modal: project + grondstof + aantal. Uit guild-stock. Geen extra GC. Silent post toont voortgang van **alle** materialen |
+| `/building deliver` | Modal: project + **bron** (van buiten / persoonlijke voorraad) + grondstof + aantal. GC = sell. Silent post toont voortgang van **alle** materialen |
 | `/building contribute` | Modal: project + tijd. GC = amount × 1 |
 | `/building status` | Menu: project → detail (missing materials / time / fase) |
 | `/building cancel name` | Allowlist. Funding terug naar guild-stock. Ledger `building_cancel`. Geen GC-terugdraai (GC was al “betaald” aan spelers) |
@@ -76,13 +76,13 @@ Create/cost/cancel = allowlist. Fund/donate/contribute/list/status = iedereen in
 
 1. `funding` → `building` wanneer alle `building_costs` gedekt zijn in funding.
 2. `building` → `complete` wanneer `time_spent >= time_required`.
-3. `complete`: geen fund/donate/contribute meer.
+3. `complete`: geen deliver / use-guild-stock / contribute meer.
 
-**Direct donate vs fund:**
+**Direct deliver vs use-guild-stock:**
 
-- `building donate` (bron *van buiten*) = speler brengt materialen die de bot nog niet bijhoudt; beloning sell-GC; funding += ; guild- en persoonlijke voorraad ongemoeid.
-- `building donate` (bron *mijn voorraad*) = aftrek uit persoonlijke voorraad; beloning sell-GC; funding += .
-- `building fund` = verplaatsing guild-stock → project; geen GC.
+- `building deliver` (bron *van buiten*) = speler brengt materialen die de bot nog niet bijhoudt; beloning sell-GC; funding += ; guild- en persoonlijke voorraad ongemoeid.
+- `building deliver` (bron *mijn voorraad*) = aftrek uit persoonlijke voorraad; beloning sell-GC; funding += .
+- `building use-guild-stock` = verplaatsing guild-stock → project; geen GC.
 
 **Costs wijzigen na funding:** verboden via `cost add` / `buildtime`. Correcties alleen via allowlist-paden (`adjust` op stock + eventueel cancel/herstart), niet door costs te herschrijven onder een lopend project.
 
@@ -92,7 +92,7 @@ Create/cost/cancel = allowlist. Fund/donate/contribute/list/status = iedereen in
 
 Kanaal: uit `/resource setup`.
 
-Flags: `MessageFlags.SuppressNotifications` (Discord “silent”). Posts are **embeds** (title, description), niet plain text. Bij building donate/fund toont **Voortgang** alle materiaalkosten (`funded / required` per type), niet alleen het type van deze actie.
+Flags: `MessageFlags.SuppressNotifications` (Discord “silent”). Posts are **embeds** (title, description), niet plain text. Bij building deliver / use-guild-stock toont **Voortgang** alle materiaalkosten (`funded / required` per type), niet alleen het type van deze actie.
 
 Templates (via `content/messages.json`) — **description-only** embeds (geen inline field-tabel), o.a.:
 
@@ -116,9 +116,9 @@ Ephemeral reply naar de caller: korte bevestiging (succes / fout: te weinig stoc
 |---|---|---|---|
 | `donate` (stock) | + `amount × sell` | + | — |
 | `buy` | − `amount × buy` (tekst: “voor {gc} GC”) | − | — |
-| `building donate` (buiten) | + `amount × sell` | ongemoeid | + |
-| `building donate` (persoonlijk) | + `amount × sell` | persoonlijk − | + |
-| `building fund` | geen | − | + |
+| `building deliver` (buiten) | + `amount × sell` | ongemoeid | + |
+| `building deliver` (persoonlijk) | + `amount × sell` | persoonlijk − | + |
+| `building use-guild-stock` | geen | − | + |
 | `building contribute` | + `amount × 1` | — | time + |
 | `adjust` | geen publieke GC | ± | — |
 | `building cancel` | geen | funding terug | project weg / cancelled |
@@ -133,7 +133,9 @@ Bot slaat **geen** player GC-balans op.
 
 Elke mutatie → rij in `resource_ledger` (audit + disaster recovery).
 
-Velden: `id`, `guild_id`, `created_at`, `actor_user_id`, `actor_nickname`, `action` (`donate` \| `buy` \| `adjust` \| `building_donate` \| `building_donate_personal` \| `building_fund` \| `building_contribute` \| `building_cancel` \| `type_add` \| …), `resource_key` (nullable bij time), `amount`, `gc_delta` (kan 0), `building_id` (nullable), `stock_after` (nullable; bij personal donate = persoonlijke voorraad na aftrek).
+Velden: `id`, `guild_id`, `created_at`, `actor_user_id`, `actor_nickname`, `action` (`donate` \| `buy` \| `adjust` \| `building_donate` \| `building_donate_personal` \| `building_fund` \| `building_contribute` \| `building_cancel` \| `type_add` \| …), `resource_key` (nullable bij time), `amount`, `gc_delta` (kan 0), `building_id` (nullable), `stock_after` (nullable; bij personal deliver = persoonlijke voorraad na aftrek).
+
+Note: slash-commands heten `deliver` / `use-guild-stock`; ledger-actions blijven `building_donate*` / `building_fund` (history).
 
 **Dagelijkse backup:** uitbreiding van bestaande status-report DM naar `STATUS_REPORT_USER_ID` (zelfde cadence/time als nu):
 
@@ -239,10 +241,10 @@ Unieke building-namen per guild via `(guild_id, name_key)`.
 | `src/commands/resource.ts` | Slash resource tree |
 | `src/commands/resourceWizard.ts` | Modal flows donate/buy/personal (type-select + amount) |
 | `src/commands/building.ts` | Slash building tree |
-| `src/commands/buildingWizard.ts` | Select-menu flow donate/fund/contribute |
+| `src/commands/buildingWizard.ts` | Select-menu flow deliver / use-guild-stock / contribute |
 | `src/commands/resourceEmbeds.ts` | Publieke silent embeds |
 | `src/services/ResourceService.ts` | types, stock, donate/buy/adjust, channel setup |
-| `src/services/BuildingService.ts` | CRUD project, fund/donate/contribute, fase-overgangen, cancel |
+| `src/services/BuildingService.ts` | CRUD project, deliver / use-guild-stock / contribute, fase-overgangen, cancel |
 | `src/db/index.ts` | queries |
 | `src/services/StatusReportService.ts` | stock/buildings/ledger snapshot in DM |
 | `src/register-commands.ts` + `interactionCreate.ts` | wiring |
@@ -275,7 +277,7 @@ Domain-logica Discord-agnostisch houden waar mogelijk (zelfde scheiding als weat
 4. Speler: `/resource buy hout 2` → stock 5, silent post “voor 4 GC”
 5. Buy met te weinig stock → ephemeral fout, geen post
 6. `/building create Houthakkershut` + costs hout 10 + time 5
-7. `/building donate` bron *van buiten* hout 5 → funding 5, +GC; of bron *mijn voorraad* als de speler steen heeft → persoonlijk −, funding +, +GC; `/building fund … hout 5` → guild-stock −5, funding vol → status `building`
+7. `/building deliver` bron *van buiten* hout 5 → funding 5, +GC; of bron *mijn voorraad* als de speler steen heeft → persoonlijk −, funding +, +GC; `/building use-guild-stock … hout 5` → guild-stock −5, funding vol → status `building`
 8. `/building contribute … 5` → complete + 5 GC
 9. Tweede building parallel aanmaken terwijl #1 nog funding is
 10. `/building cancel` op een funding-project → materialen terug in stock, geen GC-terugdraai

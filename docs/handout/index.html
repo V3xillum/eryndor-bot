@@ -700,8 +700,8 @@
           <h3>6. Materiaal naar een project</h3>
           <p>Drie verschillende acties — niet door elkaar halen:<br />
           <code>/resource donate</code> / <code>buy</code> — loot in/uit de <strong>guild-voorraad</strong> (formulier; ± GC).<br />
-          <code>/building donate</code> — materiaal naar een project: <strong>van buiten</strong> of uit je <strong>persoonlijke voorraad</strong> (formulier; + GC).<br />
-          <code>/building fund</code> — materiaal uit de <strong>guild-voorraad</strong> naar een project (geen extra GC).</p>
+          <code>/building deliver</code> — materiaal naar een project: <strong>van buiten</strong> of uit je <strong>persoonlijke voorraad</strong> (formulier; + GC).<br />
+          <code>/building use-guild-stock</code> — materiaal uit de <strong>guild-voorraad</strong> naar een project (geen extra GC).</p>
         </article>
         <article class="tile">
           <h3>7. Bouwtijd</h3>
@@ -1087,17 +1087,17 @@
         when: "Meer of minder opslagruimte voor de guild.",
       },
       {
-        cmd: "/building donate",
+        cmd: "/building deliver",
         who: "everyone",
         cat: "bouwen",
-        what: "Breng materialen naar een open project (één formulier: project + bron + grondstof + aantal). Bron: van buiten óf uit je persoonlijke voorraad. Stil bericht met voortgang. GC = sell × aantal.",
+        what: "Lever materialen aan een open project (één formulier: project + bron + grondstof + aantal). Bron: van buiten óf uit je persoonlijke voorraad. Stil bericht met voortgang. GC = sell × aantal.",
         when: "Zelf materiaal aandragen (net gevonden, of uit je eigen voorraad).",
       },
       {
-        cmd: "/building fund",
+        cmd: "/building use-guild-stock",
         who: "everyone",
         cat: "bouwen",
-        what: "Verplaats materialen uit de guild-voorraad naar een open project (één formulier: project + grondstof + aantal). Stil bericht met voortgang van alle materialen. Geen extra GC.",
+        what: "Zet materialen uit de guild-voorraad in op een open project (één formulier: project + grondstof + aantal). Stil bericht met voortgang van alle materialen. Geen extra GC.",
         when: "Gemeenschappelijke voorraad inzetten voor een project.",
       },
       {

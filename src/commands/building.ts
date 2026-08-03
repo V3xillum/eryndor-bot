@@ -42,13 +42,13 @@ export function buildBuildingCommand() {
     )
     .addSubcommand((sub) =>
       sub
-        .setName('fund')
-        .setDescription('Haal materiaal uit de guild en zet het op een project'),
+        .setName('deliver')
+        .setDescription('Lever materiaal aan een project (van buiten of jouw stash, + GC)'),
     )
     .addSubcommand((sub) =>
       sub
-        .setName('donate')
-        .setDescription('Doneer aan een project (van buiten of uit jouw stash, + GC)'),
+        .setName('use-guild-stock')
+        .setDescription('Zet guild-voorraad in op een project (geen GC)'),
     )
     .addSubcommand((sub) =>
       sub
@@ -144,11 +144,11 @@ export async function handleBuildingCommand(
     case 'status':
       await startCostShowWizard(interaction, { buildings, resources });
       return;
-    case 'fund':
-      await startMaterialWizard(interaction, { buildings, resources }, 'fund');
+    case 'use-guild-stock':
+      await startMaterialWizard(interaction, { buildings, resources }, 'usestock');
       return;
-    case 'donate':
-      await startMaterialWizard(interaction, { buildings, resources }, 'donate');
+    case 'deliver':
+      await startMaterialWizard(interaction, { buildings, resources }, 'deliver');
       return;
     case 'contribute':
       await startContributeWizard(interaction, { buildings, resources });

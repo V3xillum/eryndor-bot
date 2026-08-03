@@ -32,8 +32,8 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 
 | Command | Wat het doet (DM-taal) | Categorie | Wie |
 |---|---|---|---|
-| `/building donate` | Modal: project + bron (van buiten / persoonlijke voorraad) + grondstof + aantal. Silent post toont alle materialen. GC = sell. | Bouwen | Iedereen |
-| `/building fund` | Modal: project + grondstof + aantal. Uit guild-voorraad. Silent post toont alle materialen. | Bouwen | Iedereen |
+| `/building deliver` | Modal: project + bron (van buiten / persoonlijke voorraad) + grondstof + aantal. Silent post toont alle materialen. GC = sell. | Bouwen | Iedereen |
+| `/building use-guild-stock` | Modal: project + grondstof + aantal. Uit guild-voorraad. Silent post toont alle materialen. | Bouwen | Iedereen |
 | `/building contribute` | Modal: project + tijd. GC = tijd × 1. | Bouwen | Iedereen |
 | `/building list` | Overzicht bouwprojecten + status. | Bouwen | Iedereen |
 | `/building status` | Menu: project → kosten/voortgang. | Bouwen | Iedereen |
@@ -72,14 +72,14 @@ Uitleg voor DMs (geen DB/.env):
 1. **Grondstoftypes** — zelf aanmaken met een naam + sell/buy GC; bot houdt GC niet bij, alleen melden.
 2. **Guild- vs persoonlijke voorraad** — doneren/kopen vs eigen voorraad.
 3. **Opslaglimiet** — standaard 300 **per type**; bij volle opslag: speler-acties → rest persoonlijk; dagelijkse productie → rest **verloren** (zichtbaar in de avondpost ~17:00).
-4. **Bouwprojecten** — materialen → bouwtijd → klaar; **donate** (van buiten *of* persoonlijke voorraad, + GC) vs **fund** (guild-voorraad, geen GC); contribute voor tijd.
+4. **Bouwprojecten** — materialen → bouwtijd → klaar; **deliver** (van buiten *of* persoonlijke voorraad, + GC) vs **use-guild-stock** (guild-voorraad, geen GC); contribute voor tijd.
 5. **Productiebronnen** — bijv. Houthakkershut → Hout; opbrengst = medewerkers × opbrengst per medewerker; één stille samenvatting per dag.
 
 ---
 
 ## Speler-handout (`spelers.html`)
 
-**Ja** — kort: overview/weer/kalender; guild donate/buy + persoonlijke voorraad; bouwen met donate-bronnen + fund + contribute. Geen DM-commands.
+**Ja** — kort: overview/weer/kalender; guild donate/buy + persoonlijke voorraad; bouwen met deliver-bronnen + use-guild-stock + contribute. Geen DM-commands.
 
 ## Wat Commando’s / Sessie moeten krijgen
 

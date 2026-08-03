@@ -30,7 +30,7 @@ import {
 
 export const BUILDING_WIZARD_PREFIX = 'bwiz:';
 
-type MaterialAction = 'donate' | 'fund';
+type MaterialAction = 'deliver' | 'usestock';
 
 function nicknameFrom(
   interaction:
@@ -120,7 +120,7 @@ export async function startMaterialWizard(
   }
 
   const personalByKey =
-    action === 'donate'
+    action === 'deliver'
       ? new Map(
           deps.resources
             .personalOverview(interaction.guildId!, interaction.user.id)
@@ -157,7 +157,7 @@ export async function startMaterialWizard(
     .setTitle(buildings.messages.buildingWizardMaterialModalTitle.slice(0, 45));
   addModalIntro(
     modal,
-    action === 'donate'
+    action === 'deliver'
       ? buildings.messages.buildingWizardDonateIntro
       : buildings.messages.buildingWizardFundIntro,
   );
@@ -176,7 +176,7 @@ export async function startMaterialWizard(
       ),
   ];
 
-  if (action === 'donate') {
+  if (action === 'deliver') {
     labelComponents.push(
       new LabelBuilder()
         .setLabel(buildings.messages.buildingWizardSourceLabel.slice(0, 45))
@@ -736,12 +736,12 @@ export async function handleBuildingWizardSelect(
   }
 
   // Donate / fund: building → resource → modal
-  if (step === 'bldg' && (action === 'donate' || action === 'fund')) {
+  if (step === 'bldg' && (action === 'deliver' || action === 'usestock')) {
     await showResourceSelect(interaction, deps, action);
     return;
   }
 
-  if (step === 'res' && (action === 'donate' || action === 'fund')) {
+  if (step === 'res' && (action === 'deliver' || action === 'usestock')) {
     await showMaterialAmountModal(
       interaction,
       deps,
@@ -792,7 +792,7 @@ export async function handleBuildingWizardModal(
   }
 
   if (
-    (action === 'donate' || action === 'fund') &&
+    (action === 'deliver' || action === 'usestock') &&
     step === 'form'
   ) {
     const buildingId = Number(
@@ -802,7 +802,7 @@ export async function handleBuildingWizardModal(
     const amountRaw = interaction.fields.getTextInputValue('amount').trim();
     const amount = Number(amountRaw);
     let donateSource: 'outside' | 'personal' = 'outside';
-    if (action === 'donate') {
+    if (action === 'deliver') {
       const sourceRaw = interaction.fields.getStringSelectValues('source')[0];
       if (sourceRaw !== 'outside' && sourceRaw !== 'personal') {
         await interaction.reply({
@@ -844,7 +844,7 @@ export async function handleBuildingWizardModal(
       buildingId,
       resourceKey,
       amount,
-      action === 'donate' ? donateSource : undefined,
+      action === 'deliver' ? donateSource : undefined,
     );
     return;
   }
@@ -1090,7 +1090,7 @@ export async function handleBuildingWizardModal(
   const resourceKey = parts[4];
 
   if (
-    (action === 'donate' || action === 'fund') &&
+    (action === 'deliver' || action === 'usestock') &&
     step === 'amount' &&
     resourceKey
   ) {
@@ -1557,7 +1557,7 @@ async function finishMaterialAction(
   }
 
   const result =
-    action === 'donate'
+    action === 'deliver'
       ? buildings.donateById({
           guildId: interaction.guildId!,
           buildingId,
@@ -1587,7 +1587,7 @@ async function finishMaterialAction(
     result.building.id,
   );
 
-  if (action === 'donate') {
+  if (action === 'deliver') {
     const fromPersonal = result.source === 'personal';
     const embed = buildBuildingDonateEmbed(buildings.messages, {
       nickname,
