@@ -17,6 +17,7 @@ Zie ook: [`agent.md`](./agent.md) (content-format + roll-pool), [`feature-weathe
 - **Nieuwe range is leidend.** Overlappende segmenten worden ingekort of gesplitst; de geclaimde range wint altijd.
 - **Gaten vallen op een default-type** (guild-instelling, meestal `clear`), maar blijven in de UI zichtbaar als “ongeclaimd” — niet alsof het bewuste clear-segmenten zijn.
 - **Geen bidirectionele sync.** DB schrijft niet terug naar JSON in de repo. Switch = welke bron `getTable(guildId)` leest.
+- **Seed = 1:1 JSON.** Geen aparte “minimal” of productie-only seed in v1. De huidige `weather-table.json` (inclusief placeholder-types) is de bootstrap; opschonen gebeurt later via wizard of door JSON te wijzigen + opnieuw te seed’en.
 - Images: defaults uit `content/images/`; custom uploads downloaden naar disk onder `storage/` (mee migreren met `world.sqlite`). Geen Discord-CDN-URL als permanente bron.
 
 ---
@@ -27,7 +28,7 @@ Zie ook: [`agent.md`](./agent.md) (content-format + roll-pool), [`feature-weathe
 
 - Per-guild bronflag: `json` | `db`
 - Tabellen: weather types + range segmenten + default-type voor gaten
-- Seed uit JSON bij eerste keer `source:db` (of expliciete seed-command)
+- Seed **1:1** uit `content/weather-table.json` bij eerste `source:db` zonder data; expliciete `seed` voor reset
 - Interval-cutting: nieuwe range knipt/splitst bestaande segmenten (inclusieve integers 1–100)
 - Adjacent merge van segmenten met hetzelfde type
 - Default-type vult gaten bij roll (impliciet), wizard toont gaten apart
@@ -35,7 +36,8 @@ Zie ook: [`agent.md`](./agent.md) (content-format + roll-pool), [`feature-weathe
 - Range claim via wizard of slash (min–max + type); preview vóór commit
 - Image: attachment op slash → bot downloadt → lokaal pad opslaan
 - `getTable(guildId)` → zelfde `WeatherTableEntry[]`-shape als nu, zodat dials / cooldown / weighted pick ongewijzigd blijven
-- Overzicht 1–100 in ephemeral embed (tekstueel segmentenlijst; optioneel compacte balk)
+- Overzicht 1–100 in ephemeral embed (**tekstuele segmentenlijst** in v1)
+- `/dm weather set` accepteert interne `key` én `display_name` (case-insensitive, zoals resources)
 - Allowlist + `/dm` only
 - NL strings in `content/messages.json`
 - Handout-update (apart `handout-update-*.md` bij implementatie)
@@ -47,7 +49,10 @@ Zie ook: [`agent.md`](./agent.md) (content-format + roll-pool), [`feature-weathe
 - Image-BLOB in SQLite (pad op disk is genoeg)
 - Per-regio / seizoenstabellen
 - Speler-zichtbare tabel
-- Automatische “materialiseer alle gaten tot echte segmenten” bij elke edit (optioneel later)
+- “Minimal seed” / productie-only seed (alleen clear + clockwork) — later handmatig of via JSON-edit + re-seed
+- Compacte Unicode-balk in `show` (later optioneel)
+- Materialize-gaten-commando (gaten → echte segmenten) — later
+- Automatische “materialiseer alle gaten tot echte segmenten” bij elke edit
 - Database:Refresh / bestaande migraties herschrijven (alleen additive)
 
 ---
@@ -159,11 +164,20 @@ Off-by-one: bij fog `20–25` wordt clear **`1–19`**, niet `1–20`.
 
 | Actie | Effect |
 |---|---|
-| `source:json` (default) | Negeert DB-tabel voor rolls; wizard CRUD mag disabled of “schakel eerst naar db” |
-| `source:db` zonder data | Seed uit `weather-table.json` + images blijven `content/images/…`; default_type = eerste severity-1 non-magical type of expliciet `clear` als die bestaat |
+| `source:json` (default) | Negeert DB-tabel voor rolls; wizard CRUD: “schakel eerst naar db” |
+| `source:db` zonder data | **Auto-seed 1:1** uit huidige `weather-table.json` (alle entries, inclusief placeholders) |
 | `source:db` met data | Gebruikt bestaande types/segmenten; geen automatische re-seed |
 | Terug naar `json` | DB blijft staan (ongebruikt); rolls weer uit JSON. Custom images blijven op disk |
-| Expliciete `seed` / `reset` | Overschrijft DB-types+segmenten opnieuw vanuit JSON (bevestiging vereist) |
+| `/dm weather-table seed` | Alleen bij bron `db`: overschrijft types+segmenten+default opnieuw 1:1 vanuit JSON (**bevestigingsknop** verplicht) |
+
+### Seed-regels (vastgelegd)
+
+1. **1:1 kopie** van `content/weather-table.json` → `weather_types` + `weather_segments`. Geen filter, geen minimal variant in v1.
+2. Elke JSON-entry → één type (`key` = slug van `type`; `display_name` = `type` zoals in JSON) + één segment (`min`/`max`).
+3. `image_path` wijst naar `content/images/<image>` (geen kopie naar `storage/` bij seed).
+4. **Default-type:** `clear` als die in de geseede types zit; anders eerste type met `severity === 1` en `magical === false`; anders het eerste type.
+5. Seed is **bootstrap / test**, geen claim dat de tabel “canon” is. De huidige JSON bevat placeholders naast echte kaarten (o.a. clear, Clockwork clouds); opschonen = wizard of JSON wijzigen + `seed`.
+6. Nooit automatisch seeden bij botstart of bij elke `source:db` als er al data is.
 
 Geen merge van JSON-wijzigingen in de repo naar een actieve DB-tabel (DM moet opnieuw seed’en als ze dat willen).
 
@@ -194,9 +208,9 @@ Alles onder `/dm`, allowlist. Exacte namen mogen bij implementatie aansluiten op
 
 | Command | Effect |
 |---|---|
-| `/dm weather-table source` | `json` \| `db` — zet bron; bij eerste `db` optioneel auto-seed |
-| `/dm weather-table show` | Ephemeral overzicht: bron, default-type, segmenten 1–100, gaten als “ongeclaimd → {default}” |
-| `/dm weather-table seed` | (alleen `db`) Reset/seed vanuit JSON met bevestigingsknop |
+| `/dm weather-table source` | `json` \| `db` — zet bron; eerste `db` zonder data → auto-seed 1:1 |
+| `/dm weather-table show` | Ephemeral tekstlijst: bron, default-type, segmenten 1–100, gaten als “ongeclaimd → {default}” |
+| `/dm weather-table seed` | (alleen `db`) Reset 1:1 vanuit JSON met bevestigingsknop |
 | `/dm weather-table default` | Zet `default_type_key` |
 | `/dm weather-table type add` | naam, severity, magical, [duration], [attachment] |
 | `/dm weather-table type edit` | key/naam + te wijzigen velden + optioneel nieuw plaatje |
@@ -283,15 +297,16 @@ Gaten zijn toegestaan in DB; volledige 1–100-dekking is **niet** verplicht zol
 ## Testplan
 
 1. Guild op `json`: `/dm weather roll` identiek aan huidige starter-tabel.
-2. `/dm weather-table source db` → seed; `show` matcht JSON-ranges.
-3. Claim fog `20–25` over clear `1–25` → clear `1–19`; bevestig preview off-by-one.
-4. Claim fog `10–15` → twee clear-segmenten; merge niet over fog heen.
-5. Verwijder fog-segment → gat; roll in dat interval → default-type; `show` toont ongeclaimd.
-6. Type add + attachment → bestand onder `storage/weather-images/<guild>/`; `/dm weather set` post dat plaatje.
+2. `/dm weather-table source db` (lege DB) → auto-seed 1:1; `show` toont **dezelfde** ranges/types als JSON (nu o.a. clear `1–22` … arcane_storm `95–100`); default = `clear`.
+3. Claim fog `20–25` over clear → clear wordt `1–19` (off-by-one); preview klopt vóór bevestigen.
+4. Claim die een type middenin splitst → twee segmenten van hetzelfde type; adjacent merge niet over vreemd type heen.
+5. Verwijder een segment → gat; roll in dat interval → default-type; `show` toont ongeclaimd.
+6. Type add + attachment → bestand onder `storage/weather-images/<guild>/`; `/dm weather set` (key of display_name) post dat plaatje.
 7. Severity/magical dials werken op DB-tabel; lege dial-pool blijft reject.
 8. Terug naar `source json` → weer JSON; DB-data intact; opnieuw `db` zonder seed → oude custom tabel.
-9. `seed` met bevestiging overschrijft custom terug naar JSON-defaults.
+9. `seed` met bevestiging overschrijft custom terug naar **huidige** JSON 1:1.
 10. Bot restart: custom images + DB-segmenten blijven (sqlite + storage map).
+11. Tweede `source db` op guild die al data heeft → geen stille re-seed.
 
 ---
 
@@ -305,11 +320,15 @@ Apart `docs/handout-update-weather-table-db.md` + update `docs/handout/index.htm
 
 ---
 
-## Open keuzes (beslissen bij bouw)
+## Beslissingen (vastgelegd)
 
-1. Auto-seed bij eerste `source:db`, of verplicht aparte `seed`?
-2. `display_name` vs interne `key` in `/dm weather set` — beide accepteren (aanbevolen, zoals resources)?
-3. Compacte Unicode-balk in `show` vs alleen regelslijst?
-4. Materialize-gaten-commando in v1 of later?
-
-Aanbeveling bij twijfel: auto-seed bij eerste switch naar `db`, beide namen accepteren, tekstlijst in v1, materialize later.
+| Onderwerp | Keuze |
+|---|---|
+| Seed-inhoud | **1:1** huidige `weather-table.json` (placeholders inbegrepen) |
+| Auto-seed | Ja bij eerste `source:db` zonder data |
+| Reset | `/dm weather-table seed` + bevestiging |
+| Default na seed | `clear` als aanwezig, anders fallback hierboven |
+| `/dm weather set` | Interne `key` én `display_name` |
+| `show` UI v1 | Alleen tekstlijst (geen Unicode-balk) |
+| Materialize gaten | Niet in v1 |
+| Minimal/productie-seed | Niet in v1 |
