@@ -119,7 +119,8 @@ function migrate(db: Database.Database): void {
       created_at TEXT NOT NULL,
       level TEXT NOT NULL,
       category TEXT NOT NULL,
-      message TEXT NOT NULL
+      message TEXT NOT NULL,
+      actor_user_id TEXT
     );
 
     CREATE TABLE IF NOT EXISTS bot_meta (
@@ -252,6 +253,15 @@ function migrate(db: Database.Database): void {
   }
   if (!rsNames.has('production_last_post_date')) {
     db.exec(`ALTER TABLE resource_settings ADD COLUMN production_last_post_date TEXT`);
+  }
+
+  // Additive column on activity_log (older DBs).
+  const activityLogCols = db
+    .prepare(`PRAGMA table_info(activity_log)`)
+    .all() as Array<{ name: string }>;
+  const alNames = new Set(activityLogCols.map((c) => c.name));
+  if (!alNames.has('actor_user_id')) {
+    db.exec(`ALTER TABLE activity_log ADD COLUMN actor_user_id TEXT`);
   }
 }
 
@@ -671,11 +681,24 @@ export type ActivityLevel = 'ok' | 'warn' | 'error';
 
 export function insertActivityLog(
   db: Database.Database,
-  entry: { level: ActivityLevel; category: string; message: string; createdAt?: string },
+  entry: {
+    level: ActivityLevel;
+    category: string;
+    message: string;
+    actorUserId?: string | null;
+    createdAt?: string;
+  },
 ): void {
   db.prepare(
-    `INSERT INTO activity_log (created_at, level, category, message) VALUES (?, ?, ?, ?)`,
-  ).run(entry.createdAt ?? nowIso(), entry.level, entry.category, entry.message);
+    `INSERT INTO activity_log (created_at, level, category, message, actor_user_id)
+     VALUES (?, ?, ?, ?, ?)`,
+  ).run(
+    entry.createdAt ?? nowIso(),
+    entry.level,
+    entry.category,
+    entry.message,
+    entry.actorUserId ?? null,
+  );
 }
 
 export function countActivityByCategory(
@@ -695,6 +718,32 @@ export function countActivityByCategory(
   const out: Record<string, number> = {};
   for (const row of rows) out[row.category] = row.n;
   return out;
+}
+
+/** Distinct Discord user IDs logged on activity rows since `sinceIso` (null actors ignored). */
+export function countDistinctActivityActors(
+  db: Database.Database,
+  sinceIso: string,
+  category?: string,
+): number {
+  const row = (
+    category
+      ? (db
+          .prepare(
+            `SELECT COUNT(DISTINCT actor_user_id) AS n
+             FROM activity_log
+             WHERE created_at >= ? AND category = ? AND actor_user_id IS NOT NULL`,
+          )
+          .get(sinceIso, category) as { n: number })
+      : (db
+          .prepare(
+            `SELECT COUNT(DISTINCT actor_user_id) AS n
+             FROM activity_log
+             WHERE created_at >= ? AND actor_user_id IS NOT NULL`,
+          )
+          .get(sinceIso) as { n: number })
+  );
+  return row.n;
 }
 
 export function listActivityIssues(

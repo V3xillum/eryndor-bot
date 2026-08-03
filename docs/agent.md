@@ -367,6 +367,9 @@ Architecture should allow these without major refactoring, but **none should be 
 - Structured `descriptions` (or similar) in `weather-table.json` — only if text outside the card image becomes useful later; v1 keeps posts image-only
 - Guild-scoped slash command registration for faster iteration on a single server
 
+### Guild weather table (DB + wizard) — planned
+Per-guild d100 table in SQLite (types + range segments), DM wizard under `/dm weather-table`, switchable source `json` | `db`, default type for gaps, new claim always cuts/splits overlapping segments. Custom images under `storage/`. See [`feature-weather-table-db.md`](./feature-weather-table-db.md).
+
 ### Weather duration (per type) — implemented
 Each weather type may define `durationMinMinutes` / `durationMaxMinutes`. When present, that range schedules the next auto-update after the type becomes current; otherwise the guild `/dm weather-settings interval` applies when set, else the global `.env` interval. Explicit DM duration (`/dm weather set … duration`, `/dm weather schedule`) always wins.
 

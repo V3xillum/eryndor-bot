@@ -111,6 +111,7 @@ export class StatusReportService {
       calendar: String(summary.calendar),
       announce: String(summary.announce),
       command: String(summary.command),
+      uniqueUsers: String(summary.uniqueUsers),
     });
 
     let issues = this.messages.statusReportIssuesNone;

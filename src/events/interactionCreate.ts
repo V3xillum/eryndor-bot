@@ -46,6 +46,7 @@ export function registerInteractionHandler(
   },
 ): void {
   client.on('interactionCreate', async (interaction: Interaction) => {
+    const actorUserId = interaction.user.id;
     try {
       if (interaction.isModalSubmit()) {
         if (interaction.customId.startsWith('announce:')) {
@@ -53,7 +54,7 @@ export function registerInteractionHandler(
             announce: deps.announce,
             config: deps.config,
           });
-          deps.activity.ok('command', 'announce modal');
+          deps.activity.ok('command', 'announce modal', actorUserId);
           return;
         }
         if (interaction.customId.startsWith(BUILDING_WIZARD_PREFIX)) {
@@ -61,12 +62,12 @@ export function registerInteractionHandler(
             buildings: deps.buildings,
             resources: deps.resources,
           });
-          deps.activity.ok('command', 'building wizard modal');
+          deps.activity.ok('command', 'building wizard modal', actorUserId);
           return;
         }
         if (interaction.customId.startsWith(RESOURCE_WIZARD_PREFIX)) {
           await handleResourceWizardModal(interaction, deps.resources);
-          deps.activity.ok('command', 'resource wizard modal');
+          deps.activity.ok('command', 'resource wizard modal', actorUserId);
           return;
         }
         if (interaction.customId.startsWith(PRODUCTION_WIZARD_PREFIX)) {
@@ -74,7 +75,7 @@ export function registerInteractionHandler(
             production: deps.production,
             resources: deps.resources,
           });
-          deps.activity.ok('command', 'production wizard modal');
+          deps.activity.ok('command', 'production wizard modal', actorUserId);
         }
         return;
       }
@@ -85,7 +86,7 @@ export function registerInteractionHandler(
             buildings: deps.buildings,
             resources: deps.resources,
           });
-          deps.activity.ok('command', 'building wizard button');
+          deps.activity.ok('command', 'building wizard button', actorUserId);
         }
         return;
       }
@@ -96,7 +97,7 @@ export function registerInteractionHandler(
             buildings: deps.buildings,
             resources: deps.resources,
           });
-          deps.activity.ok('command', 'building wizard');
+          deps.activity.ok('command', 'building wizard', actorUserId);
           return;
         }
         if (interaction.customId.startsWith(PRODUCTION_WIZARD_PREFIX)) {
@@ -104,7 +105,7 @@ export function registerInteractionHandler(
             production: deps.production,
             resources: deps.resources,
           });
-          deps.activity.ok('command', 'production wizard');
+          deps.activity.ok('command', 'production wizard', actorUserId);
         }
         return;
       }
@@ -118,15 +119,15 @@ export function registerInteractionHandler(
             weather: deps.weather,
             config: deps.config,
           });
-          deps.activity.ok('command', '/eryndor');
+          deps.activity.ok('command', '/eryndor', actorUserId);
           return;
         case 'weather':
           await handleWeatherCommand(interaction, deps);
-          deps.activity.ok('command', '/weather');
+          deps.activity.ok('command', '/weather', actorUserId);
           return;
         case 'dm':
           await handleDmCommand(interaction, deps);
-          deps.activity.ok('command', '/dm');
+          deps.activity.ok('command', '/dm', actorUserId);
           return;
         case 'resource':
           await handleResourceCommand(interaction, {
@@ -134,7 +135,7 @@ export function registerInteractionHandler(
             buildings: deps.buildings,
             config: deps.config,
           });
-          deps.activity.ok('command', '/resource');
+          deps.activity.ok('command', '/resource', actorUserId);
           return;
         case 'building':
           await handleBuildingCommand(interaction, {
@@ -142,7 +143,7 @@ export function registerInteractionHandler(
             resources: deps.resources,
             config: deps.config,
           });
-          deps.activity.ok('command', '/building');
+          deps.activity.ok('command', '/building', actorUserId);
           return;
         case 'production':
           await handleProductionCommand(interaction, {
@@ -150,13 +151,13 @@ export function registerInteractionHandler(
             resources: deps.resources,
             config: deps.config,
           });
-          deps.activity.ok('command', '/production');
+          deps.activity.ok('command', '/production', actorUserId);
           return;
         default:
           return;
       }
     } catch (error) {
-      deps.activity.error('command', 'Command error', error);
+      deps.activity.error('command', 'Command error', error, actorUserId);
       const message = deps.weather.messages.commandError;
       if (interaction.isRepliable()) {
         if (interaction.deferred || interaction.replied) {

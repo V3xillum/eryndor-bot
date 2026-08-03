@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import {
   countActivityByCategory,
+  countDistinctActivityActors,
   insertActivityLog,
   listActivityIssues,
   pruneActivityLog,
@@ -20,16 +21,21 @@ export type ActivityCategory =
 export class ActivityLogService {
   constructor(private readonly db: Database.Database) {}
 
-  ok(category: ActivityCategory, message: string): void {
-    this.write('ok', category, message);
+  ok(category: ActivityCategory, message: string, actorUserId?: string): void {
+    this.write('ok', category, message, actorUserId);
   }
 
-  warn(category: ActivityCategory, message: string): void {
+  warn(category: ActivityCategory, message: string, actorUserId?: string): void {
     console.warn(message);
-    this.write('warn', category, message);
+    this.write('warn', category, message, actorUserId);
   }
 
-  error(category: ActivityCategory, message: string, error?: unknown): void {
+  error(
+    category: ActivityCategory,
+    message: string,
+    error?: unknown,
+    actorUserId?: string,
+  ): void {
     if (error !== undefined) console.error(message, error);
     else console.error(message);
     const detail =
@@ -38,7 +44,7 @@ export class ActivityLogService {
         : error !== undefined
           ? `${message}: ${String(error)}`
           : message;
-    this.write('error', category, detail);
+    this.write('error', category, detail, actorUserId);
   }
 
   summarize(since: Date): {
@@ -46,6 +52,7 @@ export class ActivityLogService {
     calendar: number;
     announce: number;
     command: number;
+    uniqueUsers: number;
     issues: Array<{ created_at: string; level: string; category: string; message: string }>;
   } {
     const sinceIso = since.toISOString();
@@ -55,6 +62,7 @@ export class ActivityLogService {
       calendar: counts.calendar ?? 0,
       announce: counts.announce ?? 0,
       command: counts.command ?? 0,
+      uniqueUsers: countDistinctActivityActors(this.db, sinceIso, 'command'),
       issues: listActivityIssues(this.db, sinceIso, 8),
     };
   }
@@ -64,11 +72,21 @@ export class ActivityLogService {
     pruneActivityLog(this.db, cutoff);
   }
 
-  private write(level: ActivityLevel, category: ActivityCategory, message: string): void {
+  private write(
+    level: ActivityLevel,
+    category: ActivityCategory,
+    message: string,
+    actorUserId?: string,
+  ): void {
     const trimmed =
       message.length > ISSUE_MESSAGE_MAX
         ? `${message.slice(0, ISSUE_MESSAGE_MAX - 1)}…`
         : message;
-    insertActivityLog(this.db, { level, category, message: trimmed });
+    insertActivityLog(this.db, {
+      level,
+      category,
+      message: trimmed,
+      actorUserId: actorUserId ?? null,
+    });
   }
 }
