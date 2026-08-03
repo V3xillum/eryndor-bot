@@ -40,11 +40,6 @@ export function buildResourceCommand() {
     .addSubcommand((sub) =>
       sub.setName('stock').setDescription('Hoeveel ligt er in de guild-voorraad?'),
     )
-    .addSubcommand((sub) =>
-      sub
-        .setName('overview')
-        .setDescription('Alles in één: guild, jouw stash en bouwvoortgang'),
-    )
     .addSubcommandGroup((group) =>
       group
         .setName('personal')
@@ -181,11 +176,10 @@ export async function handleResourceCommand(
   interaction: ChatInputCommandInteraction,
   deps: {
     resources: ResourceService;
-    buildings: BuildingService;
     config: AppConfig;
   },
 ): Promise<void> {
-  const { resources, buildings } = deps;
+  const { resources } = deps;
   const group = interaction.options.getSubcommandGroup(false);
   const sub = interaction.options.getSubcommand();
 
@@ -216,9 +210,6 @@ export async function handleResourceCommand(
       return;
     case 'stock':
       await handleStock(interaction, resources);
-      return;
-    case 'overview':
-      await handleOverview(interaction, resources, buildings);
       return;
     default:
       await interaction.reply({
@@ -547,13 +538,14 @@ async function handlePersonalGroup(
   });
 }
 
-async function handleOverview(
-  interaction: ChatInputCommandInteraction,
+/** Guild stock + personal stash + open buildings — used by `/eryndor overview`. */
+export function buildEconomyOverviewEmbeds(
   resources: ResourceService,
   buildings: BuildingService,
-): Promise<void> {
-  const guildId = interaction.guildId!;
-  const nickname = resolveNicknameSync(interaction);
+  guildId: string,
+  userId: string,
+  nickname: string,
+): EmbedBuilder[] {
   const embeds: EmbedBuilder[] = [];
 
   const cap = resources.getStorageCap(guildId);
@@ -582,7 +574,7 @@ async function handleOverview(
       ),
   );
 
-  const personalRows = resources.personalOverview(guildId, interaction.user.id);
+  const personalRows = resources.personalOverview(guildId, userId);
   const personalLines =
     personalRows.length === 0
       ? [resources.messages.resourcePersonalEmpty]
@@ -651,7 +643,7 @@ async function handleOverview(
       .setDescription(buildingBlocks.join('\n\n').slice(0, 4000)),
   );
 
-  await interaction.reply({ embeds, ephemeral: true });
+  return embeds;
 }
 
 async function handleAdjust(

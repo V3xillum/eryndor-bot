@@ -547,7 +547,7 @@
         </article>
         <article class="tile">
           <h3>Kalender</h3>
-          <p><code>/eryndor today</code> en <code>/eryndor fullmoon</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — zonder te verklappen wanneer het weer wisselt. Optioneel post de bot ’s ochtends (rond 08:30) bij events, en ’s avonds (rond 20:00) bij <strong>Full Moon (Rising)</strong> en de exacte volle maan, naar een apart kanaal. Inrichten: <code>/dm calendar setup</code>.</p>
+          <p><code>/eryndor today</code> en <code>/eryndor fullmoon</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — alleen voor jou zichtbaar (ook in <code>/eryndor overview</code>), zonder te verklappen wanneer het weer wisselt. Optioneel post de bot ’s ochtends (rond 08:30) bij events, en ’s avonds (rond 20:00) bij <strong>Full Moon (Rising)</strong> en de exacte volle maan, naar een apart kanaal. Inrichten: <code>/dm calendar setup</code>.</p>
         </article>
         <article class="tile">
           <h3>Geplande berichten</h3>
@@ -665,7 +665,7 @@
           <p>Wat speelt er nu? <code>/dm weather status</code> — weer, planning, ritme, venster, afkoeling, limieten. Alleen de volgende update: <code>/dm weather next</code>.</p>
         </article>
       </div>
-      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code> is alleen voor jou zichtbaar en post niets. Geplande tekstberichten gaan via <code>/dm announce</code>. Kalenderposts via <code>/dm calendar setup</code>. Voorraad, bouw en productie horen bij Discord tussen sessies — zie tab <strong>Voorraad &amp; bouw</strong>.</p>
+      <p class="note">Er is geen apart “post”-commando voor weer: alles wat het weer verandert, post ook naar het weerkanaal. <code>/weather current</code>, <code>/eryndor today</code> en <code>/eryndor fullmoon</code> zijn alleen voor jou zichtbaar en posten niets. Geplande tekstberichten gaan via <code>/dm announce</code>. Kalenderposts via <code>/dm calendar setup</code>. Voorraad, bouw en productie horen bij Discord tussen sessies — zie tab <strong>Voorraad &amp; bouw</strong>.</p>
     </section>
 
     <section id="voorraad" class="panel" role="tabpanel" hidden>
@@ -683,7 +683,7 @@
         </article>
         <article class="tile">
           <h3>3. Guild vs persoonlijk</h3>
-          <p><strong>Guild-voorraad:</strong> <code>/resource overview</code> (alles-in-één, alleen voor jou) / <code>donate</code> / <code>buy</code> / <code>stock</code>. <strong>Persoonlijk:</strong> <code>personal add|remove|show</code>. DM-correctie: <code>/dm resource adjust</code>.</p>
+          <p><strong>Guild-voorraad:</strong> <code>/eryndor overview</code> (alles-in-één, alleen voor jou) / <code>/resource donate</code> / <code>buy</code> / <code>stock</code>. <strong>Persoonlijk:</strong> <code>personal add|remove|show</code>. DM-correctie: <code>/dm resource adjust</code>.</p>
         </article>
         <article class="tile">
           <h3>4. Opslaglimiet</h3>
@@ -810,14 +810,14 @@
         cmd: "/eryndor today",
         who: "everyone",
         cat: "bekijken",
-        what: "Huidige Harptos-dag (Eryndor-kalender), maanfase en events.",
+        what: "Huidige Harptos-dag (Eryndor-kalender), maanfase en events (alleen voor jou).",
         when: "Wereldtijd / feestdagen aan tafel.",
       },
       {
         cmd: "/eryndor fullmoon",
         who: "everyone",
         cat: "bekijken",
-        what: "Wanneer de volgende exacte volle maan is.",
+        what: "Wanneer de volgende exacte volle maan is (alleen voor jou).",
         when: "Lycantropie, rituelen, nacht-scenes.",
       },
       {
@@ -996,18 +996,18 @@
         when: "Iets uit de gemeenschappelijke voorraad halen.",
       },
       {
+        cmd: "/eryndor overview",
+        who: "everyone",
+        cat: "bekijken",
+        what: "Alles-in-één (alleen voor jou): vandaag + volgende volle maan, guild-voorraad, jouw stash, bouwprojecten en productiebronnen.",
+        when: "Snel zien waar de wereld en de guild staan.",
+      },
+      {
         cmd: "/resource stock",
         who: "everyone",
         cat: "voorraad",
         what: "Toon de guild-voorraad en de opslaglimiet per type (alleen voor jou).",
         when: "Even kijken wat er nog ligt.",
-      },
-      {
-        cmd: "/resource overview",
-        who: "everyone",
-        cat: "voorraad",
-        what: "Alles-in-één overzicht (alleen voor jou): guild-voorraad, jouw Persoonlijke voorraad, en bouwprojecten met voortgang.",
-        when: "Snel zien waar de guild en jij staan.",
       },
       {
         cmd: "/resource personal add",
@@ -1120,13 +1120,6 @@
         cat: "bouwen",
         what: "Detail van een project via menu: ontbrekende materialen, tijd, fase.",
         when: "Voortgang van één project checken.",
-      },
-      {
-        cmd: "/building cost show",
-        who: "everyone",
-        cat: "bouwen",
-        what: "Toon kosten en voortgang van een project (menu).",
-        when: "Wat is er nog nodig?",
       },
       {
         cmd: "/dm building create",

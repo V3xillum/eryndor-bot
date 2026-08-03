@@ -117,6 +117,9 @@ export function registerInteractionHandler(
           await handleEryndorCommand(interaction, {
             calendar: deps.calendar,
             weather: deps.weather,
+            resources: deps.resources,
+            buildings: deps.buildings,
+            production: deps.production,
             config: deps.config,
           });
           deps.activity.ok('command', '/eryndor', actorUserId);
@@ -132,7 +135,6 @@ export function registerInteractionHandler(
         case 'resource':
           await handleResourceCommand(interaction, {
             resources: deps.resources,
-            buildings: deps.buildings,
             config: deps.config,
           });
           deps.activity.ok('command', '/resource', actorUserId);

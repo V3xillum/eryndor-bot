@@ -56,11 +56,12 @@ Global slash commands can take up to about an hour to appear after registration.
 
 | Command | Effect |
 |---|---|
+| `/eryndor overview` | Private: calendar + stock + buildings + production |
 | `/eryndor help` | Dutch overview of player commands (DMs also get DM cheat-sheet + handout link) |
-| `/eryndor today` / `fullmoon` | Harptos day / next exact Full Moon |
+| `/eryndor today` / `fullmoon` | Private Harptos day / next exact Full Moon (also in overview) |
 | `/weather current` | Private current weather |
 | `/resource …` | `donate` / `buy` / `stock` / `personal` / `type list` |
-| `/building …` | `deliver` / `use-guild-stock` / `contribute` / `list` / `status` / `cost show` |
+| `/building …` | `deliver` / `use-guild-stock` / `contribute` / `list` / `status` |
 | `/production list` | Production sources overview |
 
 ### DM (`/dm` — hidden from players by default)

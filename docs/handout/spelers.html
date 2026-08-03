@@ -158,6 +158,44 @@
 
     .tile + .tile { margin-top: 0; }
 
+    .tile details {
+      margin-top: 0.75rem;
+      border-top: 1px solid var(--line);
+      padding-top: 0.65rem;
+    }
+
+    .tile details summary {
+      cursor: pointer;
+      list-style: none;
+      color: var(--parchment);
+      font-size: 0.92rem;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .tile details summary::-webkit-details-marker { display: none; }
+
+    .tile details summary::before {
+      content: "▸";
+      display: inline-block;
+      margin-right: 0.4rem;
+      transition: transform 0.15s ease;
+      color: var(--muted);
+    }
+
+    .tile details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .tile details .loose-cmds {
+      margin: 0.55rem 0 0;
+      padding-left: 1.15rem;
+      color: var(--mist);
+      font-size: 0.92rem;
+    }
+
+    .tile details .loose-cmds li { margin: 0.35rem 0; }
+
     code {
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 0.88em;
@@ -214,20 +252,26 @@
 
       <div class="tile">
         <h3>Alles in één oogopslag</h3>
-        <p><code>/resource overview</code> — guild-voorraad, jouw eigen voorraad, en hoe ver bouwprojecten zijn.</p>
+        <p><code>/eryndor overview</code> — kalender (vandaag + volgende volle maan), guild-voorraad, jouw eigen voorraad, bouwprojecten en productiebronnen. Alleen voor jou zichtbaar.</p>
+        <details>
+          <summary>Bekijk losse commando’s</summary>
+          <ul class="loose-cmds">
+            <li><code>/resource stock</code> — alleen de guild-voorraad</li>
+            <li><code>/building list</code> — welke projecten er lopen</li>
+            <li><code>/building status</code> — detail van één project (menu)</li>
+            <li><code>/production list</code> — alleen productiebronnen</li>
+          </ul>
+        </details>
       </div>
       <div class="tile">
-        <h3>Weer &amp; kalender</h3>
-        <p><code>/weather current</code> — het huidige weer.<br />
-        <code>/eryndor today</code> — welke dag het is in Eryndor, maanfase, feestdagen.<br />
-        <code>/eryndor fullmoon</code> — wanneer de volgende volle maan is.</p>
+        <h3>Weer</h3>
+        <p><code>/weather current</code> — het huidige weer (alleen voor jou).</p>
       </div>
       <div class="tile">
-        <h3>Losse overzichten</h3>
-        <p><code>/resource stock</code> — alleen de guild-voorraad.<br />
-        <code>/resource personal show</code> — alleen jouw Persoonlijke voorraad.<br />
-        <code>/building list</code> of <code>/building status</code> — projecten en voortgang.<br />
-        <code>/production list</code> — welke productiebronnen er zijn (bijv. een houthakkershut).</p>
+        <h3>Alleen kalender</h3>
+        <p><code>/eryndor today</code> — welke dag het is in Eryndor, maanfase, feestdagen.<br />
+        <code>/eryndor fullmoon</code> — wanneer de volgende volle maan is.<br />
+        (Beide zitten ook in <code>/eryndor overview</code>.)</p>
       </div>
 
       <h2>De guild-voorraad</h2>
@@ -243,7 +287,7 @@
       </div>
       <div class="tile">
         <h3>Persoonlijke voorraad</h3>
-        <p>Apart van de guild: <code>/resource personal add</code> / <code>remove</code> / <code>show</code>. Handig voor spul dat van jou is. Geen GC.</p>
+        <p>Apart van de guild: <code>/resource personal add</code> / <code>remove</code> / <code>show</code>. Jouw eigen voorraad grondstoffen. Geen GC.</p>
       </div>
       <div class="note">
         <strong>Opslaglimiet:</strong> per type past er maar een bepaalde hoeveelheid in de guild-voorraad. Past het niet meer? Rest gaat naar jouw Persoonlijke voorraad.
@@ -269,6 +313,7 @@
 
       <h2>Snel terugvinden</h2>
       <ul>
+        <li><code>/eryndor overview</code> — alles in één oogopslag</li>
         <li><code>/eryndor help</code> — korte lijst van wat jij mag gebruiken</li>
         <li>Formulieren openen vaak met dropdowns: kies type of project, vul een aantal in, klaar</li>
       </ul>

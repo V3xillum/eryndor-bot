@@ -15,7 +15,7 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 | `/resource donate` | Modal: grondstof + aantal. Doneer aan de guild-voorraad. Stil bericht. Bot meldt GC (zelf bijhouden). | Voorraad | Iedereen |
 | `/resource buy` | Modal: grondstof + aantal. Koop uit de guild-voorraad. Stil bericht. Bot meldt kosten. | Voorraad | Iedereen |
 | `/resource stock` | Toon guild-voorraad + opslaglimiet per type (alleen voor jou). | Voorraad | Iedereen |
-| `/resource overview` | Alles-in-één (alleen voor jou): guild-voorraad, jouw persoonlijke voorraad, bouwprojecten + voortgang. | Voorraad | Iedereen |
+| `/eryndor overview` | Alles-in-één (alleen voor jou): kalender, guild-voorraad, persoonlijke voorraad, bouw + productie. | Bekijken | Iedereen |
 | `/resource personal add` | Modal: type + aantal. Zet iets in je Persoonlijke voorraad. Stil bericht. Geen GC. | Voorraad | Iedereen |
 | `/resource personal remove` | Modal: type + aantal. Haal iets uit je Persoonlijke voorraad. Stil bericht. | Voorraad | Iedereen |
 | `/resource personal show` | Toon jouw persoonlijke voorraad (alleen voor jou). | Voorraad | Iedereen |
@@ -37,7 +37,6 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 | `/building contribute` | Modal: project + tijd. GC = tijd × 1. | Bouwen | Iedereen |
 | `/building list` | Overzicht bouwprojecten + status. | Bouwen | Iedereen |
 | `/building status` | Menu: project → kosten/voortgang. | Bouwen | Iedereen |
-| `/building cost show` | Zelfde als status (menu). | Bouwen | Iedereen |
 | `/dm building create` | Nieuw project; bouwtijd fase 2 default **100**. | Bouwen | DM |
 | `/dm building-cost add` | Modal: project + type + aantal → knop “nog een toevoegen”. | Bouwen | DM |
 | `/dm building-cost buildtime` | Modal: project + bouwtijd. Altijd tot voltooid (niet locked na stortingen). | Bouwen | DM |
@@ -79,7 +78,7 @@ Uitleg voor DMs (geen DB/.env):
 
 ## Speler-handout (`spelers.html`)
 
-**Ja** — kort: overview/weer/kalender; guild donate/buy + persoonlijke voorraad; bouwen met deliver-bronnen + use-guild-stock + contribute. Geen DM-commands.
+**Ja** — kort: `/eryndor overview` / weer; guild donate/buy + persoonlijke voorraad; bouwen met deliver-bronnen + use-guild-stock + contribute. Geen DM-commands.
 
 ## Wat Commando’s / Sessie moeten krijgen
 

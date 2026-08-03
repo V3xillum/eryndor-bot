@@ -18,7 +18,7 @@ Zie ook: [`agent.md`](./agent.md), [`feature-eryndor-calendar.md`](./feature-ery
 |---|---|
 | `/dm calendar setup channel` | Zet `calendar_channel_id` |
 | `/dm calendar clear` | Zet `calendar_channel_id` op null |
-| `/eryndor today` / `fullmoon` | Ongewijzigd (iedereen) |
+| `/eryndor today` / `fullmoon` | Ephemeral (alleen voor de caller); ongewijzigd gedrag verder |
 
 ### Ochtend (events)
 

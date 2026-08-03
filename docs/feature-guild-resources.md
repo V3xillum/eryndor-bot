@@ -47,7 +47,7 @@ Zelfde patroon als `/weather setup` / `/dm calendar setup`: per Discord-guild é
 | `/resource donate` | Modal: grondstof-dropdown + aantal. Stock += amount. Publieke silent post + ephemeral bevestiging. GC = `amount × sell` (melding) |
 | `/resource buy` | Modal: grondstof-dropdown + aantal. Stock moet ≥ amount. Stock −= amount. Publieke silent post. Kosten = `amount × buy` (melding) |
 | `/resource stock` | Overzicht huidige voorraad (ephemeral) |
-| `/resource overview` | Ephemeral: guild-voorraad + Persoonlijke voorraad + bouwprojecten met voortgang |
+| `/eryndor overview` | Ephemeral: vandaag + volgende volle maan, guild-voorraad, persoonlijke voorraad, bouwprojecten, productie |
 | `/resource personal add` | Modal: type + aantal. Persoonlijke voorraad += amount. Publieke silent embed. Geen GC |
 | `/resource personal remove` | Modal: type + aantal (alleen wat je hebt). Persoonlijke voorraad −= amount. Publieke silent embed. Geen GC |
 | `/resource personal show` | Eigen persoonlijke voorraad (ephemeral) |
@@ -64,12 +64,11 @@ Create/cost/cancel = allowlist. deliver / use-guild-stock / contribute / list / 
 | `/building create name` | Nieuw project, status `funding`. `time_required` default **100** (fase 2). Meerdere tegelijk OK |
 | `/building cost add` | Menu: project → modal (grondstof + aantal) → knop “nog een toevoegen” |
 | `/building cost buildtime` | Menu: project → modal bouwtijd (fase 2). Corrigeert de default 100 |
-| `/building cost show` | Menu: project → kosten + voortgang |
-| `/building list` | Alle projecten + status |
+| `/building list` | Alle projecten + statusfase |
+| `/building status` | Menu: project → detail (materialen / tijd / fase) |
 | `/building use-guild-stock` | Modal: project + grondstof + aantal. Uit guild-stock. Geen extra GC. Silent post toont voortgang van **alle** materialen |
 | `/building deliver` | Modal: project + **bron** (van buiten / persoonlijke voorraad) + grondstof + aantal. GC = sell. Silent post toont voortgang van **alle** materialen |
 | `/building contribute` | Modal: project + tijd. GC = amount × 1 |
-| `/building status` | Menu: project → detail (missing materials / time / fase) |
 | `/building cancel name` | Allowlist. Funding terug naar guild-stock. Ledger `building_cancel`. Geen GC-terugdraai (GC was al “betaald” aan spelers) |
 
 **Fase-overgangen (automatisch bij mutatie):**

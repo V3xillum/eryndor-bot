@@ -3,6 +3,7 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
+  type GuildMember,
   type SlashCommandSubcommandBuilder,
 } from 'discord.js';
 import type { AppConfig } from '../config.js';
@@ -10,13 +11,26 @@ import {
   CalendarFetchError,
   type EryndorCalendarService,
 } from '../services/EryndorCalendarService.js';
+import type { BuildingService } from '../services/BuildingService.js';
+import type { ProductionService } from '../services/ProductionService.js';
+import type { ResourceService } from '../services/ResourceService.js';
 import type { WeatherService } from '../services/WeatherService.js';
 import { formatTemplate } from '../utils/helpers.js';
+import { buildProductionListEmbed } from './productionWizard.js';
+import { buildEconomyOverviewEmbeds } from './resource.js';
+import { guildNickname } from './resourceEmbeds.js';
 
 export function buildEryndorCommand() {
   return new SlashCommandBuilder()
     .setName('eryndor')
-    .setDescription('Kalender, volle maan en hulp voor de bot')
+    .setDescription('Wereldinfo, overzicht en hulp voor de bot')
+    .addSubcommand((sub) =>
+      sub
+        .setName('overview')
+        .setDescription(
+          'Alles in één: kalender, voorraad, bouw en productie (alleen voor jou)',
+        ),
+    )
     .addSubcommand((sub) =>
       sub
         .setName('help')
@@ -25,12 +39,12 @@ export function buildEryndorCommand() {
     .addSubcommand((sub) =>
       sub
         .setName('today')
-        .setDescription('Welke dag is het in Eryndor? Maanfase en feestdagen'),
+        .setDescription('Welke dag is het in Eryndor? Maanfase en feestdagen (alleen voor jou)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('fullmoon')
-        .setDescription('Wanneer is de volgende exacte volle maan?'),
+        .setDescription('Wanneer is de volgende exacte volle maan? (alleen voor jou)'),
     );
 }
 
@@ -62,6 +76,9 @@ export async function handleEryndorCommand(
   deps: {
     calendar: EryndorCalendarService;
     weather: WeatherService;
+    resources: ResourceService;
+    buildings: BuildingService;
+    production: ProductionService;
     config: AppConfig;
   },
 ): Promise<void> {
@@ -77,6 +94,9 @@ export async function handleEryndorCommand(
   }
 
   switch (sub) {
+    case 'overview':
+      await handleOverview(interaction, deps);
+      return;
     case 'help':
       await handleHelp(interaction, weather, config);
       return;
@@ -136,6 +156,62 @@ export async function dispatchEryndorAdmin(
   }
 }
 
+async function handleOverview(
+  interaction: ChatInputCommandInteraction,
+  deps: {
+    calendar: EryndorCalendarService;
+    resources: ResourceService;
+    buildings: BuildingService;
+    production: ProductionService;
+  },
+): Promise<void> {
+  const { calendar, resources, buildings, production } = deps;
+  const guildId = interaction.guildId!;
+  await interaction.deferReply({ ephemeral: true });
+
+  const embeds: EmbedBuilder[] = [];
+  let calendarNote: string | undefined;
+
+  try {
+    const [day, nextMoon] = await Promise.all([
+      calendar.getToday(),
+      calendar.getNextFullMoon(),
+    ]);
+    embeds.push(calendar.buildTodayEmbed(day));
+    embeds.push(calendar.buildFullMoonEmbed(nextMoon));
+  } catch (error) {
+    if (error instanceof CalendarFetchError) {
+      calendarNote = calendar.messages.calendarLoadError;
+    } else {
+      throw error;
+    }
+  }
+
+  const nickname = resolveNicknameSync(interaction);
+  embeds.push(
+    ...buildEconomyOverviewEmbeds(
+      resources,
+      buildings,
+      guildId,
+      interaction.user.id,
+      nickname,
+    ),
+  );
+
+  const productionEmbed = buildProductionListEmbed(production, resources, guildId);
+  embeds.push(
+    productionEmbed ??
+      new EmbedBuilder()
+        .setTitle(production.messages.productionListTitle)
+        .setDescription(production.messages.productionListEmpty),
+  );
+
+  await interaction.editReply({
+    content: calendarNote,
+    embeds: embeds.slice(0, 10),
+  });
+}
+
 async function handleHelp(
   interaction: ChatInputCommandInteraction,
   weather: WeatherService,
@@ -182,7 +258,7 @@ async function handleToday(
   interaction: ChatInputCommandInteraction,
   calendar: EryndorCalendarService,
 ): Promise<void> {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   try {
     const day = await calendar.getToday();
@@ -200,7 +276,7 @@ async function handleFullMoon(
   interaction: ChatInputCommandInteraction,
   calendar: EryndorCalendarService,
 ): Promise<void> {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   try {
     const next = await calendar.getNextFullMoon();
@@ -242,4 +318,16 @@ async function handleClear(
       : calendar.messages.calendarClearNone,
     ephemeral: true,
   });
+}
+
+function resolveNicknameSync(interaction: ChatInputCommandInteraction): string {
+  const member =
+    interaction.member && 'displayName' in interaction.member
+      ? (interaction.member as GuildMember)
+      : null;
+  const apiNick =
+    interaction.member && 'nick' in interaction.member
+      ? (interaction.member.nick as string | null | undefined)
+      : null;
+  return guildNickname(member, interaction.user, apiNick);
 }

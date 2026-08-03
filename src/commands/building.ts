@@ -24,21 +24,13 @@ export function buildBuildingCommand() {
   return new SlashCommandBuilder()
     .setName('building')
     .setDescription('Bouwprojecten: materialen leveren en meewerken')
-    .addSubcommandGroup((group) =>
-      group
-        .setName('cost')
-        .setDescription('Wat kost een project nog, en hoe ver is het?')
-        .addSubcommand((sub) =>
-          sub
-            .setName('show')
-            .setDescription('Kosten en voortgang van een project (menu)'),
-        ),
-    )
     .addSubcommand((sub) =>
       sub.setName('list').setDescription('Welke bouwprojecten lopen er?'),
     )
     .addSubcommand((sub) =>
-      sub.setName('status').setDescription('Status van een project (menu)'),
+      sub
+        .setName('status')
+        .setDescription('Detail van één project: materialen, tijd en fase (menu)'),
     )
     .addSubcommand((sub) =>
       sub
@@ -114,24 +106,11 @@ export async function handleBuildingCommand(
   },
 ): Promise<void> {
   const { buildings, resources } = deps;
-  const group = interaction.options.getSubcommandGroup(false);
   const sub = interaction.options.getSubcommand();
 
   if (!interaction.guildId) {
     await interaction.reply({
       content: buildings.messages.guildOnly,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  if (group === 'cost') {
-    if (sub === 'show') {
-      await startCostShowWizard(interaction, { buildings, resources });
-      return;
-    }
-    await interaction.reply({
-      content: buildings.messages.unknownSubcommand,
       ephemeral: true,
     });
     return;

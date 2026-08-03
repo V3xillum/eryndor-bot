@@ -25,7 +25,7 @@ Beide handouts linken naar elkaar (footer / hero).
 ## Speler-handout (`spelers.html`)
 
 ### Wat erin hoort
-- **Even kijken** — overview, weer, kalender, losse lijsten (`stock`, `personal show`, `building list/status`, `production list`)
+- **Even kijken** — `/eryndor overview` als default; daaronder `<details>` “Bekijk losse commando’s” met alleen stock / building list|status / production list (geen personal show — die staat verderop; weer + kalender blijven aparte tiles)
 - **Guild-voorraad** — donate / buy / persoonlijke voorraad (add|remove|show); GC zelf bijhouden; opslaglimiet + overflow → persoonlijk
 - **Meebouwen** — deliver (bronkeuze), use-guild-stock, contribute
 - Korte tip: `/eryndor help` + formulieren met dropdowns
@@ -126,7 +126,7 @@ Eerst op **wie**, daarna op **categorie**:
 
 | Categorie | Voorbeelden |
 |---|---|
-| Bekijken | `/weather current`, `/eryndor today`, `/eryndor fullmoon` |
+| Bekijken | `/eryndor overview`, `/weather current`, `/eryndor today`, `/eryndor fullmoon` |
 | Inrichten | `/dm weather setup`, `/dm calendar setup` / `clear`, `/dm resource setup` |
 | Instellingen | `/dm weather-settings …` |
 | Acties | `/dm weather` → `roll`, `set`, `schedule`, `pause`, `resume` |

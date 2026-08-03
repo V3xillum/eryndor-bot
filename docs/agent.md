@@ -258,7 +258,7 @@ Discord commands should only parse input, call the service, and format the reply
 
 Fetch order: Pages base URL first; on persistent 404, optional raw.githubusercontent.com fallback. Do not scrape HTML.
 
-Replies are Dutch Discord embeds (`content/messages.json` for labels/errors). Today embed: Harptos title, moon phase, NL-formatted Gregorian date under the moon, events list, then a markdown “Bekijk ↗” link to the calendar UI (`ERYNDOR_CALENDAR_BASE_URL`) under Events — **no** next-full-moon footer on today (full moon is only via `/eryndor fullmoon`).
+Replies are Dutch Discord embeds (`content/messages.json` for labels/errors). Today embed: Harptos title, moon phase, NL-formatted Gregorian date under the moon, events list, then a markdown “Bekijk ↗” link to the calendar UI (`ERYNDOR_CALENDAR_BASE_URL`) under Events — **no** next-full-moon footer on today (full moon is only via `/eryndor fullmoon`). Slash `/eryndor today` and `/eryndor fullmoon` reply **ephemerally** (private to the caller); morning/evening auto-posts to the calendar channel remain public.
 
 UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec detail: [`docs/feature-eryndor-calendar.md`](./feature-eryndor-calendar.md). Daily auto-post of events: [`docs/feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
@@ -267,9 +267,10 @@ UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec de
 **Player-facing (everyone in the guild):**
 - `/weather current`
 - `/eryndor help` (players: player commands + link to player handout `…/spelers.html`; allowlist also sees DM cheat-sheet + DM `HANDOUT_URL`)
-- `/eryndor today`, `/eryndor fullmoon`
-- `/resource donate|buy|stock|personal|*|type list|overview`
-- `/building deliver|use-guild-stock|contribute|list|status|cost show` — deliver: source *outside* or *personal stock* (+ sell GC); use-guild-stock: guild stock only (no GC)
+- `/eryndor overview` — private: today + next full moon, guild/personal stock, buildings, production
+- `/eryndor today`, `/eryndor fullmoon` — private calendar shortcuts (same embeds as in overview / channel posts)
+- `/resource donate|buy|stock|personal|*|type list`
+- `/building deliver|use-guild-stock|contribute|list|status` — deliver: source *outside* or *personal stock* (+ sell GC); use-guild-stock: guild stock only (no GC)
 - `/production list`
 
 **DM-only:** all under `/dm …` (see Slash Commands). Runtime gate remains `ALLOWED_USER_IDS`.
@@ -283,10 +284,10 @@ Unauthorized users get a short ephemeral denial.
 There is **no** `/weather post`. Anything that changes weather also broadcasts to the configured channel/thread.
 
 ### Player commands
-- `/eryndor help|today|fullmoon` — help + calendar info. Everyone.
+- `/eryndor overview|help|today|fullmoon` — overview (calendar + economy), help, private calendar shortcuts. Everyone.
 - `/weather current` — private current weather. Everyone.
-- `/resource donate|buy|stock|personal|*|type list|overview` — stockpile. Everyone.
-- `/building deliver|use-guild-stock|contribute|list|status|cost show` — projects. Everyone. Deliver chooses source (outside / personal stock, + sell GC); use-guild-stock uses guild stock (no GC).
+- `/resource donate|buy|stock|personal|*|type list` — stockpile actions. Everyone.
+- `/building deliver|use-guild-stock|contribute|list|status` — projects. Everyone. Deliver chooses source (outside / personal stock, + sell GC); use-guild-stock uses guild stock (no GC).
 - `/production list` — production overview. Everyone.
 
 ### `/dm` (allowlist + Discord picker hidden by default)
@@ -392,7 +393,7 @@ Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / def
 `/dm announce schedule|list|cancel` stores free-text posts in `scheduled_posts` and posts them via the existing 30s scheduler to a chosen channel (not the weather destination). Relative or absolute `when` in `WEATHER_TIMEZONE`. Modal body max 2000 chars. Allowlist only. See [`feature-scheduled-announcements.md`](./feature-scheduled-announcements.md).
 
 ### Guild resources & buildings — implemented
-`/resource` (types, donate/buy/stock/personal/overview, setup, cap) and `/building` (create/cost add|buildtime|show/deliver/use-guild-stock/contribute). Flexible resource types per guild, two-phase building projects (materials → build time, default **100**). `/building deliver` source: **outside** or **personal stock** (both + sell GC); `/building use-guild-stock` from guild stock (no GC). Public silent embeds (deliver/use-guild-stock show full material progress), ledger + status-report backup. No player GC balance in DB. Player handout: `docs/handout/spelers.html`. See [`feature-guild-resources.md`](./feature-guild-resources.md).
+`/eryndor overview` (calendar + guild/personal stock + buildings + production), `/resource` (types, donate/buy/stock/personal, setup, cap) and `/building` (create; DM cost add|buildtime; list|status|deliver|use-guild-stock|contribute). Flexible resource types per guild, two-phase building projects (materials → build time, default **100**). `/building deliver` source: **outside** or **personal stock** (both + sell GC); `/building use-guild-stock` from guild stock (no GC). Public silent embeds (deliver/use-guild-stock show full material progress), ledger + status-report backup. No player GC balance in DB. Player handout: `docs/handout/spelers.html`. See [`feature-guild-resources.md`](./feature-guild-resources.md).
 
 ### Guild production & storage cap — implemented
 `/production` (add/list/workers/yield/remove) and `/resource cap`. Per-type `storage_cap` (default 300). Interactive overflow → personal stock; auto production overflow → **lost**, shown clearly on the daily silent post after `PRODUCTION_POST_TIME` (default `17:00`). Same same-day catch-up as calendar posts if the bot starts late. See [`feature-guild-production.md`](./feature-guild-production.md).
