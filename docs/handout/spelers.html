@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eryndor bot — Speler-handout</title>
+  <meta name="description" content="Korte uitleg voor spelers: wat je met Eryndor bot kunt doen tussen sessies — voorraad, bouw en info." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0b0f14;
+      --panel: rgba(20, 28, 36, 0.78);
+      --line: rgba(210, 190, 150, 0.16);
+      --mist: #a8b7c2;
+      --text: #eef2f5;
+      --muted: #8f9eaa;
+      --accent: #6db3a0;
+      --parchment: #c9a86a;
+      --parchment-soft: rgba(201, 168, 106, 0.14);
+      --radius: 16px;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
+      --font-display: "Cinzel", Georgia, serif;
+      --font-body: "Figtree", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 50% -8%, rgba(201, 168, 106, 0.16), transparent 55%),
+        radial-gradient(1000px 480px at 8% 18%, rgba(109, 179, 160, 0.12), transparent 50%),
+        linear-gradient(180deg, #080c11 0%, #101820 45%, #0b0f14 100%);
+      line-height: 1.55;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.28;
+      background-image:
+        repeating-linear-gradient(
+          -14deg,
+          transparent 0,
+          transparent 12px,
+          rgba(255, 255, 255, 0.012) 12px,
+          rgba(255, 255, 255, 0.012) 13px
+        );
+    }
+
+    .wrap {
+      width: min(720px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2rem 0 4rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 1.5rem 1rem 1.4rem;
+    }
+
+    .logo-frame {
+      width: min(180px, 46vw);
+      aspect-ratio: 1;
+      margin: 0 auto 1.1rem;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(201, 168, 106, 0.4), 0 18px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .logo-frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hero-brand {
+      font-family: var(--font-display);
+      font-size: clamp(1.85rem, 5vw, 2.6rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin: 0;
+      color: #f3e7cf;
+    }
+
+    .hero-brand span {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.42em;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      color: var(--parchment);
+      text-transform: uppercase;
+    }
+
+    .hero p {
+      margin: 0.85rem auto 0;
+      max-width: 32rem;
+      color: var(--mist);
+      font-size: 1.02rem;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.35rem 1.25rem 1.5rem;
+      backdrop-filter: blur(12px);
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      letter-spacing: 0.03em;
+      margin: 1.45rem 0 0.4rem;
+      font-weight: 700;
+      color: #f0e4cc;
+    }
+
+    h2:first-child { margin-top: 0; }
+
+    p {
+      margin: 0 0 0.85rem;
+      color: var(--mist);
+      font-size: 0.98rem;
+    }
+
+    .lead {
+      color: var(--muted);
+      margin-bottom: 1.1rem;
+    }
+
+    .tile {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.95rem 1rem;
+      background: rgba(8, 12, 18, 0.4);
+      margin-bottom: 0.75rem;
+    }
+
+    .tile h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1rem;
+      color: var(--parchment);
+    }
+
+    .tile p { margin: 0; }
+
+    .tile + .tile { margin-top: 0; }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.88em;
+      color: #d9ecff;
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      padding: 0.08rem 0.35rem;
+    }
+
+    ul {
+      margin: 0 0 0.85rem;
+      padding-left: 1.15rem;
+      color: var(--mist);
+    }
+
+    li { margin: 0.3rem 0; }
+
+    .note {
+      margin-top: 1.1rem;
+      padding: 0.9rem 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(109, 179, 160, 0.25);
+      background: rgba(109, 179, 160, 0.08);
+      color: var(--mist);
+      font-size: 0.92rem;
+    }
+
+    .note strong { color: #d7efe6; }
+
+    footer {
+      margin-top: 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    footer a { color: var(--parchment); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="logo-frame">
+        <img src="eryndor-logo.jpg" alt="Eryndor Campaign" width="180" height="180" />
+      </div>
+      <h1 class="hero-brand">Eryndor bot<span>Voor spelers</span></h1>
+      <p>Tussen sessies houdt de bot de wereld een beetje levend: weer, kalender, de gedeelde voorraad van de guild, en bouwprojecten waar je aan kunt meedoen.</p>
+    </header>
+
+    <section class="panel">
+      <h2>Even kijken</h2>
+      <p class="lead">Antwoorden van de bot zie je meestal alleen zelf. Handig om snel te checken waar jullie staan.</p>
+
+      <div class="tile">
+        <h3>Alles in één oogopslag</h3>
+        <p><code>/resource overview</code> — guild-voorraad, jouw eigen voorraad, en hoe ver bouwprojecten zijn.</p>
+      </div>
+      <div class="tile">
+        <h3>Weer &amp; kalender</h3>
+        <p><code>/weather current</code> — het huidige weer.<br />
+        <code>/eryndor today</code> — welke dag het is in Eryndor, maanfase, feestdagen.<br />
+        <code>/eryndor fullmoon</code> — wanneer de volgende volle maan is.</p>
+      </div>
+      <div class="tile">
+        <h3>Losse overzichten</h3>
+        <p><code>/resource stock</code> — alleen de guild-voorraad.<br />
+        <code>/resource personal show</code> — alleen jouw Persoonlijke voorraad.<br />
+        <code>/building list</code> of <code>/building status</code> — projecten en voortgang.<br />
+        <code>/production list</code> — welke productiebronnen er zijn (bijv. een houthakkershut).</p>
+      </div>
+
+      <h2>De guild-voorraad</h2>
+      <p>Jullie hebben een gedeelde opslag: loot, crafting, inkopen. De bot houdt bij hoeveel er ligt. <strong>Guild Credits</strong> (GC) houdt de bot niet voor je bij — die tel je zelf bij je personage.</p>
+
+      <div class="tile">
+        <h3>Doneren</h3>
+        <p><code>/resource donate</code> — lever materiaal in bij de guild. Je krijgt GC voor de <em>verkoop</em> (prijs per stuk staat bij het type).</p>
+      </div>
+      <div class="tile">
+        <h3>Kopen</h3>
+        <p><code>/resource buy</code> — haal iets uit de gedeelde voorraad. Dat kost GC voor de <em>aankoop</em>.</p>
+      </div>
+      <div class="tile">
+        <h3>Persoonlijke voorraad</h3>
+        <p>Apart van de guild: <code>/resource personal add</code> / <code>remove</code> / <code>show</code>. Handig voor spul dat van jou is. Geen GC.</p>
+      </div>
+      <div class="note">
+        <strong>Opslaglimiet:</strong> per type past er maar een bepaalde hoeveelheid in de guild-voorraad. Past het niet meer? Rest gaat naar jouw Persoonlijke voorraad.
+      </div>
+
+      <h2>Meebouwen</h2>
+      <p>De DM zet een bouwproject klaar (bijv. een mijn of hut). Dat gaat in twee stappen: eerst genoeg materialen, daarna werktijd.</p>
+
+      <div class="tile">
+        <h3>Materialen doneren</h3>
+        <p><code>/building donate</code> — kies project, bron, grondstof en aantal. Bron:</p>
+        <p style="margin-top:0.45rem"><em>Van buiten</em> — net gehakt/gevonden, nog niet in de bot. Je krijgt GC.<br />
+        <em>Mijn voorraad</em> — uit je persoonlijke voorraad. Ook GC; die voorraad gaat omlaag.</p>
+      </div>
+      <div class="tile">
+        <h3>Uit de gedeelde voorraad</h3>
+        <p><code>/building fund</code> — haal materiaal uit de guild-opslag en zet het op het project. Geen extra GC.</p>
+      </div>
+      <div class="tile">
+        <h3>Meewerken (tijd)</h3>
+        <p>Als de materialen compleet zijn, komt de bouwfase. <code>/building contribute</code> — besteed tijd-units. 1 unit ≈ 1 GC.</p>
+      </div>
+
+      <h2>Snel terugvinden</h2>
+      <ul>
+        <li><code>/eryndor help</code> — korte lijst van wat jij mag gebruiken</li>
+        <li>Formulieren openen vaak met dropdowns: kies type of project, vul een aantal in, klaar</li>
+      </ul>
+
+      <div class="note">
+        Twijfel je of iets mag, of klopt de voorraad niet? Vraag je DM — die richt types, projecten en limieten in.
+      </div>
+    </section>
+
+    <footer>
+      Eryndor bot · speler-handout ·
+      <a href="./">DM-handout</a>
+    </footer>
+  </div>
+</body>
+</html>

@@ -119,19 +119,36 @@ export async function startMaterialWizard(
     return;
   }
 
+  const personalByKey =
+    action === 'donate'
+      ? new Map(
+          deps.resources
+            .personalOverview(interaction.guildId!, interaction.user.id)
+            .map((r) => [r.type.key, r.quantity]),
+        )
+      : null;
+
   const resourceOptions = [...resourceByKey.entries()]
     .slice(0, 25)
-    .map(([key, m]) =>
-      new StringSelectMenuOptionBuilder()
+    .map(([key, m]) => {
+      const desc =
+        personalByKey != null
+          ? formatTemplate(
+              buildings.messages.buildingWizardStillNeededWithPersonal,
+              {
+                left: String(m.left),
+                qty: String(personalByKey.get(key) ?? 0),
+              },
+            )
+          : formatTemplate(buildings.messages.buildingWizardStillNeeded, {
+              left: String(m.left),
+              required: String(m.required),
+            });
+      return new StringSelectMenuOptionBuilder()
         .setLabel(m.displayName.slice(0, 100))
         .setValue(key)
-        .setDescription(
-          formatTemplate(buildings.messages.buildingWizardStillNeeded, {
-            left: String(m.left),
-            required: String(m.required),
-          }).slice(0, 100),
-        ),
-    );
+        .setDescription(desc.slice(0, 100));
+    });
 
   const modal = new ModalBuilder()
     .setCustomId(
@@ -144,41 +161,76 @@ export async function startMaterialWizard(
       ? buildings.messages.buildingWizardDonateIntro
       : buildings.messages.buildingWizardFundIntro,
   );
-  modal.addLabelComponents(
+
+  const labelComponents = [
+    new LabelBuilder()
+      .setLabel(buildings.messages.buildingWizardBuildingLabel.slice(0, 45))
+      .setStringSelectMenuComponent(
+        new StringSelectMenuBuilder()
+          .setCustomId('building')
+          .setPlaceholder(
+            buildings.messages.buildingWizardBuildingPlaceholder.slice(0, 150),
+          )
+          .setRequired(true)
+          .addOptions(buildingOptions),
+      ),
+  ];
+
+  if (action === 'donate') {
+    labelComponents.push(
       new LabelBuilder()
-        .setLabel(buildings.messages.buildingWizardBuildingLabel.slice(0, 45))
+        .setLabel(buildings.messages.buildingWizardSourceLabel.slice(0, 45))
         .setStringSelectMenuComponent(
           new StringSelectMenuBuilder()
-            .setCustomId('building')
+            .setCustomId('source')
             .setPlaceholder(
-              buildings.messages.buildingWizardBuildingPlaceholder.slice(0, 150),
+              buildings.messages.buildingWizardSourcePlaceholder.slice(0, 150),
             )
             .setRequired(true)
-            .addOptions(buildingOptions),
-        ),
-      new LabelBuilder()
-        .setLabel(buildings.messages.buildingWizardResourceLabel.slice(0, 45))
-        .setStringSelectMenuComponent(
-          new StringSelectMenuBuilder()
-            .setCustomId('type')
-            .setPlaceholder(
-              buildings.messages.buildingWizardResourcePlaceholder.slice(0, 150),
-            )
-            .setRequired(true)
-            .addOptions(resourceOptions),
-        ),
-      new LabelBuilder()
-        .setLabel(buildings.messages.buildingWizardAmountLabel.slice(0, 45))
-        .setTextInputComponent(
-          new TextInputBuilder()
-            .setCustomId('amount')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setMinLength(1)
-            .setMaxLength(4)
-            .setPlaceholder('1'),
+            .addOptions(
+              new StringSelectMenuOptionBuilder()
+                .setLabel(buildings.messages.buildingWizardSourceOutside.slice(0, 100))
+                .setValue('outside')
+                .setDescription(
+                  buildings.messages.buildingWizardSourceOutsideDesc.slice(0, 100),
+                ),
+              new StringSelectMenuOptionBuilder()
+                .setLabel(buildings.messages.buildingWizardSourcePersonal.slice(0, 100))
+                .setValue('personal')
+                .setDescription(
+                  buildings.messages.buildingWizardSourcePersonalDesc.slice(0, 100),
+                ),
+            ),
         ),
     );
+  }
+
+  labelComponents.push(
+    new LabelBuilder()
+      .setLabel(buildings.messages.buildingWizardResourceLabel.slice(0, 45))
+      .setStringSelectMenuComponent(
+        new StringSelectMenuBuilder()
+          .setCustomId('type')
+          .setPlaceholder(
+            buildings.messages.buildingWizardResourcePlaceholder.slice(0, 150),
+          )
+          .setRequired(true)
+          .addOptions(resourceOptions),
+      ),
+    new LabelBuilder()
+      .setLabel(buildings.messages.buildingWizardAmountLabel.slice(0, 45))
+      .setTextInputComponent(
+        new TextInputBuilder()
+          .setCustomId('amount')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+          .setMinLength(1)
+          .setMaxLength(4)
+          .setPlaceholder('1'),
+      ),
+  );
+
+  modal.addLabelComponents(...labelComponents);
 
   await interaction.showModal(modal);
 }
@@ -749,6 +801,18 @@ export async function handleBuildingWizardModal(
     const resourceKey = interaction.fields.getStringSelectValues('type')[0];
     const amountRaw = interaction.fields.getTextInputValue('amount').trim();
     const amount = Number(amountRaw);
+    let donateSource: 'outside' | 'personal' = 'outside';
+    if (action === 'donate') {
+      const sourceRaw = interaction.fields.getStringSelectValues('source')[0];
+      if (sourceRaw !== 'outside' && sourceRaw !== 'personal') {
+        await interaction.reply({
+          content: deps.buildings.messages.buildingWizardSourceInvalid,
+          ephemeral: true,
+        });
+        return;
+      }
+      donateSource = sourceRaw;
+    }
     if (!Number.isInteger(buildingId) || buildingId < 1) {
       await interaction.reply({
         content: deps.buildings.messages.buildingWizardBuildingGone,
@@ -780,6 +844,7 @@ export async function handleBuildingWizardModal(
       buildingId,
       resourceKey,
       amount,
+      action === 'donate' ? donateSource : undefined,
     );
     return;
   }
@@ -1477,6 +1542,7 @@ async function finishMaterialAction(
   buildingId: number,
   resourceKey: string,
   amount: number,
+  donateSource: 'outside' | 'personal' = 'outside',
 ): Promise<void> {
   const { buildings, resources } = deps;
   const nickname = nicknameFrom(interaction);
@@ -1499,6 +1565,7 @@ async function finishMaterialAction(
           amount,
           actorUserId: interaction.user.id,
           actorNickname: nickname,
+          source: donateSource,
         })
       : buildings.fundById({
           guildId: interaction.guildId!,
@@ -1521,6 +1588,7 @@ async function finishMaterialAction(
   );
 
   if (action === 'donate') {
+    const fromPersonal = result.source === 'personal';
     const embed = buildBuildingDonateEmbed(buildings.messages, {
       nickname,
       amount: result.amount,
@@ -1529,16 +1597,24 @@ async function finishMaterialAction(
       gc: result.gc,
       progress,
       phaseNote: result.phaseNote,
+      fromPersonal,
+      personalAfter: fromPersonal ? (result.stockAfter ?? 0) : undefined,
     });
     await postSilentEmbed(channel, embed);
     await interaction.reply({
-      content: formatTemplate(buildings.messages.buildingDonateSuccess, {
-        amount: String(result.amount),
-        type: result.type.display_name,
-        building: result.building.name,
-        gc: String(result.gc),
-        phase: result.phaseNote,
-      }),
+      content: formatTemplate(
+        fromPersonal
+          ? buildings.messages.buildingDonatePersonalSuccess
+          : buildings.messages.buildingDonateSuccess,
+        {
+          amount: String(result.amount),
+          type: result.type.display_name,
+          building: result.building.name,
+          gc: String(result.gc),
+          personal: String(result.stockAfter ?? 0),
+          phase: result.phaseNote,
+        },
+      ),
       ephemeral: true,
     });
     return;

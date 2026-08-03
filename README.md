@@ -2,7 +2,7 @@
 
 Discord bot for the Eryndor (West Marches) D&D server: weather, calendar, guild resources/buildings/production. The bot posts weather automatically on a random interval (defaults in `.env`, overridable per guild via `/dm weather-settings`) and gives allowlisted users slash-command control during sessions.
 
-DM handout (GitHub Pages, from `/docs`): [`docs/handout/`](./docs/handout/). Agent rules for that handout: [`docs/handout-agent.md`](./docs/handout-agent.md). Feature specs: `docs/feature-*.md`.
+DM handout (GitHub Pages, from `/docs`): [`docs/handout/`](./docs/handout/). Player handout: [`docs/handout/spelers.html`](./docs/handout/spelers.html). Agent rules: [`docs/handout-agent.md`](./docs/handout-agent.md). Feature specs: `docs/feature-*.md`.
 
 ## Requirements
 

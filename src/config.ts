@@ -17,6 +17,11 @@ const DEFAULT_CALENDAR_FULLMOON_POST_TIME = '20:00';
 const DEFAULT_ERYNDOR_BASE_URL = 'https://v3xillum.github.io/eryndor';
 const DEFAULT_ERYNDOR_FALLBACK_URL = 'https://raw.githubusercontent.com/V3xillum/eryndor/main';
 const DEFAULT_HANDOUT_URL = 'https://v3xillum.github.io/eryndor-bot/handout/';
+
+function derivePlayerHandoutUrl(handoutUrl: string): string {
+  const base = handoutUrl.endsWith('/') ? handoutUrl : `${handoutUrl}/`;
+  return `${base}spelers.html`;
+}
 const DEFAULT_STATUS_REPORT_TIME = '10:00';
 const DEFAULT_PRODUCTION_POST_TIME = '17:00';
 
@@ -132,6 +137,7 @@ export function loadConfig() {
   if (!/^https?:\/\//i.test(handoutUrl)) {
     throw new Error(`HANDOUT_URL must be an http(s) URL, got: ${handoutUrl}`);
   }
+  const playerHandoutUrl = derivePlayerHandoutUrl(handoutUrl);
 
   const statusReportTime = parseTimeOfDay(
     process.env.STATUS_REPORT_TIME?.trim() || DEFAULT_STATUS_REPORT_TIME,
@@ -155,6 +161,7 @@ export function loadConfig() {
     updateMaxMinutes,
     activeWindow: loadActiveWindow(),
     handoutUrl,
+    playerHandoutUrl,
     calendarEventsPostTime,
     calendarFullMoonPostTime,
     eryndorCalendar: {

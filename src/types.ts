@@ -296,6 +296,7 @@ export interface Messages {
   resourceEmbedDonateTitle: string;
   resourceEmbedBuyTitle: string;
   resourceEmbedBuildingDonateTitle: string;
+  resourceEmbedBuildingDonatePersonalTitle: string;
   resourceEmbedBuildingFundTitle: string;
   resourceEmbedContributeTitle: string;
   resourceEmbedPersonalAddTitle: string;
@@ -304,6 +305,7 @@ export interface Messages {
   resourceEmbedDonateOverflow: string;
   resourceEmbedBuyDesc: string;
   resourceEmbedBuildingDonateDesc: string;
+  resourceEmbedBuildingDonatePersonalDesc: string;
   resourceEmbedBuildingFundDesc: string;
   resourceEmbedContributeDesc: string;
   resourceEmbedPersonalAddDesc: string;
@@ -379,6 +381,7 @@ export interface Messages {
   buildingStatusCancelled: string;
   buildingFundSuccess: string;
   buildingDonateSuccess: string;
+  buildingDonatePersonalSuccess: string;
   buildingContributeSuccess: string;
   buildingWrongPhase: string;
   buildingNoCostForType: string;
@@ -400,6 +403,7 @@ export interface Messages {
   buildingWizardBuildingGone: string;
   buildingWizardNotYours: string;
   buildingWizardStillNeeded: string;
+  buildingWizardStillNeededWithPersonal: string;
   buildingWizardTimeLeft: string;
   buildingWizardPickBuildingCost: string;
   buildingWizardPickResourceCost: string;
@@ -444,6 +448,13 @@ export interface Messages {
   buildingWizardMaterialModalTitle: string;
   buildingWizardDonateIntro: string;
   buildingWizardFundIntro: string;
+  buildingWizardSourceLabel: string;
+  buildingWizardSourcePlaceholder: string;
+  buildingWizardSourceOutside: string;
+  buildingWizardSourceOutsideDesc: string;
+  buildingWizardSourcePersonal: string;
+  buildingWizardSourcePersonalDesc: string;
+  buildingWizardSourceInvalid: string;
   buildingWizardMaterialModalLabel: string;
   buildingWizardContributeModalTitle: string;
   buildingWizardContributeIntro: string;

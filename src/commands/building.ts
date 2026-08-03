@@ -46,7 +46,9 @@ export function buildBuildingCommand() {
     .addSubcommand((sub) =>
       sub
         .setName('donate')
-        .setDescription('Donate materials into a project (form: project + type + amount)'),
+        .setDescription(
+          'Donate to a project: from outside or your personal stock (form; + sell GC)',
+        ),
     )
     .addSubcommand((sub) =>
       sub

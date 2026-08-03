@@ -160,8 +160,12 @@ async function handleHelp(
         },
       );
   } else {
+    const url = config.playerHandoutUrl;
     embed
-      .setDescription(weather.messages.helpEmbedDescriptionPlayer)
+      .setURL(url)
+      .setDescription(
+        formatTemplate(weather.messages.helpEmbedDescriptionPlayer, { url }),
+      )
       .addFields({
         name: weather.messages.helpFieldPlayer,
         value: weather.messages.helpEveryoneBody,

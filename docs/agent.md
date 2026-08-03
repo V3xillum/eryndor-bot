@@ -266,10 +266,10 @@ UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec de
 
 **Player-facing (everyone in the guild):**
 - `/weather current`
-- `/eryndor help` (players: player commands only; allowlist also sees DM cheat-sheet + `HANDOUT_URL`)
+- `/eryndor help` (players: player commands + link to player handout `…/spelers.html`; allowlist also sees DM cheat-sheet + DM `HANDOUT_URL`)
 - `/eryndor today`, `/eryndor fullmoon`
-- `/resource donate|buy|stock|personal|*|type list`
-- `/building donate|fund|contribute|list|status|cost show`
+- `/resource donate|buy|stock|personal|*|type list|overview`
+- `/building donate|fund|contribute|list|status|cost show` — donate: source *outside* or *personal stock* (+ sell GC); fund: guild stock only (no GC)
 - `/production list`
 
 **DM-only:** all under `/dm …` (see Slash Commands). Runtime gate remains `ALLOWED_USER_IDS`.
@@ -285,8 +285,8 @@ There is **no** `/weather post`. Anything that changes weather also broadcasts t
 ### Player commands
 - `/eryndor help|today|fullmoon` — help + calendar info. Everyone.
 - `/weather current` — private current weather. Everyone.
-- `/resource donate|buy|stock|personal|*|type list` — stockpile. Everyone.
-- `/building donate|fund|contribute|list|status|cost show` — projects. Everyone.
+- `/resource donate|buy|stock|personal|*|type list|overview` — stockpile. Everyone.
+- `/building donate|fund|contribute|list|status|cost show` — projects. Everyone. Donate chooses source (outside / personal stock, + sell GC); fund uses guild stock (no GC).
 - `/production list` — production overview. Everyone.
 
 ### `/dm` (allowlist + Discord picker hidden by default)
@@ -389,7 +389,7 @@ Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / def
 `/dm announce schedule|list|cancel` stores free-text posts in `scheduled_posts` and posts them via the existing 30s scheduler to a chosen channel (not the weather destination). Relative or absolute `when` in `WEATHER_TIMEZONE`. Modal body max 2000 chars. Allowlist only. See [`feature-scheduled-announcements.md`](./feature-scheduled-announcements.md).
 
 ### Guild resources & buildings — implemented
-`/resource` (types, donate/buy/stock, setup, cap) and `/building` (create/cost add|buildtime|show/fund/donate/contribute). Flexible resource types per guild, two-phase building projects (materials → build time, default **100**), public silent embeds (donate/fund show full material progress), ledger + status-report backup. No player GC balance in DB. See [`feature-guild-resources.md`](./feature-guild-resources.md).
+`/resource` (types, donate/buy/stock/personal/overview, setup, cap) and `/building` (create/cost add|buildtime|show/fund/donate/contribute). Flexible resource types per guild, two-phase building projects (materials → build time, default **100**). `/building donate` source: **outside** or **personal stock** (both + sell GC); `/building fund` from guild stock (no GC). Public silent embeds (donate/fund show full material progress), ledger + status-report backup. No player GC balance in DB. Player handout: `docs/handout/spelers.html`. See [`feature-guild-resources.md`](./feature-guild-resources.md).
 
 ### Guild production & storage cap — implemented
 `/production` (add/list/workers/yield/remove) and `/resource cap`. Per-type `storage_cap` (default 300). Interactive overflow → personal stock; auto production overflow → **lost**, shown clearly on the daily silent post after `PRODUCTION_POST_TIME` (default `17:00`). Same same-day catch-up as calendar posts if the bot starts late. See [`feature-guild-production.md`](./feature-guild-production.md).

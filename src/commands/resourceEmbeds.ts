@@ -113,20 +113,32 @@ export function buildBuildingDonateEmbed(
     gc: number;
     progress: string;
     phaseNote: string;
+    fromPersonal?: boolean;
+    personalAfter?: number;
   },
 ): EmbedBuilder {
-  const body = formatTemplate(messages.resourceEmbedBuildingDonateDesc, {
-    nickname: input.nickname,
-    amount: String(input.amount),
-    type: input.typeName,
-    building: input.buildingName,
-    gc: String(input.gc),
-    progress: input.progress,
-  });
+  const body = formatTemplate(
+    input.fromPersonal
+      ? messages.resourceEmbedBuildingDonatePersonalDesc
+      : messages.resourceEmbedBuildingDonateDesc,
+    {
+      nickname: input.nickname,
+      amount: String(input.amount),
+      type: input.typeName,
+      building: input.buildingName,
+      gc: String(input.gc),
+      progress: input.progress,
+      personal: String(input.personalAfter ?? 0),
+    },
+  );
 
   return new EmbedBuilder()
     .setColor(COLOR_BUILDING_DONATE)
-    .setTitle(messages.resourceEmbedBuildingDonateTitle)
+    .setTitle(
+      input.fromPersonal
+        ? messages.resourceEmbedBuildingDonatePersonalTitle
+        : messages.resourceEmbedBuildingDonateTitle,
+    )
     .setDescription(withPhase(body, input.phaseNote))
     .setTimestamp();
 }

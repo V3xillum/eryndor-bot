@@ -1,11 +1,14 @@
 # Handout agent — Eryndor bot DM-handout
 
-Regels voor agents (en mensen) die [`docs/handout/index.html`](./handout/index.html) bijwerken.
+Regels voor agents (en mensen) die de handouts bijwerken:
+
+- DM: [`docs/handout/index.html`](./handout/index.html)
+- Speler: [`docs/handout/spelers.html`](./handout/spelers.html)
 
 **Bot-waarheid** (commands, data, gedrag) = [`agent.md`](./agent.md) + feature-docs.
 **Handout-stijl** (toon, structuur, wat wél/niet uitleggen) = **dit bestand**.
 
-GitHub Pages serveert de map `/docs`; de handout staat op `/handout/` (`docs/handout/index.html`). Logo: `docs/handout/eryndor-logo.jpg`.
+GitHub Pages serveert de map `/docs`; DM-handout: `/handout/` · speler-handout: `/handout/spelers.html`. Logo: `docs/handout/eryndor-logo.jpg`. Speler-URL in de bot = `HANDOUT_URL` + `spelers.html` (zie `playerHandoutUrl` in config); `/eryndor help` voor niet-DM’s linkt daarnaartoe.
 
 ---
 
@@ -13,7 +16,43 @@ GitHub Pages serveert de map `/docs`; de handout staat op `/handout/` (`docs/han
 
 Een **DM-handout** in het Nederlands: wat de bot doet, welke slash-commands er zijn, en wat je moet aanleveren voor een nieuw weertype.
 
-Geen setup-gids, geen Node/Discord Developer Portal, geen SQLite, geen deploy.
+Een **speler-handout** (`spelers.html`): kort, campaign-taal, geen tech — wat *jij* tussen sessies kunt doen (info, voorraad, meebouwen). Geen DM-commands, geen setup, geen allowlist.
+
+Beide handouts linken naar elkaar (footer / hero).
+
+---
+
+## Speler-handout (`spelers.html`)
+
+### Wat erin hoort
+- **Even kijken** — overview, weer, kalender, losse lijsten (`stock`, `personal show`, `building list/status`, `production list`)
+- **Guild-voorraad** — donate / buy / persoonlijke voorraad (add|remove|show); GC zelf bijhouden; opslaglimiet + overflow → persoonlijk
+- **Meebouwen** — donate (bronkeuze), fund, contribute
+- Korte tip: `/eryndor help` + formulieren met dropdowns
+
+### Donate-bronnen (vaste uitleg)
+Bij `/building donate` altijd **beide** bronnen noemen:
+
+| Bron in Discord | Campaign-taal | GC | Voorraad |
+|---|---|---|---|
+| Van buiten | Net gehakt/gevonden; bot hield het nog niet bij | + sell | onaangeroerd |
+| Mijn voorraad | Uit je persoonlijke voorraad | + sell | persoonlijk − |
+
+`/building fund` = alleen uit de **guild**-voorraad, **geen** GC. Niet door elkaar halen.
+
+### Wat er níet in hoort
+- `/dm …`, setup, types aanmaken, costs, cancel, adjust, cap zetten
+- Env-keys, DB, ledger-actions, “ephemeral”, silent-flags
+- Lange command-tabellen of DM-how-to
+
+### Toon
+- Alsof je aan de speeltafel uitlegt, niet aan een developer
+- Slash-commands wél exact (`/building donate`)
+- Termen: **persoonlijke voorraad** (niet “bak”), **guild-voorraad**, **Guild Credits (GC)**
+- Zelfde visuele taal als de DM-handout (fonts/kleuren/logo) mag; geen tabs nodig — één scrollbare pagina
+
+### Sync
+Speler-facing gedrag wijzigt → **beide** handouts + help-tekst (`helpEveryoneBody` / speler-help embed) meenemen. DM-only wijzigingen → alleen `index.html` (+ dit bestand / briefing).
 
 ---
 
@@ -117,9 +156,11 @@ Gebruik deze termen consistent:
 - **Gepland bericht** — vrije tekst die de bot later post in een gekozen kanaal (los van het weerkanaal); via `/dm announce`
 - **Kalender-events kanaal** — ochtendpost (`@everyone` + today-embed) alleen bij events; avondpost bij Full Moon (Rising) (stil) en exacte volle maan (`@everyone`); via `/dm calendar setup` (los van het weerkanaal)
 - **Guild-voorraad** — gedeelde grondstoffen per server; stille berichten in het voorraadkanaal (`/dm resource setup`)
-- **Persoonlijke voorraad** — bak per speler, los van de guild
-- **Opslaglimiet** — max per grondstoftype (standaard 300); overflow bij spelers → persoonlijk; bij dagelijkse productie → verloren
+- **Persoonlijke voorraad** — per speler, los van de guild (niet “bak”)
+- **Opslaglimiet** — max per grondstoftype (standaard 300); overflow bij spelers → persoonlijke voorraad; bij dagelijkse productie → verloren
 - **Bouwproject** — materialen verzamelen → bouwen (tijd) → voltooid; via `/building`
+- **Donate (bouw)** — materiaal naar een project: bron *van buiten* of *mijn voorraad* (beide + sell-GC)
+- **Fund (bouw)** — materiaal uit de guild-voorraad naar een project (geen extra GC)
 - **Productiebron** — vaste bron (bijv. hut) die periodiek grondstoffen levert; samenvatting stil ~17:00; via `/production`
 - **Eryndor bot** — productnaam (repo/package mag `weather-bot` / `eryndor-bot` blijven)
 
@@ -132,10 +173,13 @@ Defaults in de handout moeten overeenkomen met content/`weather-rules.json` en s
 1. Feature **implemented** in de bot (zie feature-doc + `agent.md`).
 2. Schrijf een korte briefing: `docs/handout-update-<onderwerp>.md` (zie o.a. [`handout-update-guild-schedule-settings.md`](./handout-update-guild-schedule-settings.md), [`handout-update-guild-resources.md`](./handout-update-guild-resources.md)).
 3. Werk `docs/handout/index.html` bij volgens **dit** bestand + die briefing.
-4. Geen secrets, geen interne implementatiedetails in de handout.
-5. Proposed features (bijv. [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md)) → **geen** handout tot status = implemented.
+4. Raakt het **spelers** (nieuwe/ gewijzigde player-commands of flows)? → ook `docs/handout/spelers.html` + speler-help in `content/messages.json` bijwerken.
+5. Geen secrets, geen interne implementatiedetails in de handouts.
+6. Proposed features (bijv. [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md)) → **geen** handout tot status = implemented.
 
 ### Briefing-template (handout-update)
+
+In briefing ook vermelden of `spelers.html` moet meegenomen worden (ja/nee + welke tiles).
 
 ```markdown
 # Handout-update: <onderwerp>
@@ -151,6 +195,9 @@ Feature is **implemented**. Zie agent.md / feature-doc.
 ## Wat Commando’s / Sessie moeten krijgen
 …
 
+## Speler-handout (`spelers.html`)
+ja/nee — zo ja: welke secties (kijken / voorraad / bouwen)
+
 ## Niet in de handout
 DB, .env-keys, migraties, …
 ```
@@ -159,8 +206,9 @@ DB, .env-keys, migraties, …
 
 ## Technisch (HTML)
 
-- Eén pagina: `docs/handout/index.html` (CSS/JS inline is ok).
-- Weertypes in de pagina (`WEATHER_TYPES`): sync met `content/weather-table.json` als die wijzigt.
+- DM: `docs/handout/index.html` (CSS/JS inline is ok; tabs).
+- Speler: `docs/handout/spelers.html` (één pagina, geen tabs nodig; mag CSS delen/spiegelen).
+- Weertypes in de DM-pagina (`WEATHER_TYPES`): sync met `content/weather-table.json` als die wijzigt.
 - Redirect: `docs/index.html` → `handout/`.
 - Visueel: donkere basis + perkament/logo-accenten; clean houden, geen dashboard-rommel.
 - Geen build-stap voor Pages.
@@ -169,7 +217,7 @@ DB, .env-keys, migraties, …
 
 ## Checklist voor de agent
 
-- [ ] `WEATHER_TYPES` in de HTML gelijk aan `content/weather-table.json` als types wijzigen?
+- [ ] `WEATHER_TYPES` in de DM-HTML gelijk aan `content/weather-table.json` als types wijzigen?
 - [ ] Klopt het met de **echte** commands/gedrag in de bot?
 - [ ] Nederlands, vaste termen, geen tech-jargon in lopende tekst?
 - [ ] Nederlandse brug naast Discord-optienamen (`ritme` → `interval`)?
@@ -179,3 +227,7 @@ DB, .env-keys, migraties, …
 - [ ] Sessie-tile alleen als het een veelgebruikte flow is?
 - [ ] Aanlever-tab: geen sfeertekst-veld; JSON als optioneel voorbeeld voor content-beheerder?
 - [ ] Handout-update briefing bijgewerkt of gemarkeerd als verwerkt?
+- [ ] Speler-facing change? → `spelers.html` + `/eryndor help` spelertekst bijgewerkt?
+- [ ] Donate/bouw: bronnen *van buiten* / *mijn voorraad* + fund zonder GC correct uitgelegd (DM én speler)?
+- [ ] Geen “bak” — zeg **persoonlijke voorraad**?
+- [ ] Onderlinge links DM ↔ speler-handout nog intact?

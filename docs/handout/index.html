@@ -515,6 +515,7 @@
       </div>
       <h1 class="hero-brand">Eryndor bot<span>DM-handout</span></h1>
       <p>Wat de bot voor jullie tafel doet: weer en kalender, guild-voorraad en bouw, en wat je doorgeeft als er een nieuw weertype bij komt.</p>
+      <p style="margin-top:0.65rem;font-size:0.95rem"><a href="spelers.html" style="color:#c9a86a">Speler-handout</a> — korte uitleg voor de tafel (voorraad, bouwen, info).</p>
     </header>
 
     <nav class="nav" role="tablist" aria-label="Handout secties">
@@ -540,7 +541,7 @@
         </article>
         <article class="tile">
           <h3>Spelers</h3>
-          <p>Iedereen mag weer en kalender raadplegen. Tussen sessies op Discord: doneren, kopen, meebouwen en productie/lijsten bekijken. Overzicht van spelercommands: <code>/eryndor help</code>. Alleen aangewezen DM’s richten types, limieten en bronnen in (DM’s zien via diezelfde help ook de handout-link).</p>
+          <p>Iedereen mag weer en kalender raadplegen. Tussen sessies op Discord: doneren, kopen, meebouwen en productie/lijsten bekijken. Speler-uitleg: <a href="spelers.html" style="color:#c9a86a">speler-handout</a> of <code>/eryndor help</code>. Alleen aangewezen DM’s richten types, limieten en bronnen in (DM’s zien via help ook de DM-handout-link).</p>
         </article>
         <article class="tile">
           <h3>Kalender</h3>
@@ -684,7 +685,7 @@
         </article>
         <article class="tile">
           <h3>4. Opslaglimiet</h3>
-          <p>Standaard max <strong>300 per type</strong> (Hout 300 én Steen 300, niet opgeteld). Aanpassen: <code>/dm resource cap</code>. Zit de guild vol? Rest van een donatie/correctie gaat naar je <strong>persoonlijke</strong> bak. Dagelijkse productie die niet past is <strong>verloren</strong> — dat staat in de avondpost.</p>
+          <p>Standaard max <strong>300 per type</strong> (Hout 300 én Steen 300, niet opgeteld). Aanpassen: <code>/dm resource cap</code>. Zit de guild vol? Rest van een donatie/correctie gaat naar je <strong>persoonlijke voorraad</strong>. Dagelijkse productie die niet past is <strong>verloren</strong> — dat staat in de avondpost.</p>
         </article>
         <article class="tile">
           <h3>5. Bouwproject — zo werkt het</h3>
@@ -697,7 +698,7 @@
           <h3>6. Materiaal naar een project</h3>
           <p>Drie verschillende acties — niet door elkaar halen:<br />
           <code>/resource donate</code> / <code>buy</code> — loot in/uit de <strong>guild-voorraad</strong> (formulier; ± GC).<br />
-          <code>/building donate</code> — materiaal <strong>van buiten</strong> direct op een project (formulier; + GC).<br />
+          <code>/building donate</code> — materiaal naar een project: <strong>van buiten</strong> of uit je <strong>persoonlijke voorraad</strong> (formulier; + GC).<br />
           <code>/building fund</code> — materiaal uit de <strong>guild-voorraad</strong> naar een project (geen extra GC).</p>
         </article>
         <article class="tile">
@@ -979,7 +980,7 @@
         cmd: "/resource donate",
         who: "everyone",
         cat: "voorraad",
-        what: "Modal: kies grondstof + vul aantal in. Doneer aan de guild-voorraad. Stil bericht in het voorraadkanaal. Bot meldt hoeveel GC je ontvangt (zelf bijhouden). Past de opslag niet? Rest gaat naar je persoonlijke bak.",
+        what: "Modal: kies grondstof + vul aantal in. Doneer aan de guild-voorraad. Stil bericht in het voorraadkanaal. Bot meldt hoeveel GC je ontvangt (zelf bijhouden). Past de opslag niet? Rest gaat naar je Persoonlijke voorraad.",
         when: "Loot of crafting-opbrengst in de gedeelde voorraad stoppen.",
       },
       {
@@ -1000,21 +1001,21 @@
         cmd: "/resource overview",
         who: "everyone",
         cat: "voorraad",
-        what: "Alles-in-één overzicht (alleen voor jou): guild-voorraad, jouw persoonlijke bak, en bouwprojecten met voortgang.",
+        what: "Alles-in-één overzicht (alleen voor jou): guild-voorraad, jouw Persoonlijke voorraad, en bouwprojecten met voortgang.",
         when: "Snel zien waar de guild en jij staan.",
       },
       {
         cmd: "/resource personal add",
         who: "everyone",
         cat: "voorraad",
-        what: "Modal: kies grondstof + vul aantal in. Zet grondstoffen in je persoonlijke bak. Stil bericht. Geen GC.",
+        what: "Modal: kies grondstof + vul aantal in. Zet grondstoffen in je Persoonlijke voorraad. Stil bericht. Geen GC.",
         when: "Eigen voorraad bijhouden, los van de guild.",
       },
       {
         cmd: "/resource personal remove",
         who: "everyone",
         cat: "voorraad",
-        what: "Modal: kies uit wat je hebt + vul aantal in. Haal iets uit je persoonlijke bak. Stil bericht. Geen GC.",
+        what: "Modal: kies uit wat je hebt + vul aantal in. Haal iets uit je Persoonlijke voorraad. Stil bericht. Geen GC.",
         when: "Persoonlijke voorraad gebruiken of corrigeren.",
       },
       {
@@ -1070,7 +1071,7 @@
         cmd: "/dm resource adjust",
         who: "dm",
         cat: "voorraad",
-        what: "Modal: kies type, kies toevoegen of verminderen, vul een positief aantal in. Corrigeert de guild-voorraad zonder publieke GC-melding. Overflow bij volle opslag → jouw persoonlijke bak.",
+        what: "Modal: kies type, kies toevoegen of verminderen, vul een positief aantal in. Corrigeert de guild-voorraad zonder publieke GC-melding. Overflow bij volle opslag → jouw Persoonlijke voorraad.",
         when: "DM-correctie of housekeeping.",
       },
       {
@@ -1084,8 +1085,8 @@
         cmd: "/building donate",
         who: "everyone",
         cat: "bouwen",
-        what: "Breng materialen “van buiten” naar een open project (één formulier: project + grondstof + aantal). Stil bericht met voortgang van alle materialen. GC = sell × aantal.",
-        when: "Zelf materiaal aandragen voor een bouw.",
+        what: "Breng materialen naar een open project (één formulier: project + bron + grondstof + aantal). Bron: van buiten óf uit je persoonlijke voorraad. Stil bericht met voortgang. GC = sell × aantal.",
+        when: "Zelf materiaal aandragen (net gevonden, of uit je eigen voorraad).",
       },
       {
         cmd: "/building fund",
@@ -1147,7 +1148,7 @@
         cmd: "/dm building cancel",
         who: "dm",
         cat: "bouwen",
-        what: "Annuleer een open project. Gestorte materialen gaan terug naar de guild-voorraad; past dat niet → rest naar jouw persoonlijke bak. GC die spelers al kregen, draait niet terug.",
+        what: "Annuleer een open project. Gestorte materialen gaan terug naar de guild-voorraad; past dat niet → rest naar jouw Persoonlijke voorraad. GC die spelers al kregen, draait niet terug.",
         when: "Project gaat niet door.",
       },
       {

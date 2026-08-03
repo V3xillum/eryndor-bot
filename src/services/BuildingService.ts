@@ -35,12 +35,17 @@ export interface BuildingDetail {
   statusLabel: string;
 }
 
+/** Where building materials come from. */
+export type BuildingMaterialSource = 'guild' | 'outside' | 'personal';
+
 export interface BuildingMaterialActionResult {
   building: Building;
   type: ResourceType;
   amount: number;
   gc: number;
+  /** Guild stock after a fund; personal stock after a personal donate; null for outside donate. */
   stockAfter: number | null;
+  source: BuildingMaterialSource;
   phaseNote: string;
   previousStatus: BuildingStatus;
 }
@@ -492,6 +497,7 @@ export class BuildingService {
     amount: number;
     actorUserId: string;
     actorNickname: string;
+    source?: 'outside' | 'personal';
   }): BuildingResult<BuildingMaterialActionResult> {
     const building = this.getInGuild(input.guildId, input.buildingId);
     if (!building) {
@@ -533,10 +539,13 @@ export class BuildingService {
     actorUserId: string;
     actorNickname: string;
   }): BuildingResult<BuildingMaterialActionResult> {
-    return this.addMaterials({ ...input, fromStock: true, awardSellGc: false });
+    return this.addMaterials({ ...input, source: 'guild' });
   }
 
-  /** Donate materials directly into the project (sell GC, stock untouched). */
+  /**
+   * Donate materials into the project (sell GC).
+   * `outside` = not tracked in bot stock; `personal` = from the player's voorraad.
+   */
   donate(input: {
     guildId: string;
     buildingName: string;
@@ -544,8 +553,12 @@ export class BuildingService {
     amount: number;
     actorUserId: string;
     actorNickname: string;
+    source?: 'outside' | 'personal';
   }): BuildingResult<BuildingMaterialActionResult> {
-    return this.addMaterials({ ...input, fromStock: false, awardSellGc: true });
+    return this.addMaterials({
+      ...input,
+      source: input.source === 'personal' ? 'personal' : 'outside',
+    });
   }
 
   contribute(input: {
@@ -711,8 +724,7 @@ export class BuildingService {
     amount: number;
     actorUserId: string;
     actorNickname: string;
-    fromStock: boolean;
-    awardSellGc: boolean;
+    source: BuildingMaterialSource;
   }): BuildingResult<BuildingMaterialActionResult> {
     if (
       !Number.isInteger(input.amount) ||
@@ -766,7 +778,7 @@ export class BuildingService {
     const applied = Math.min(input.amount, room);
     let stockAfter: number | null = null;
 
-    if (input.fromStock) {
+    if (input.source === 'guild') {
       const available = dbQueries.getStockQuantity(this.db, input.guildId, type.key);
       if (available < applied) {
         return {
@@ -783,16 +795,47 @@ export class BuildingService {
         type.key,
         -applied,
       );
+    } else if (input.source === 'personal') {
+      const available = dbQueries.getPlayerStockQuantity(
+        this.db,
+        input.guildId,
+        input.actorUserId,
+        type.key,
+      );
+      if (available < applied) {
+        return {
+          ok: false,
+          message: formatTemplate(this.messages.resourceInsufficientPersonal, {
+            stock: String(available),
+            name: type.display_name,
+          }),
+        };
+      }
+      stockAfter = dbQueries.addPlayerStockQuantity(
+        this.db,
+        input.guildId,
+        input.actorUserId,
+        type.key,
+        -applied,
+      );
     }
 
     dbQueries.addBuildingFunding(this.db, building.id, type.key, applied);
-    const gc = input.awardSellGc ? applied * type.sell_gc : 0;
+    const awardSellGc = input.source !== 'guild';
+    const gc = awardSellGc ? applied * type.sell_gc : 0;
+
+    const ledgerAction =
+      input.source === 'guild'
+        ? 'building_fund'
+        : input.source === 'personal'
+          ? 'building_donate_personal'
+          : 'building_donate';
 
     dbQueries.insertResourceLedger(this.db, {
       guildId: input.guildId,
       actorUserId: input.actorUserId,
       actorNickname: input.actorNickname,
-      action: input.fromStock ? 'building_fund' : 'building_donate',
+      action: ledgerAction,
       resourceKey: type.key,
       amount: applied,
       gcDelta: gc,
@@ -811,6 +854,7 @@ export class BuildingService {
       amount: applied,
       gc,
       stockAfter,
+      source: input.source,
       phaseNote,
       previousStatus,
     };

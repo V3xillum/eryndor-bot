@@ -15,9 +15,9 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 | `/resource donate` | Modal: grondstof + aantal. Doneer aan de guild-voorraad. Stil bericht. Bot meldt GC (zelf bijhouden). | Voorraad | Iedereen |
 | `/resource buy` | Modal: grondstof + aantal. Koop uit de guild-voorraad. Stil bericht. Bot meldt kosten. | Voorraad | Iedereen |
 | `/resource stock` | Toon guild-voorraad + opslaglimiet per type (alleen voor jou). | Voorraad | Iedereen |
-| `/resource overview` | Alles-in-één (alleen voor jou): guild-voorraad, jouw bak, bouwprojecten + voortgang. | Voorraad | Iedereen |
-| `/resource personal add` | Modal: type + aantal. Zet iets in je persoonlijke bak. Stil bericht. Geen GC. | Voorraad | Iedereen |
-| `/resource personal remove` | Modal: type + aantal. Haal iets uit je persoonlijke bak. Stil bericht. | Voorraad | Iedereen |
+| `/resource overview` | Alles-in-één (alleen voor jou): guild-voorraad, jouw persoonlijke voorraad, bouwprojecten + voortgang. | Voorraad | Iedereen |
+| `/resource personal add` | Modal: type + aantal. Zet iets in je Persoonlijke voorraad. Stil bericht. Geen GC. | Voorraad | Iedereen |
+| `/resource personal remove` | Modal: type + aantal. Haal iets uit je Persoonlijke voorraad. Stil bericht. | Voorraad | Iedereen |
 | `/resource personal show` | Toon jouw persoonlijke voorraad (alleen voor jou). | Voorraad | Iedereen |
 | `/dm resource setup` | Kies het kanaal voor stille voorraad-/bouw-/productieberichten. | Inrichten | DM |
 | `/dm resource clear` | Wis die kanaal-setup. | Inrichten | DM |
@@ -32,7 +32,7 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 
 | Command | Wat het doet (DM-taal) | Categorie | Wie |
 |---|---|---|---|
-| `/building donate` | Modal: project + grondstof + aantal. Silent post toont alle materialen. GC = sell. | Bouwen | Iedereen |
+| `/building donate` | Modal: project + bron (van buiten / persoonlijke voorraad) + grondstof + aantal. Silent post toont alle materialen. GC = sell. | Bouwen | Iedereen |
 | `/building fund` | Modal: project + grondstof + aantal. Uit guild-voorraad. Silent post toont alle materialen. | Bouwen | Iedereen |
 | `/building contribute` | Modal: project + tijd. GC = tijd × 1. | Bouwen | Iedereen |
 | `/building list` | Overzicht bouwprojecten + status. | Bouwen | Iedereen |
@@ -70,12 +70,16 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 Uitleg voor DMs (geen DB/.env):
 
 1. **Grondstoftypes** — zelf aanmaken met een naam + sell/buy GC; bot houdt GC niet bij, alleen melden.
-2. **Guild- vs persoonlijke voorraad** — doneren/kopen vs eigen bak.
+2. **Guild- vs persoonlijke voorraad** — doneren/kopen vs eigen voorraad.
 3. **Opslaglimiet** — standaard 300 **per type**; bij volle opslag: speler-acties → rest persoonlijk; dagelijkse productie → rest **verloren** (zichtbaar in de avondpost ~17:00).
-4. **Bouwprojecten** — materialen → bouwtijd → klaar; donate vs fund; contribute voor tijd.
+4. **Bouwprojecten** — materialen → bouwtijd → klaar; **donate** (van buiten *of* persoonlijke voorraad, + GC) vs **fund** (guild-voorraad, geen GC); contribute voor tijd.
 5. **Productiebronnen** — bijv. Houthakkershut → Hout; opbrengst = medewerkers × opbrengst per medewerker; één stille samenvatting per dag.
 
 ---
+
+## Speler-handout (`spelers.html`)
+
+**Ja** — kort: overview/weer/kalender; guild donate/buy + persoonlijke voorraad; bouwen met donate-bronnen + fund + contribute. Geen DM-commands.
 
 ## Wat Commando’s / Sessie moeten krijgen
 
