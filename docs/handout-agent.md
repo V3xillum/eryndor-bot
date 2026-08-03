@@ -75,11 +75,10 @@ Lezers zijn DMs die D&D snappen, geen bot-developers. Als een zin “sorry, wat?
 
 ## Tabs (niet zomaar herschikken)
 
-1. **Overzicht** — wat doet de bot, zwaarte/afkoeling, huidige types, ritme/venster (kort)
+1. **Overzicht** — wat doet de bot, korte sessie-cheat (pause/set/roll), zwaarte/afkoeling, huidige types, ritme/venster (kort)
 2. **Commando’s** — volledige lijst, gegroepeerd + filters
-3. **Tijdens de sessie** — korte “wanneer doe ik X”-tiles
-4. **Voorraad & bouw** — guild-grondstoffen, bouwprojecten, productie (DM-uitleg + flows)
-5. **Nieuw weertype** — wat aanleveren (geen formulier)
+3. **Voorraad & bouw** — guild-grondstoffen, bouwprojecten, productie (DM-uitleg + flows)
+4. **Nieuw weertype** — wat aanleveren (geen formulier)
 
 Nieuwe tab alleen als er echt een nieuw *soort* content bij komt (zoals voorraad/bouw/productie t.o.v. weer/kalender).
 
@@ -92,7 +91,8 @@ Nieuwe tab alleen als er echt een nieuw *soort* content bij komt (zoals voorraad
 - Maximaal **één command-verwijzing** om het aan te passen (`Aanpassen: \`/dm weather-settings interval\``), met Nederlandse brug (“ritme (`interval`)”).
 - Geen how-to van die commands hier (minuten vs uren, voorbeelden 1–5, enz.) → dat hoort op **Commando’s**.
 - Als hetzelfde concept twee keer dreigt (bijv. afkoeling onder Zwaarte én in de note): één keer uitleggen, elders kort terugverwijzen.
-- Duurcodes (`30m`, `2h`, `1d`) één keer kort uitleggen (sessie-tab of note), niet overal opnieuw.
+- Duurcodes (`30m`, `2h`, `1d`) één keer kort in de sessie-note op Overzicht.
+- Sessie-cheat: één compacte note (pause / set / roll / limieten) — geen aparte tab meer.
 
 ### Commando’s
 - Per command: **wat het doet** + **wanneer** — in DM-taal, daarna Discord-details.
@@ -100,11 +100,9 @@ Nieuwe tab alleen als er echt een nieuw *soort* content bij komt (zoals voorraad
 - Option-namen uit Discord (`after`, `max_next`, `schedule`/`all`) altijd met Nederlandse betekenis ernaast.
 - Houd de `COMMANDS`-array en `CATEGORIES` in de HTML in sync met de echte bot (`agent.md` / README).
 
-### Tijdens de sessie
-- Per tile: eerst **waarom** (wat wil de DM bereiken?), dan het command.
-- Voorbeeld: niet “stop automatische updates”, wel “zet het weer vast zodat de bot niet mid-sessie wisselt”.
-- Kort houden (2–4 zinnen max). Geen essays.
-- Commands volledig genoeg om na te typen; geen losse Engelse fragments zonder context.
+### Layout
+- Tile-grids (`.grid-2`): max **3 kolommen** (op smal: 2 / 1).
+- Zwaarte-schaal (`.severity-scale`): altijd **5** kolommen (op heel smal: 2).
 
 ### Nieuw weertype
 - Checklist van wat de DM/content-persoon **aanlevert** — in gewone taal (naam, plaatje, zwaarte, …).
