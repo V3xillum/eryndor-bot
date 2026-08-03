@@ -16,9 +16,11 @@ const ADMIN_SUBCOMMANDS = new Set(['add', 'workers', 'yield', 'remove']);
 export function buildProductionCommand() {
   return new SlashCommandBuilder()
     .setName('production')
-    .setDescription('Guild production sources')
+    .setDescription('Bronnen die tussen sessies grondstoffen opleveren')
     .addSubcommand((sub) =>
-      sub.setName('list').setDescription('List production sources'),
+      sub
+        .setName('list')
+        .setDescription('Welke productiebronnen heeft de guild?'),
     );
 }
 

@@ -40,78 +40,94 @@ import {
 export function buildDmCommand() {
   return new SlashCommandBuilder()
     .setName('dm')
-    .setDescription('DM-only Eryndor bot controls (hidden from players by default)')
+    .setDescription('DM-tools voor Eryndor (verborgen voor spelers)')
     .setDefaultMemberPermissions(0)
     .addSubcommandGroup((group) =>
       buildWeatherAdminSubcommands(
-        group.setName('weather').setDescription('Weather controls for DMs'),
+        group.setName('weather').setDescription('Weer sturen tijdens en tussen sessies'),
       ),
     )
     .addSubcommandGroup((group) =>
       buildWeatherSeveritySubcommands(
-        group.setName('weather-severity').setDescription('Temporary severity dial'),
+        group
+          .setName('weather-severity')
+          .setDescription('Tijdelijk alleen mild of juist heftig weer'),
       ),
     )
     .addSubcommandGroup((group) =>
       buildWeatherMagicalSubcommands(
-        group.setName('weather-magical').setDescription('Temporary magical dial'),
+        group
+          .setName('weather-magical')
+          .setDescription('Tijdelijk alleen magisch weer, of juist niet'),
       ),
     )
     .addSubcommandGroup((group) =>
       buildWeatherSettingsSubcommands(
-        group.setName('weather-settings').setDescription('Guild schedule and cooldown'),
+        group
+          .setName('weather-settings')
+          .setDescription('Ritme, berichtenvenster en afkoeling'),
       ),
     )
     .addSubcommandGroup((group) =>
       group
         .setName('calendar')
-        .setDescription('Calendar event channel setup')
+        .setDescription('Kanaal voor kalender-events en volle maan')
         .addSubcommand((sub) => buildCalendarSetupSubcommand(sub))
         .addSubcommand((sub) => buildCalendarClearSubcommand(sub)),
     )
     .addSubcommandGroup((group) =>
       group
         .setName('announce')
-        .setDescription('Schedule free-text posts')
+        .setDescription('Plan sfeer- of wereldberichten voor later')
         .addSubcommand((sub) => buildAnnounceScheduleSubcommand(sub))
         .addSubcommand((sub) => buildAnnounceListSubcommand(sub))
         .addSubcommand((sub) => buildAnnounceCancelSubcommand(sub)),
     )
     .addSubcommandGroup((group) =>
       buildResourceAdminSubcommands(
-        group.setName('resource').setDescription('Guild resource admin'),
+        group.setName('resource').setDescription('Guild-voorraad inrichten en corrigeren'),
       ),
     )
     .addSubcommandGroup((group) =>
       buildResourceTypeAdminSubcommands(
-        group.setName('resource-type').setDescription('Manage resource types'),
+        group
+          .setName('resource-type')
+          .setDescription('Welke grondstoffen bestaan er (en de GC-prijzen)'),
       ),
     )
     .addSubcommandGroup((group) =>
       buildBuildingAdminSubcommands(
-        group.setName('building').setDescription('Building project admin'),
+        group.setName('building').setDescription('Bouwprojecten starten of annuleren'),
       ),
     )
     .addSubcommandGroup((group) =>
       buildBuildingCostAdminSubcommands(
-        group.setName('building-cost').setDescription('Set building project costs'),
+        group
+          .setName('building-cost')
+          .setDescription('Materiaalkosten en bouwtijd van een project'),
       ),
     )
     .addSubcommandGroup((group) =>
       group
         .setName('production')
-        .setDescription('Production source admin')
+        .setDescription('Bronnen die tussen sessies grondstoffen opleveren')
         .addSubcommand((sub) =>
-          sub.setName('add').setDescription('Add a production source'),
+          sub
+            .setName('add')
+            .setDescription('Nieuwe productiebron (bijv. houthakkershut)'),
         )
         .addSubcommand((sub) =>
-          sub.setName('workers').setDescription('Set workers on a production source'),
+          sub
+            .setName('workers')
+            .setDescription('Hoeveel medewerkers werken er op een bron?'),
         )
         .addSubcommand((sub) =>
-          sub.setName('yield').setDescription('Set yield per worker on a production source'),
+          sub
+            .setName('yield')
+            .setDescription('Hoeveel levert één medewerker per interval op?'),
         )
         .addSubcommand((sub) =>
-          sub.setName('remove').setDescription('Remove a production source'),
+          sub.setName('remove').setDescription('Productiebron verwijderen'),
         ),
     );
 }

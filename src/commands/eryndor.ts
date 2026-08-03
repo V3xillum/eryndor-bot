@@ -16,21 +16,21 @@ import { formatTemplate } from '../utils/helpers.js';
 export function buildEryndorCommand() {
   return new SlashCommandBuilder()
     .setName('eryndor')
-    .setDescription('Eryndor world info, calendar, and bot help')
+    .setDescription('Kalender, volle maan en hulp voor de bot')
     .addSubcommand((sub) =>
       sub
         .setName('help')
-        .setDescription('Command overview; DMs also get the handout link'),
+        .setDescription('Wat kun je met de bot? (DM’s krijgen ook de handout-link)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('today')
-        .setDescription('Show the current Harptos day, moon phase, and events'),
+        .setDescription('Welke dag is het in Eryndor? Maanfase en feestdagen'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('fullmoon')
-        .setDescription('Show the next exact Full Moon on the Eryndor calendar'),
+        .setDescription('Wanneer is de volgende exacte volle maan?'),
     );
 }
 
@@ -39,13 +39,11 @@ export function buildCalendarSetupSubcommand(
 ): SlashCommandSubcommandBuilder {
   return sub
     .setName('setup')
-    .setDescription(
-      'Configure where morning calendar-event posts go (only on days with events)',
-    )
+    .setDescription('Kanaal voor ochtend-events en avond-volle-maan posts')
     .addChannelOption((opt) =>
       opt
         .setName('channel')
-        .setDescription('Channel for calendar-event posts')
+        .setDescription('Kanaal voor kalenderberichten')
         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
         .setRequired(true),
     );
@@ -54,7 +52,9 @@ export function buildCalendarSetupSubcommand(
 export function buildCalendarClearSubcommand(
   sub: SlashCommandSubcommandBuilder,
 ): SlashCommandSubcommandBuilder {
-  return sub.setName('clear').setDescription('Disable automatic morning calendar-event posts');
+  return sub
+    .setName('clear')
+    .setDescription('Automatische kalenderposts uitzetten');
 }
 
 export async function handleEryndorCommand(

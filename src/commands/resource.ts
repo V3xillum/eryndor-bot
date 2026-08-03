@@ -16,51 +16,51 @@ import { startResourceAmountWizard } from './resourceWizard.js';
 export function buildResourceCommand() {
   return new SlashCommandBuilder()
     .setName('resource')
-    .setDescription('Guild resource stockpile')
+    .setDescription('Guild-voorraad: doneren, kopen en je eigen stash')
     .addSubcommandGroup((group) =>
       group
         .setName('type')
-        .setDescription('Resource types')
+        .setDescription('Welke grondstoffen bestaan er, en wat leveren ze op?')
         .addSubcommand((sub) =>
-          sub.setName('list').setDescription('List resource types'),
+          sub
+            .setName('list')
+            .setDescription('Lijst met grondstoffen + GC bij doneren/kopen'),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName('donate')
-        .setDescription('Donate to the guild stockpile (form: type + amount)'),
+        .setDescription('Lever materiaal in bij de guild (+ GC)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('buy')
-        .setDescription('Buy from the guild stockpile (form: type + amount)'),
+        .setDescription('Haal materiaal uit de guild-voorraad (− GC)'),
     )
     .addSubcommand((sub) =>
-      sub.setName('stock').setDescription('Show the guild stockpile'),
+      sub.setName('stock').setDescription('Hoeveel ligt er in de guild-voorraad?'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('overview')
-        .setDescription(
-          'Private overview: guild stock, your stash, and building progress',
-        ),
+        .setDescription('Alles in één: guild, jouw stash en bouwvoortgang'),
     )
     .addSubcommandGroup((group) =>
       group
         .setName('personal')
-        .setDescription('Your personal resource stash')
+        .setDescription('Jouw persoonlijke voorraad (los van de guild)')
         .addSubcommand((sub) =>
           sub
             .setName('add')
-            .setDescription('Add to your personal stash (form: type + amount)'),
+            .setDescription('Zet materiaal in jouw eigen voorraad (geen GC)'),
         )
         .addSubcommand((sub) =>
           sub
             .setName('remove')
-            .setDescription('Remove from your personal stash (form: type + amount)'),
+            .setDescription('Haal materiaal uit jouw eigen voorraad (geen GC)'),
         )
         .addSubcommand((sub) =>
-          sub.setName('show').setDescription('Show your personal stash'),
+          sub.setName('show').setDescription('Wat zit er in jouw persoonlijke voorraad?'),
         ),
     );
 }
@@ -72,33 +72,31 @@ export function buildResourceAdminSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('setup')
-        .setDescription('Configure the channel for public resource posts')
+        .setDescription('Kanaal waar voorraad- en bouwberichten stil landen')
         .addChannelOption((opt) =>
           opt
             .setName('channel')
-            .setDescription('Channel for silent donate/buy/personal/building posts')
+            .setDescription('Kanaal voor stille voorraad-/bouwposts')
             .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
             .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName('clear').setDescription('Clear the resource channel setup'),
+      sub.setName('clear').setDescription('Voorraadkanaal uitzetten'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('adjust')
-        .setDescription(
-          'Correct guild stock without a public GC post (add or remove via form)',
-        ),
+        .setDescription('Corrigeer guild-voorraad stil (zonder GC-post)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('cap')
-        .setDescription('Show or set the per-type storage cap')
+        .setDescription('Opslaglimiet per grondstof tonen of zetten')
         .addIntegerOption((opt) =>
           opt
             .setName('amount')
-            .setDescription('New cap (omit to show current)')
+            .setDescription('Nieuwe limiet (laat leeg om huidige te zien)')
             .setRequired(false)
             .setMinValue(1)
             .setMaxValue(999999),
@@ -113,24 +111,24 @@ export function buildResourceTypeAdminSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('add')
-        .setDescription('Add a resource type (id is derived from the name)')
+        .setDescription('Nieuwe grondstof toevoegen (bijv. Hout) met GC-prijzen')
         .addStringOption((opt) =>
           opt
             .setName('name')
-            .setDescription('Display name (e.g. Hout)')
+            .setDescription('Weergavenaam (bijv. Hout)')
             .setRequired(true),
         )
         .addIntegerOption((opt) =>
           opt
             .setName('sell')
-            .setDescription('GC received when donating one unit')
+            .setDescription('GC die je krijgt bij doneren van 1 stuk')
             .setRequired(true)
             .setMinValue(0),
         )
         .addIntegerOption((opt) =>
           opt
             .setName('buy')
-            .setDescription('GC cost when buying (default 2× sell)')
+            .setDescription('GC-kosten bij kopen (standaard 2× doneren)')
             .setRequired(false)
             .setMinValue(0),
         ),
@@ -138,30 +136,30 @@ export function buildResourceTypeAdminSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('edit')
-        .setDescription('Edit a resource type (stable id stays the same)')
+        .setDescription('Naam of GC-prijzen van een grondstof aanpassen')
         .addStringOption((opt) =>
           opt
             .setName('name')
-            .setDescription('Current name or id (e.g. Hout / hout)')
+            .setDescription('Huidige naam (bijv. Hout)')
             .setRequired(true),
         )
         .addStringOption((opt) =>
           opt
             .setName('rename')
-            .setDescription('New display name (does not change the id)')
+            .setDescription('Nieuwe weergavenaam')
             .setRequired(false),
         )
         .addIntegerOption((opt) =>
           opt
             .setName('sell')
-            .setDescription('New sell GC')
+            .setDescription('Nieuwe GC bij doneren')
             .setRequired(false)
             .setMinValue(0),
         )
         .addIntegerOption((opt) =>
           opt
             .setName('buy')
-            .setDescription('New buy GC')
+            .setDescription('Nieuwe GC bij kopen')
             .setRequired(false)
             .setMinValue(0),
         ),
@@ -169,11 +167,11 @@ export function buildResourceTypeAdminSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('remove')
-        .setDescription('Remove a resource type (stock must be 0)')
+        .setDescription('Grondstof verwijderen (voorraad moet 0 zijn)')
         .addStringOption((opt) =>
           opt
             .setName('name')
-            .setDescription('Name or id to remove')
+            .setDescription('Naam van de grondstof om te verwijderen')
             .setRequired(true),
         ),
     );
@@ -399,7 +397,6 @@ async function handleTypeGroup(
       const lines = types.map((t) =>
         formatTemplate(resources.messages.resourceTypeListItem, {
           name: t.display_name,
-          key: t.key,
           sell: String(t.sell_gc),
           buy: String(t.buy_gc),
         }),

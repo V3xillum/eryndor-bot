@@ -22,18 +22,18 @@ export function buildAnnounceScheduleSubcommand(
 ): SlashCommandSubcommandBuilder {
   return sub
     .setName('schedule')
-    .setDescription('Plan a text post for later (opens a text modal)')
+    .setDescription('Zet een sfeer- of wereldbericht klaar voor later')
     .addChannelOption((opt) =>
       opt
         .setName('channel')
-        .setDescription('Channel where the text will be posted')
+        .setDescription('In welk kanaal komt het bericht?')
         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
         .setRequired(true),
     )
     .addStringOption((opt) =>
       opt
         .setName('when')
-        .setDescription('30m / 2h / 1d, or DD-MM-YYYY HH:mm (server timezone)')
+        .setDescription('Over 30m / 2h / 1d, of datum DD-MM-JJJJ UU:mm')
         .setRequired(true),
     );
 }
@@ -41,7 +41,9 @@ export function buildAnnounceScheduleSubcommand(
 export function buildAnnounceListSubcommand(
   sub: SlashCommandSubcommandBuilder,
 ): SlashCommandSubcommandBuilder {
-  return sub.setName('list').setDescription('List pending scheduled posts for this server');
+  return sub
+    .setName('list')
+    .setDescription('Welke geplande berichten staan er nog klaar?');
 }
 
 export function buildAnnounceCancelSubcommand(
@@ -49,11 +51,11 @@ export function buildAnnounceCancelSubcommand(
 ): SlashCommandSubcommandBuilder {
   return sub
     .setName('cancel')
-    .setDescription('Cancel a pending scheduled post by id')
+    .setDescription('Schrap een gepland bericht (id uit list)')
     .addIntegerOption((opt) =>
       opt
         .setName('id')
-        .setDescription('Post id from /dm announce list')
+        .setDescription('Id uit `/dm announce list`')
         .setRequired(true)
         .setMinValue(1),
     );

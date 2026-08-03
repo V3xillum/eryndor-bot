@@ -20,9 +20,11 @@ import {
 export function buildWeatherCommand() {
   return new SlashCommandBuilder()
     .setName('weather')
-    .setDescription('Eryndor bot weather controls')
+    .setDescription('Bekijk het huidige weer in Eryndor')
     .addSubcommand((sub) =>
-      sub.setName('current').setDescription('Show the current weather (private reply)'),
+      sub
+        .setName('current')
+        .setDescription('Wat voor weer hangt er nu boven de wereld? (alleen voor jou)'),
     );
 }
 
@@ -33,18 +35,18 @@ export function buildWeatherAdminSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('setup')
-        .setDescription('Configure where weather updates are posted')
+        .setDescription('Kies in welk kanaal (of thread) het weer verschijnt')
         .addChannelOption((opt) =>
           opt
             .setName('channel')
-            .setDescription('Channel for weather updates')
+            .setDescription('Kanaal voor weerberichten')
             .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
             .setRequired(true),
         )
         .addChannelOption((opt) =>
           opt
             .setName('thread')
-            .setDescription('Optional thread for weather updates')
+            .setDescription('Optionele thread voor weerberichten')
             .addChannelTypes(
               ChannelType.PublicThread,
               ChannelType.PrivateThread,
@@ -56,57 +58,57 @@ export function buildWeatherAdminSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('status')
-        .setDescription(
-          'Admin: current weather details (severity, magical, schedule, cooldown, dials)',
-        ),
+        .setDescription('Overzicht: weer, planning, limieten en afkoeling'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('next')
-        .setDescription('Show when the next automatic weather update is scheduled'),
+        .setDescription('Wanneer wisselt het weer de volgende keer vanzelf?'),
     )
-    .addSubcommand((sub) => sub.setName('roll').setDescription('Roll new weather and post it'))
+    .addSubcommand((sub) =>
+      sub.setName('roll').setDescription('Gooi nieuw weer (d100) en post het meteen'),
+    )
     .addSubcommand((sub) =>
       sub
         .setName('set')
-        .setDescription('Set weather by type or physical d100 result, then post it')
+        .setDescription('Zet het weer zelf (type of jouw d100) en post het')
         .addStringOption((opt) =>
           opt
             .setName('value')
-            .setDescription('Type (e.g. storm) or d100 roll (1–100)')
+            .setDescription('Weertype (bijv. storm) of d100-worp (1–100)')
             .setRequired(true),
         )
         .addStringOption((opt) =>
           opt
             .setName('duration')
-            .setDescription('How long this weather lasts before auto-roll (e.g. 15m, 2h)')
+            .setDescription('Hoe lang dit weer aanhoudt (bijv. 15m, 2h)')
             .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName('schedule')
-        .setDescription('Keep current weather, set when the next auto-roll happens')
+        .setDescription('Houd dit weer, plan alleen wanneer het weer wisselt')
         .addStringOption((opt) =>
           opt
             .setName('duration')
-            .setDescription('Delay until next automatic update (e.g. 15m, 2h, 1d)')
+            .setDescription('Over hoeveel tijd wisselt het weer? (bijv. 15m, 2h, 1d)')
             .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName('pause')
-        .setDescription('Pause automatic weather updates')
+        .setDescription('Pauzeer automatisch weer (handig tijdens een sessie)')
         .addStringOption((opt) =>
           opt
             .setName('duration')
-            .setDescription('Duration like 30m, 2h, or 1d')
+            .setDescription('Hoe lang pauzeren? (bijv. 30m, 2h, 1d)')
             .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName('resume').setDescription('Resume automatic weather updates'),
+      sub.setName('resume').setDescription('Hervat automatisch weer na een pauze'),
     );
 }
 
@@ -117,30 +119,30 @@ export function buildWeatherSeveritySubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('set')
-        .setDescription('Limit rolls to a severity range for a duration')
+        .setDescription('Tijdelijk alleen weer van bepaalde zwaarte (mild ↔ heftig)')
         .addIntegerOption((opt) =>
           opt
             .setName('min')
-            .setDescription('Minimum severity (inclusive)')
+            .setDescription('Lichtste weer dat mag (1 = mild)')
             .setRequired(true)
             .setMinValue(1),
         )
         .addIntegerOption((opt) =>
           opt
             .setName('max')
-            .setDescription('Maximum severity (inclusive)')
+            .setDescription('Zwaarste weer dat mag (hoger = heftiger)')
             .setRequired(true)
             .setMinValue(1),
         )
         .addStringOption((opt) =>
           opt
             .setName('duration')
-            .setDescription('How long the dial stays active (e.g. 2h, 1d)')
+            .setDescription('Hoe lang geldt dit? (bijv. 2h, 1d)')
             .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName('clear').setDescription('Clear the severity dial (back to default)'),
+      sub.setName('clear').setDescription('Zwaarte-limiet opheffen (weer alles mogelijk)'),
     );
 }
 
@@ -151,26 +153,26 @@ export function buildWeatherMagicalSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('set')
-        .setDescription('Limit rolls to magical or non-magical weather for a duration')
+        .setDescription('Tijdelijk alleen magisch weer, of juist géén')
         .addStringOption((opt) =>
           opt
             .setName('mode')
-            .setDescription('only = magical weather; none = non-magical only')
+            .setDescription('Alleen magisch, of alleen gewoon weer')
             .setRequired(true)
             .addChoices(
-              { name: 'only (magical)', value: 'only' },
-              { name: 'none (non-magical)', value: 'none' },
+              { name: 'Alleen magisch weer', value: 'only' },
+              { name: 'Geen magisch weer', value: 'none' },
             ),
         )
         .addStringOption((opt) =>
           opt
             .setName('duration')
-            .setDescription('How long the dial stays active (e.g. 2h, 1d)')
+            .setDescription('Hoe lang geldt dit? (bijv. 2h, 1d)')
             .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName('clear').setDescription('Clear the magical dial (back to default)'),
+      sub.setName('clear').setDescription('Magie-filter opheffen (weer alles mogelijk)'),
     );
 }
 
@@ -181,23 +183,23 @@ export function buildWeatherSettingsSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('show')
-        .setDescription('Show effective interval, window, and cooldown for this server'),
+        .setDescription('Toon ritme, berichtenvenster en afkoeling voor deze server'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('interval')
-        .setDescription('Set guild fallback auto-update interval (minutes)')
+        .setDescription('Hoe vaak wisselt het weer vanzelf? (bereik in minuten)')
         .addIntegerOption((opt) =>
           opt
             .setName('min')
-            .setDescription('Minimum minutes between auto-updates')
+            .setDescription('Kortste wachttijd tussen weerwissels (minuten)')
             .setRequired(true)
             .setMinValue(1),
         )
         .addIntegerOption((opt) =>
           opt
             .setName('max')
-            .setDescription('Maximum minutes between auto-updates')
+            .setDescription('Langste wachttijd tussen weerwissels (minuten)')
             .setRequired(true)
             .setMinValue(1),
         ),
@@ -205,44 +207,47 @@ export function buildWeatherSettingsSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('window')
-        .setDescription('Set guild active posting window (timezone from .env)')
+        .setDescription('Tussen welke uren mag de bot automatisch weer posten?')
         .addBooleanOption((opt) =>
           opt
             .setName('enabled')
-            .setDescription('Whether automatic posts only run inside the window')
+            .setDescription('Alleen binnen dit venster automatisch posten?')
             .setRequired(true),
         )
         .addStringOption((opt) =>
           opt
             .setName('start')
-            .setDescription('Window start HH:mm (e.g. 06:00)')
+            .setDescription('Venster start (HH:mm, bijv. 06:00)')
             .setRequired(false),
         )
         .addStringOption((opt) =>
-          opt.setName('end').setDescription('Window end HH:mm (e.g. 23:00)').setRequired(false),
+          opt
+            .setName('end')
+            .setDescription('Venster einde (HH:mm, bijv. 23:00)')
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName('cooldown')
-        .setDescription('Set guild severity cooldown (omit fields to keep current / inherit)')
+        .setDescription('Na zwaar weer: hoe mild moet de volgende worp zijn?')
         .addBooleanOption((opt) =>
           opt
             .setName('enabled')
-            .setDescription('Whether severity cooldown applies after heavy weather')
+            .setDescription('Afkoeling na zwaar weer aan of uit?')
             .setRequired(false),
         )
         .addIntegerOption((opt) =>
           opt
             .setName('after')
-            .setDescription('Severity threshold that triggers cooldown (inclusive)')
+            .setDescription('Vanaf welke zwaarte telt weer als “zwaar”?')
             .setRequired(false)
             .setMinValue(1),
         )
         .addIntegerOption((opt) =>
           opt
             .setName('max_next')
-            .setDescription('Max severity allowed on the next roll after cooldown')
+            .setDescription('Max. zwaarte van de volgende worp na afkoeling')
             .setRequired(false)
             .setMinValue(1),
         ),
@@ -250,16 +255,16 @@ export function buildWeatherSettingsSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('clear')
-        .setDescription('Clear guild settings overrides by scope')
+        .setDescription('Zet ritme, venster en/of afkoeling terug naar standaard')
         .addStringOption((opt) =>
           opt
             .setName('scope')
-            .setDescription('Which overrides to clear')
+            .setDescription('Wat terugzetten?')
             .setRequired(true)
             .addChoices(
-              { name: 'schedule (interval + window)', value: 'schedule' },
-              { name: 'cooldown', value: 'cooldown' },
-              { name: 'all', value: 'all' },
+              { name: 'Ritme + berichtenvenster', value: 'schedule' },
+              { name: 'Afkoeling', value: 'cooldown' },
+              { name: 'Alles', value: 'all' },
             ),
         ),
     );

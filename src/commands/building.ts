@@ -23,37 +23,37 @@ import {
 export function buildBuildingCommand() {
   return new SlashCommandBuilder()
     .setName('building')
-    .setDescription('Guild building projects')
+    .setDescription('Bouwprojecten: materialen leveren en meewerken')
     .addSubcommandGroup((group) =>
       group
         .setName('cost')
-        .setDescription('Project costs and progress')
+        .setDescription('Wat kost een project nog, en hoe ver is het?')
         .addSubcommand((sub) =>
-          sub.setName('show').setDescription('Show costs and progress (menu)'),
+          sub
+            .setName('show')
+            .setDescription('Kosten en voortgang van een project (menu)'),
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName('list').setDescription('List building projects'),
+      sub.setName('list').setDescription('Welke bouwprojecten lopen er?'),
     )
     .addSubcommand((sub) =>
-      sub.setName('status').setDescription('Show project status (menu)'),
+      sub.setName('status').setDescription('Status van een project (menu)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('fund')
-        .setDescription('Move guild stock into a project (form: project + type + amount)'),
+        .setDescription('Haal materiaal uit de guild en zet het op een project'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('donate')
-        .setDescription(
-          'Donate to a project: from outside or your personal stock (form; + sell GC)',
-        ),
+        .setDescription('Doneer aan een project (van buiten of uit jouw stash, + GC)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('contribute')
-        .setDescription('Spend time on a project (form: project + amount, 1 GC per unit)'),
+        .setDescription('Besteed werktijd aan een project (1 GC per eenheid)'),
     );
 }
 
@@ -64,17 +64,17 @@ export function buildBuildingAdminSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('create')
-        .setDescription('Create a building project')
+        .setDescription('Start een nieuw bouwproject')
         .addStringOption((opt) =>
-          opt.setName('name').setDescription('Project name').setRequired(true),
+          opt.setName('name').setDescription('Naam van het project').setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName('cancel')
-        .setDescription('Cancel a project and return funded materials')
+        .setDescription('Annuleer een project; gestorte materialen gaan terug')
         .addStringOption((opt) =>
-          opt.setName('name').setDescription('Project name').setRequired(true),
+          opt.setName('name').setDescription('Naam van het project').setRequired(true),
         ),
     );
 }
@@ -86,26 +86,22 @@ export function buildBuildingCostAdminSubcommands(
     .addSubcommand((sub) =>
       sub
         .setName('add')
-        .setDescription('Add a material cost (form: project + type + amount)'),
+        .setDescription('Voeg een materiaalkost toe aan een project'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('buildtime')
-        .setDescription(
-          'Set phase-2 build time (any open project; not when complete)',
-        ),
+        .setDescription('Hoeveel werktijd is nodig om te bouwen?'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('funding')
-        .setDescription(
-          'DM correct deposited materials (add/remove, no GC)',
-        ),
+        .setDescription('Corrigeer gestorte materialen (stil, zonder GC)'),
     )
     .addSubcommand((sub) =>
       sub
         .setName('spent')
-        .setDescription('DM correct time spent on a building project (no GC)'),
+        .setDescription('Corrigeer bestede werktijd (stil, zonder GC)'),
     );
 }
 
