@@ -2,7 +2,7 @@
 
 Feature-spec voor een AI-agent die dit in **Eryndor bot** (deze Discord-bot) implementeert.
 
-**Status:** implemented als `/eryndor today` en `/eryndor fullmoon` (onder `/eryndor`; niet de NL top-level namen hieronder).
+**Status:** implemented als `/eryndor vandaag` en `/eryndor vollemaan` (onder `/eryndor`; niet de NL top-level namen hieronder).
 
 **Gerelateerd:** bestaande bot-architectuur in [`agent.md`](./agent.md). Calendar UI / data-bron: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/).
 
@@ -12,8 +12,8 @@ Feature-spec voor een AI-agent die dit in **Eryndor bot** (deze Discord-bot) imp
 
 Twee slash commands die de **statische JSON API** van de Calendar of Eryndor consumeren *(oorspronkelijk voorgesteld als NL top-level; live: subcommands van `/eryndor`)*:
 
-1. **`/eryndor today`** (was voorstel `/vandaag`) — huidige Harptos-dag, maanfase, events (birthdays, memorials, festivals).
-2. **`/eryndor fullmoon`** (was voorstel `/vollemaan`) — volgende *exacte* Full Moon (niet Rising/Fading).
+1. **`/eryndor vandaag`** (was voorstel `/vandaag`) — huidige Harptos-dag, maanfase, events (birthdays, memorials, festivals).
+2. **`/eryndor vollemaan`** (was voorstel `/vollemaan`) — volgende *exacte* Full Moon (niet Rising/Fading).
 
 User-facing replies: **Nederlands** (zoals `content/messages.json` voor weather).
 

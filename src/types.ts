@@ -590,6 +590,6 @@ export interface CalendarDay {
     isExactFullMoon: boolean;
   };
   events: CalendarEvent[];
-  /** Optional while calendar API still includes it; bot no longer requires this for /eryndor today. */
+  /** Optional while calendar API still includes it; bot no longer requires this for /eryndor vandaag. */
   nextFullMoon?: CalendarNextFullMoon;
 }

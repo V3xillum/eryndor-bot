@@ -18,13 +18,13 @@ Zie ook: [`agent.md`](./agent.md), [`feature-eryndor-calendar.md`](./feature-ery
 |---|---|
 | `/dm calendar setup channel` | Zet `calendar_channel_id` |
 | `/dm calendar clear` | Zet `calendar_channel_id` op null |
-| `/eryndor today` / `fullmoon` | Ephemeral (alleen voor de caller); ongewijzigd gedrag verder |
+| `/eryndor vandaag` / `fullmoon` | Ephemeral (alleen voor de caller); ongewijzigd gedrag verder |
 
 ### Ochtend (events)
 
 - Posttijd: `CALENDAR_EVENTS_POST_TIME` (default `08:30`) in `WEATHER_TIMEZONE`.
 - `events.length === 0` → **geen** bericht.
-- anders → `@everyone` + zelfde embed als `/eryndor today`.
+- anders → `@everyone` + zelfde embed als `/eryndor vandaag`.
 
 ### Avond (volle maan)
 

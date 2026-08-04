@@ -1,6 +1,5 @@
 import {
   ChannelType,
-  SlashCommandBuilder,
   SlashCommandSubcommandGroupBuilder,
   type ChatInputCommandInteraction,
 } from 'discord.js';
@@ -17,15 +16,24 @@ import {
   scheduleDisplayFromSettings,
 } from './weatherStatusEmbed.js';
 
-export function buildWeatherCommand() {
-  return new SlashCommandBuilder()
-    .setName('weather')
-    .setDescription('Bekijk het huidige weer in Eryndor')
-    .addSubcommand((sub) =>
-      sub
-        .setName('current')
-        .setDescription('Wat voor weer hangt er nu boven de wereld? (alleen voor jou)'),
-    );
+/** Player-facing current weather reply (also used by `/eryndor weer`). */
+export async function replyCurrentWeather(
+  interaction: ChatInputCommandInteraction,
+  weather: WeatherService,
+): Promise<void> {
+  const result = weather.getCurrentWeather(interaction.guildId!);
+  if (!result) {
+    await interaction.reply({
+      content: weather.messages.noWeatherYet,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  await interaction.reply({
+    ...buildWeatherCard(result),
+    ephemeral: true,
+  });
 }
 
 export function buildWeatherAdminSubcommands(
@@ -270,25 +278,6 @@ export function buildWeatherSettingsSubcommands(
     );
 }
 
-export async function handleWeatherCommand(
-  interaction: ChatInputCommandInteraction,
-  deps: {
-    weather: WeatherService;
-  },
-): Promise<void> {
-  const { weather } = deps;
-
-  if (!interaction.guildId) {
-    await interaction.reply({
-      content: weather.messages.guildOnly,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  await handleCurrent(interaction, weather);
-}
-
 export async function dispatchWeatherAdmin(
   interaction: ChatInputCommandInteraction,
   deps: {
@@ -417,25 +406,6 @@ async function handleSetup(
   const target = thread ? `<#${thread.id}>` : `<#${channel.id}>`;
   await interaction.reply({
     content: formatTemplate(weather.messages.setupSuccess, { target }),
-    ephemeral: true,
-  });
-}
-
-async function handleCurrent(
-  interaction: ChatInputCommandInteraction,
-  weather: WeatherService,
-): Promise<void> {
-  const result = weather.getCurrentWeather(interaction.guildId!);
-  if (!result) {
-    await interaction.reply({
-      content: weather.messages.noWeatherYet,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  await interaction.reply({
-    ...buildWeatherCard(result),
     ephemeral: true,
   });
 }

@@ -22,10 +22,10 @@ import {
 
 export function buildBuildingCommand() {
   return new SlashCommandBuilder()
-    .setName('building')
+    .setName('bouw')
     .setDescription('Bouwprojecten: materialen leveren en meewerken')
     .addSubcommand((sub) =>
-      sub.setName('list').setDescription('Welke bouwprojecten lopen er?'),
+      sub.setName('lijst').setDescription('Welke bouwprojecten lopen er?'),
     )
     .addSubcommand((sub) =>
       sub
@@ -34,17 +34,17 @@ export function buildBuildingCommand() {
     )
     .addSubcommand((sub) =>
       sub
-        .setName('deliver')
+        .setName('leveren')
         .setDescription('Lever materiaal aan een project (van buiten of jouw stash, + GC)'),
     )
     .addSubcommand((sub) =>
       sub
-        .setName('use-guild-stock')
+        .setName('uit-guild')
         .setDescription('Zet guild-voorraad in op een project (geen GC)'),
     )
     .addSubcommand((sub) =>
       sub
-        .setName('contribute')
+        .setName('meewerken')
         .setDescription('Besteed werktijd aan een project (1 GC per eenheid)'),
     );
 }
@@ -117,19 +117,19 @@ export async function handleBuildingCommand(
   }
 
   switch (sub) {
-    case 'list':
+    case 'lijst':
       await handleList(interaction, buildings);
       return;
     case 'status':
       await startCostShowWizard(interaction, { buildings, resources });
       return;
-    case 'use-guild-stock':
+    case 'uit-guild':
       await startMaterialWizard(interaction, { buildings, resources }, 'usestock');
       return;
-    case 'deliver':
+    case 'leveren':
       await startMaterialWizard(interaction, { buildings, resources }, 'deliver');
       return;
-    case 'contribute':
+    case 'meewerken':
       await startContributeWizard(interaction, { buildings, resources });
       return;
     default:

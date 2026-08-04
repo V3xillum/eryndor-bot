@@ -15,11 +15,11 @@ const ADMIN_SUBCOMMANDS = new Set(['add', 'workers', 'yield', 'remove']);
 
 export function buildProductionCommand() {
   return new SlashCommandBuilder()
-    .setName('production')
+    .setName('productie')
     .setDescription('Bronnen die tussen sessies grondstoffen opleveren')
     .addSubcommand((sub) =>
       sub
-        .setName('list')
+        .setName('lijst')
         .setDescription('Welke productiebronnen heeft de guild?'),
     );
 }
@@ -58,7 +58,7 @@ export async function handleProductionCommand(
     case 'add':
       await startAddWizard(interaction, { production, resources });
       return;
-    case 'list': {
+    case 'lijst': {
       const embed = buildProductionListEmbed(
         production,
         resources,

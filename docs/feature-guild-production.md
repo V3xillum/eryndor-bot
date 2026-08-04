@@ -14,7 +14,7 @@ Zie ook: [`feature-guild-resources.md`](./feature-guild-resources.md), [`agent.m
 
 - Eén guild-setting `storage_cap` (default **300**).
 - Geldt als maximum **per resource type** (Hout ≤ 300 **en** Steen ≤ 300, niet som).
-- Gezet via `/resource cap` (allowlist); zichtbaar op `/resource stock`.
+- Gezet via `/dm resource cap` (allowlist); zichtbaar op `/voorraad guild`.
 
 ### Overflow
 
@@ -55,12 +55,12 @@ Formule: `workers × yield_per_worker`.
 
 | Command | Wie | Effect |
 |---|---|---|
-| `/production add` | allowlist | Modal: resource + interval + naam/workers/yield (max_workers = default 5) |
-| `/production list` | iedereen | Overzicht bronnen |
-| `/production workers` | allowlist | Menu + modal |
-| `/production yield` | allowlist | Menu + modal |
-| `/production remove` | allowlist | Menu |
-| `/resource cap [amount]` | allowlist | Zet/toon storage cap |
+| `/dm production add` | allowlist | Modal: resource + interval + naam/workers/yield (max_workers = default 5) |
+| `/productie lijst` | iedereen | Overzicht bronnen |
+| `/dm production workers` | allowlist | Menu + modal |
+| `/dm production yield` | allowlist | Menu + modal |
+| `/dm production remove` | allowlist | Menu |
+| `/dm resource cap [amount]` | allowlist | Zet/toon storage cap |
 
 ---
 
@@ -92,4 +92,4 @@ CREATE TABLE IF NOT EXISTS production_sources (
 
 - Per-type cap overrides (later C)
 - Overflow naar personal bij auto-payout
-- Verplichte koppeling aan `/building` id
+- Verplichte koppeling aan building id

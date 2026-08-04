@@ -1,7 +1,7 @@
 # Eryndor bot
 
 ## Project Goal
-Build **Eryndor bot** — a Discord bot for the Eryndor (West Marches) D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), gives authorized users full manual control during sessions through slash commands, exposes Eryndor calendar info (`/eryndor today`, `/eryndor fullmoon`) from the static Calendar of Eryndor JSON API, and can post that same “today” embed each morning to a separate channel **only on days with calendar events** (`/dm calendar setup`).
+Build **Eryndor bot** — a Discord bot for the Eryndor (West Marches) D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), gives authorized users full manual control during sessions through slash commands, exposes Eryndor calendar info (`/eryndor vandaag`, `/eryndor vollemaan`) from the static Calendar of Eryndor JSON API, and can post that same “today” embed each morning to a separate channel **only on days with calendar events** (`/dm calendar setup`).
 
 **DM handout:** static site under [`docs/handout/`](./handout/). Style and update rules for agents: [`handout-agent.md`](./handout-agent.md). Bot behaviour remains defined in **this** file.
 
@@ -44,11 +44,11 @@ WEATHER_ACTIVE_START=06:00
 WEATHER_ACTIVE_END=23:00
 WEATHER_TIMEZONE=Europe/Amsterdam
 
-# Calendar of Eryndor static JSON (public). Used by /eryndor today and /eryndor fullmoon.
+# Calendar of Eryndor static JSON (public). Used by /eryndor vandaag and /eryndor vollemaan.
 # DOY for “today” uses WEATHER_TIMEZONE (default Europe/Amsterdam).
 ERYNDOR_CALENDAR_BASE_URL=https://v3xillum.github.io/eryndor
 ERYNDOR_CALENDAR_FALLBACK_URL=https://raw.githubusercontent.com/V3xillum/eryndor/main
-# Morning auto-post of /eryndor today embed — only when events exist (local WEATHER_TIMEZONE).
+# Morning auto-post of /eryndor vandaag embed — only when events exist (local WEATHER_TIMEZONE).
 CALENDAR_EVENTS_POST_TIME=08:30
 # Evening Full Moon (Rising) + exact Full Moon posts to the same /dm calendar setup channel.
 CALENDAR_FULLMOON_POST_TIME=20:00
@@ -56,7 +56,7 @@ CALENDAR_FULLMOON_POST_TIME=20:00
 # Daily guild production summary on the resource channel (silent). Local WEATHER_TIMEZONE.
 PRODUCTION_POST_TIME=17:00
 
-# DM handout (GitHub Pages). Linked from /eryndor help.
+# DM handout (GitHub Pages). Linked from /eryndor hulp.
 HANDOUT_URL=https://v3xillum.github.io/eryndor-bot/handout/
 
 # Optional status-report DMs (comma-separated user IDs; empty = off).
@@ -165,7 +165,7 @@ Automated posts go to `thread_id` when set, otherwise to `channel_id`. If neithe
 
 Pending rows in `scheduled_posts` with `post_at` in the past are posted on the next scheduler tick (same 30s loop). Announcements ignore the weather active window and pause.
 
-Morning calendar-event posts use `calendar_channel_id` (from `/dm calendar setup`), independent of the weather destination. Once per local day after `CALENDAR_EVENTS_POST_TIME` (default `08:30` in `WEATHER_TIMEZONE`): fetch today; post `@everyone` + the same embed as `/eryndor today` **only if** `events.length > 0`; otherwise stay silent. `calendar_events_last_handled_date` prevents duplicates (and skips empty days). Missed morning after restart → catch-up on the next tick after the post time.
+Morning calendar-event posts use `calendar_channel_id` (from `/dm calendar setup`), independent of the weather destination. Once per local day after `CALENDAR_EVENTS_POST_TIME` (default `08:30` in `WEATHER_TIMEZONE`): fetch today; post `@everyone` + the same embed as `/eryndor vandaag` **only if** `events.length > 0`; otherwise stay silent. `calendar_events_last_handled_date` prevents duplicates (and skips empty days). Missed morning after restart → catch-up on the next tick after the post time.
 
 Evening full-moon posts use the **same** channel after `CALENDAR_FULLMOON_POST_TIME` (default `20:00`):
 - `moon.phase === "Full Moon (Rising)"` → moon-night embed, no `@everyone`, `MessageFlags.SuppressNotifications`
@@ -253,25 +253,25 @@ Discord commands should only parse input, call the service, and format the reply
 
 `EryndorCalendarService` fetches public static JSON (no secrets). The calendar site is GitHub Pages; there is no live “today” API — the bot computes Harptos day-of-year (DOY) in `WEATHER_TIMEZONE`, capped at **365** (no leap day), then fetches:
 
-- `/eryndor today` → `{BASE}/data/days/{doy}.json` (3-digit zero-padded DOY)
-- `/eryndor fullmoon` → `{BASE}/data/full-moons.json` → `nextByFromDoy[String(doy)]` (exact Full Moon only)
+- `/eryndor vandaag` → `{BASE}/data/days/{doy}.json` (3-digit zero-padded DOY)
+- `/eryndor vollemaan` → `{BASE}/data/full-moons.json` → `nextByFromDoy[String(doy)]` (exact Full Moon only)
 
 Fetch order: Pages base URL first; on persistent 404, optional raw.githubusercontent.com fallback. Do not scrape HTML.
 
-Replies are Dutch Discord embeds (`content/messages.json` for labels/errors). Today embed: Harptos title, moon phase, NL-formatted Gregorian date under the moon, events list, then a markdown “Bekijk ↗” link to the calendar UI (`ERYNDOR_CALENDAR_BASE_URL`) under Events — **no** next-full-moon footer on today (full moon is only via `/eryndor fullmoon`). Slash `/eryndor today` and `/eryndor fullmoon` reply **ephemerally** (private to the caller); morning/evening auto-posts to the calendar channel remain public.
+Replies are Dutch Discord embeds (`content/messages.json` for labels/errors). Today embed: Harptos title, moon phase, NL-formatted Gregorian date under the moon, events list, then a markdown “Bekijk ↗” link to the calendar UI (`ERYNDOR_CALENDAR_BASE_URL`) under Events — **no** next-full-moon footer on today (full moon is only via `/eryndor vollemaan`). Slash `/eryndor vandaag` and `/eryndor vollemaan` reply **ephemerally** (private to the caller); morning/evening auto-posts to the calendar channel remain public.
 
 UI calendar: [Calendar of Eryndor](https://v3xillum.github.io/eryndor/). Spec detail: [`docs/feature-eryndor-calendar.md`](./feature-eryndor-calendar.md). Daily auto-post of events: [`docs/feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
 ## Permissions
 
 **Player-facing (everyone in the guild):**
-- `/weather current`
-- `/eryndor help` (players: player commands + link to player handout `…/spelers.html`; allowlist also sees DM cheat-sheet + DM `HANDOUT_URL`)
-- `/eryndor overview` — private: today + next full moon, guild/personal stock, buildings, production
-- `/eryndor today`, `/eryndor fullmoon` — private calendar shortcuts (same embeds as in overview / channel posts)
-- `/resource donate|buy|stock|personal|*|type list`
-- `/building deliver|use-guild-stock|contribute|list|status` — deliver: source *outside* or *personal stock* (+ sell GC); use-guild-stock: guild stock only (no GC)
-- `/production list`
+- `/eryndor weer`
+- `/eryndor hulp` (players: player commands + link to player handout `…/spelers.html`; allowlist also sees DM cheat-sheet + DM `HANDOUT_URL`)
+- `/eryndor overzicht` — private: today + next full moon, guild/personal stock, buildings, production
+- `/eryndor vandaag`, `/eryndor vollemaan` — private calendar shortcuts (same embeds as in overview / channel posts)
+- `/voorraad doneren|kopen|guild|persoonlijk|*|types`
+- `/bouw leveren|uit-guild|meewerken|lijst|status` — leveren: source *outside* or *personal stock* (+ sell GC); uit-guild: guild stock only (no GC)
+- `/productie lijst`
 
 **DM-only:** all under `/dm …` (see Slash Commands). Runtime gate remains `ALLOWED_USER_IDS`.
 
@@ -284,11 +284,11 @@ Unauthorized users get a short ephemeral denial.
 There is **no** `/weather post`. Anything that changes weather also broadcasts to the configured channel/thread.
 
 ### Player commands
-- `/eryndor overview|help|today|fullmoon` — overview (calendar + economy), help, private calendar shortcuts. Everyone.
-- `/weather current` — private current weather. Everyone.
-- `/resource donate|buy|stock|personal|*|type list` — stockpile actions. Everyone.
-- `/building deliver|use-guild-stock|contribute|list|status` — projects. Everyone. Deliver chooses source (outside / personal stock, + sell GC); use-guild-stock uses guild stock (no GC).
-- `/production list` — production overview. Everyone.
+- `/eryndor overzicht|hulp|vandaag|vollemaan` — overview (calendar + economy), help, private calendar shortcuts. Everyone.
+- `/eryndor weer` — private current weather. Everyone.
+- `/voorraad doneren|kopen|guild|persoonlijk|*|types` — stockpile actions. Everyone.
+- `/bouw leveren|uit-guild|meewerken|lijst|status` — projects. Everyone. Leveren chooses source (outside / personal stock, + sell GC); uit-guild uses guild stock (no GC).
+- `/productie lijst` — production overview. Everyone.
 
 ### `/dm` (allowlist + Discord picker hidden by default)
 
@@ -393,15 +393,15 @@ Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / def
 `/dm announce schedule|list|cancel` stores free-text posts in `scheduled_posts` and posts them via the existing 30s scheduler to a chosen channel (not the weather destination). Relative or absolute `when` in `WEATHER_TIMEZONE`. Modal body max 2000 chars. Allowlist only. See [`feature-scheduled-announcements.md`](./feature-scheduled-announcements.md).
 
 ### Guild resources & buildings — implemented
-`/eryndor overview` (calendar + guild/personal stock + buildings + production), `/resource` (types, donate/buy/stock/personal, setup, cap) and `/building` (create; DM cost add|buildtime; list|status|deliver|use-guild-stock|contribute). Flexible resource types per guild, two-phase building projects (materials → build time, default **100**). `/building deliver` source: **outside** or **personal stock** (both + sell GC); `/building use-guild-stock` from guild stock (no GC). Public silent embeds (deliver/use-guild-stock show full material progress), ledger + status-report backup. No player GC balance in DB. Player handout: `docs/handout/spelers.html`. See [`feature-guild-resources.md`](./feature-guild-resources.md).
+`/eryndor overzicht` (calendar + guild/personal stock + buildings + production); players: `/voorraad` (types, doneren/kopen/guild/persoonlijk) and `/bouw` (lijst|status|leveren|uit-guild|meewerken). DM: `/dm resource`, `/dm resource-type`, `/dm building`, `/dm building-cost`. Flexible resource types per guild, two-phase building projects (materials → build time, default **100**). `/bouw leveren` source: **outside** or **personal stock** (both + sell GC); `/bouw uit-guild` from guild stock (no GC). Public silent embeds (leveren/uit-guild show full material progress), ledger + status-report backup. No player GC balance in DB. Player handout: `docs/handout/spelers.html`. See [`feature-guild-resources.md`](./feature-guild-resources.md).
 
 ### Guild production & storage cap — implemented
-`/production` (add/list/workers/yield/remove) and `/resource cap`. Per-type `storage_cap` (default 300). Interactive overflow → personal stock; auto production overflow → **lost**, shown clearly on the daily silent post after `PRODUCTION_POST_TIME` (default `17:00`). Same same-day catch-up as calendar posts if the bot starts late. See [`feature-guild-production.md`](./feature-guild-production.md).
+`/productie lijst` (players); DM: `/dm production` (add/workers/yield/remove) and `/dm resource cap`. Per-type `storage_cap` (default 300). Interactive overflow → personal stock; auto production overflow → **lost**, shown clearly on the daily silent post after `PRODUCTION_POST_TIME` (default `17:00`). Same same-day catch-up as calendar posts if the bot starts late. See [`feature-guild-production.md`](./feature-guild-production.md).
 
 ### Calendar events channel — implemented
-`/dm calendar setup` stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/eryndor today` embed **only when** `events.length > 0`. Empty days stay silent. `/dm calendar clear` disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
+`/dm calendar setup` stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/eryndor vandaag` embed **only when** `events.length > 0`. Empty days stay silent. `/dm calendar clear` disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
-**Possible adjustment (not built):** post the today-embed **every** morning. Days with events: keep `@everyone` (and normal notifications). Empty days: no `@everyone`, plus Discord `MessageFlags.SuppressNotifications` (no sound/push). Current preference remains “only post on event days” — a daily date post is likely noise; anyone curious can run `/eryndor today` on demand.
+**Possible adjustment (not built):** post the today-embed **every** morning. Days with events: keep `@everyone` (and normal notifications). Empty days: no `@everyone`, plus Discord `MessageFlags.SuppressNotifications` (no sound/push). Current preference remains “only post on event days” — a daily date post is likely noise; anyone curious can run `/eryndor vandaag` on demand.
 
 ### Calendar full moon evening posts — implemented
 Same `/dm calendar setup` channel. Each evening after `CALENDAR_FULLMOON_POST_TIME` (default `20:00`):

@@ -15,47 +15,42 @@ import { startResourceAmountWizard } from './resourceWizard.js';
 
 export function buildResourceCommand() {
   return new SlashCommandBuilder()
-    .setName('resource')
+    .setName('voorraad')
     .setDescription('Guild-voorraad: doneren, kopen en je eigen stash')
-    .addSubcommandGroup((group) =>
-      group
-        .setName('type')
-        .setDescription('Welke grondstoffen bestaan er, en wat leveren ze op?')
-        .addSubcommand((sub) =>
-          sub
-            .setName('list')
-            .setDescription('Lijst met grondstoffen + GC bij doneren/kopen'),
-        ),
+    .addSubcommand((sub) =>
+      sub
+        .setName('types')
+        .setDescription('Lijst met grondstoffen + GC bij doneren/kopen'),
     )
     .addSubcommand((sub) =>
       sub
-        .setName('donate')
+        .setName('doneren')
         .setDescription('Lever materiaal in bij de guild (+ GC)'),
     )
     .addSubcommand((sub) =>
       sub
-        .setName('buy')
+        .setName('kopen')
         .setDescription('Haal materiaal uit de guild-voorraad (− GC)'),
     )
     .addSubcommand((sub) =>
-      sub.setName('stock').setDescription('Hoeveel ligt er in de guild-voorraad?'),
+      sub.setName('guild').setDescription('Hoeveel ligt er in de guild-voorraad?'),
     )
     .addSubcommandGroup((group) =>
       group
-        .setName('personal')
+        .setName('persoonlijk')
         .setDescription('Jouw persoonlijke voorraad (los van de guild)')
         .addSubcommand((sub) =>
           sub
-            .setName('add')
+            .setName('toevoegen')
             .setDescription('Zet materiaal in jouw eigen voorraad (geen GC)'),
         )
         .addSubcommand((sub) =>
           sub
-            .setName('remove')
+            .setName('verwijderen')
             .setDescription('Haal materiaal uit jouw eigen voorraad (geen GC)'),
         )
         .addSubcommand((sub) =>
-          sub.setName('show').setDescription('Wat zit er in jouw persoonlijke voorraad?'),
+          sub.setName('tonen').setDescription('Wat zit er in jouw persoonlijke voorraad?'),
         ),
     );
 }
@@ -191,24 +186,22 @@ export async function handleResourceCommand(
     return;
   }
 
-  if (group === 'type') {
-    await handleTypeGroup(interaction, resources);
-    return;
-  }
-
-  if (group === 'personal') {
+  if (group === 'persoonlijk') {
     await handlePersonalGroup(interaction, resources);
     return;
   }
 
   switch (sub) {
-    case 'donate':
+    case 'types':
+      await replyTypeList(interaction, resources);
+      return;
+    case 'doneren':
       await handleDonate(interaction, resources);
       return;
-    case 'buy':
+    case 'kopen':
       await handleBuy(interaction, resources);
       return;
-    case 'stock':
+    case 'guild':
       await handleStock(interaction, resources);
       return;
     default:
@@ -376,28 +369,9 @@ async function handleTypeGroup(
       });
       return;
     }
-    case 'list': {
-      const types = resources.listTypes(interaction.guildId!);
-      if (types.length === 0) {
-        await interaction.reply({
-          content: resources.messages.resourceTypeListEmpty,
-          ephemeral: true,
-        });
-        return;
-      }
-      const lines = types.map((t) =>
-        formatTemplate(resources.messages.resourceTypeListItem, {
-          name: t.display_name,
-          sell: String(t.sell_gc),
-          buy: String(t.buy_gc),
-        }),
-      );
-      const embed = new EmbedBuilder()
-        .setTitle(resources.messages.resourceTypeListTitle)
-        .setDescription(lines.join('\n').slice(0, 4000));
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+    case 'list':
+      await replyTypeList(interaction, resources);
       return;
-    }
     default:
       await interaction.reply({
         content: resources.messages.unknownSubcommand,
@@ -495,7 +469,7 @@ async function handlePersonalGroup(
   const sub = interaction.options.getSubcommand();
   const nickname = resolveNicknameSync(interaction);
 
-  if (sub === 'show') {
+  if (sub === 'tonen') {
     const rows = resources.personalOverview(
       interaction.guildId!,
       interaction.user.id,
@@ -522,12 +496,12 @@ async function handlePersonalGroup(
     return;
   }
 
-  if (sub === 'add') {
+  if (sub === 'toevoegen') {
     await startResourceAmountWizard(interaction, resources, 'personal_add');
     return;
   }
 
-  if (sub === 'remove') {
+  if (sub === 'verwijderen') {
     await startResourceAmountWizard(interaction, resources, 'personal_remove');
     return;
   }
@@ -538,7 +512,32 @@ async function handlePersonalGroup(
   });
 }
 
-/** Guild stock + personal stash + open buildings — used by `/eryndor overview`. */
+async function replyTypeList(
+  interaction: ChatInputCommandInteraction,
+  resources: ResourceService,
+): Promise<void> {
+  const types = resources.listTypes(interaction.guildId!);
+  if (types.length === 0) {
+    await interaction.reply({
+      content: resources.messages.resourceTypeListEmpty,
+      ephemeral: true,
+    });
+    return;
+  }
+  const lines = types.map((t) =>
+    formatTemplate(resources.messages.resourceTypeListItem, {
+      name: t.display_name,
+      sell: String(t.sell_gc),
+      buy: String(t.buy_gc),
+    }),
+  );
+  const embed = new EmbedBuilder()
+    .setTitle(resources.messages.resourceTypeListTitle)
+    .setDescription(lines.join('\n').slice(0, 4000));
+  await interaction.reply({ embeds: [embed], ephemeral: true });
+}
+
+/** Guild stock + personal stash + open buildings — used by `/eryndor overzicht`. */
 export function buildEconomyOverviewEmbeds(
   resources: ResourceService,
   buildings: BuildingService,

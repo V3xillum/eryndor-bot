@@ -550,11 +550,11 @@
         </article>
         <article class="tile">
           <h3>Spelers</h3>
-          <p>Iedereen mag weer en kalender raadplegen. Tussen sessies op Discord: doneren, kopen, meebouwen en productie/lijsten bekijken. Speler-uitleg: <a href="spelers.html" style="color:#c9a86a">speler-handout</a> of <code>/eryndor help</code>. Alleen aangewezen DM’s richten types, limieten en bronnen in (DM’s zien via help ook de DM-handout-link).</p>
+          <p>Iedereen mag weer en kalender raadplegen. Tussen sessies op Discord: doneren, kopen, meebouwen en productie/lijsten bekijken. Speler-uitleg: <a href="spelers.html" style="color:#c9a86a">speler-handout</a> of <code>/eryndor hulp</code>. Alleen aangewezen DM’s richten types, limieten en bronnen in (DM’s zien via help ook de DM-handout-link).</p>
         </article>
         <article class="tile">
           <h3>Kalender</h3>
-          <p><code>/eryndor today</code> en <code>/eryndor fullmoon</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — alleen voor jou zichtbaar (ook in <code>/eryndor overview</code>), zonder te verklappen wanneer het weer wisselt. Optioneel post de bot ’s ochtends (rond 08:30) bij events, en ’s avonds (rond 20:00) bij <strong>Full Moon (Rising)</strong> en de exacte volle maan, naar een apart kanaal. Inrichten: <code>/dm calendar setup</code>.</p>
+          <p><code>/eryndor vandaag</code> en <code>/eryndor vollemaan</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — alleen voor jou zichtbaar (ook in <code>/eryndor overzicht</code>), zonder te verklappen wanneer het weer wisselt. Optioneel post de bot ’s ochtends (rond 08:30) bij events, en ’s avonds (rond 20:00) bij <strong>Full Moon (Rising)</strong> en de exacte volle maan, naar een apart kanaal. Inrichten: <code>/dm calendar setup</code>.</p>
         </article>
         <article class="tile">
           <h3>Geplande berichten</h3>
@@ -647,11 +647,11 @@
         </article>
         <article class="tile">
           <h3>2. Grondstoftypes</h3>
-          <p>Maak types aan: <code>/dm resource-type add</code> — naam (bijv. Hout) + hoeveel GC je krijgt bij doneren (veld <code>sell</code>). Optioneel koopprijs (veld <code>buy</code>; anders 2× sell). Aanpassen: <code>edit</code> / weg: <code>remove</code>. Lijst: <code>/resource type list</code>.</p>
+          <p>Maak types aan: <code>/dm resource-type add</code> — naam (bijv. Hout) + hoeveel GC je krijgt bij doneren (veld <code>sell</code>). Optioneel koopprijs (veld <code>buy</code>; anders 2× sell). Aanpassen: <code>edit</code> / weg: <code>remove</code>. Lijst: <code>/voorraad types</code>.</p>
         </article>
         <article class="tile">
           <h3>3. Guild vs persoonlijk</h3>
-          <p><strong>Guild-voorraad:</strong> <code>/eryndor overview</code> (alles-in-één, alleen voor jou) / <code>/resource donate</code> / <code>buy</code> / <code>stock</code>. <strong>Persoonlijk:</strong> <code>personal add|remove|show</code>. DM-correctie: <code>/dm resource adjust</code>.</p>
+          <p><strong>Guild-voorraad:</strong> <code>/eryndor overzicht</code> (alles-in-één, alleen voor jou) / <code>/voorraad doneren</code> / <code>kopen</code> / <code>guild</code>. <strong>Persoonlijk:</strong> <code>persoonlijk toevoegen|verwijderen|tonen</code>. DM-correctie: <code>/dm resource adjust</code>.</p>
         </article>
         <article class="tile">
           <h3>4. Opslaglimiet</h3>
@@ -661,15 +661,15 @@
           <h3>5. Bouwproject — zo werkt het</h3>
           <p><strong>1.</strong> DM: <code>/dm building create</code> + materiaalkosten (<code>/dm building-cost add</code>) + eventueel bouwtijd (<code>/dm building-cost buildtime</code>, standaard 100 eenheden werk).<br />
           <strong>2.</strong> Materialen verzamelen tot alles binnen is.<br />
-          <strong>3.</strong> Meebouwen met <code>/building contribute</code> tot de bouwtijd vol is → klaar.<br />
+          <strong>3.</strong> Meebouwen met <code>/bouw meewerken</code> tot de bouwtijd vol is → klaar.<br />
           Annuleren: <code>/dm building cancel</code> (materialen terug naar de guild).</p>
         </article>
         <article class="tile">
           <h3>6. Materiaal naar een project</h3>
           <p>Drie verschillende acties — niet door elkaar halen:<br />
-          <code>/resource donate</code> / <code>buy</code> — loot in/uit de <strong>guild-voorraad</strong> (formulier; ± GC).<br />
-          <code>/building deliver</code> — materiaal naar een project: <strong>van buiten</strong> of uit je <strong>persoonlijke voorraad</strong> (formulier; + GC).<br />
-          <code>/building use-guild-stock</code> — materiaal uit de <strong>guild-voorraad</strong> naar een project (geen extra GC).</p>
+          <code>/voorraad doneren</code> / <code>kopen</code> — loot in/uit de <strong>guild-voorraad</strong> (formulier; ± GC).<br />
+          <code>/bouw leveren</code> — materiaal naar een project: <strong>van buiten</strong> of uit je <strong>persoonlijke voorraad</strong> (formulier; + GC).<br />
+          <code>/bouw uit-guild</code> — materiaal uit de <strong>guild-voorraad</strong> naar een project (geen extra GC).</p>
         </article>
         <article class="tile">
           <h3>7. Bouwtijd</h3>
@@ -768,21 +768,21 @@
 
     const COMMANDS = [
       {
-        cmd: "/weather current",
+        cmd: "/eryndor weer",
         who: "everyone",
         cat: "bekijken",
         what: "Laat jou alleen voor jezelf zien welk weer er nu staat. Post niets in het kanaal.",
         when: "Even checken zonder de tafel te storen.",
       },
       {
-        cmd: "/eryndor today",
+        cmd: "/eryndor vandaag",
         who: "everyone",
         cat: "bekijken",
         what: "Huidige Harptos-dag (Eryndor-kalender), maanfase en events (alleen voor jou).",
         when: "Wereldtijd / feestdagen aan tafel.",
       },
       {
-        cmd: "/eryndor fullmoon",
+        cmd: "/eryndor vollemaan",
         who: "everyone",
         cat: "bekijken",
         what: "Wanneer de volgende exacte volle maan is (alleen voor jou).",
@@ -799,7 +799,7 @@
         cmd: "/dm calendar setup",
         who: "dm",
         cat: "inrichten",
-        what: "Kies in welk kanaal kalenderposts komen. Ochtend (~08:30): @everyone + /eryndor today-embed alleen bij events. Avond (~20:00): Full Moon (Rising) stil, exacte volle maan met @everyone. Los van het weerkanaal.",
+        what: "Kies in welk kanaal kalenderposts komen. Ochtend (~08:30): @everyone + /eryndor vandaag-embed alleen bij events. Avond (~20:00): Full Moon (Rising) stil, exacte volle maan met @everyone. Los van het weerkanaal.",
         when: "Eenmalig als je feestdagen/verjaardagen en volle-maan-avonden automatisch wilt laten zien.",
       },
       {
@@ -936,7 +936,7 @@
         when: "Checken wat er speelt: planning, limieten, of welk ritme/venster geldt.",
       },
       {
-        cmd: "/eryndor help",
+        cmd: "/eryndor hulp",
         who: "everyone",
         cat: "info",
         what: "Overzicht van spelercommands (voor iedereen). Als DM zie je ook de DM-commands plus een link naar deze handout.",
@@ -950,56 +950,56 @@
         when: "Planning tussen scenes.",
       },
       {
-        cmd: "/resource donate",
+        cmd: "/voorraad doneren",
         who: "everyone",
         cat: "voorraad",
         what: "Modal: kies grondstof + vul aantal in. Doneer aan de guild-voorraad. Stil bericht in het voorraadkanaal. Bot meldt hoeveel GC je ontvangt (zelf bijhouden). Past de opslag niet? Rest gaat naar je Persoonlijke voorraad.",
         when: "Loot of crafting-opbrengst in de gedeelde voorraad stoppen.",
       },
       {
-        cmd: "/resource buy",
+        cmd: "/voorraad kopen",
         who: "everyone",
         cat: "voorraad",
         what: "Modal: kies grondstof + vul aantal in. Koop uit de guild-voorraad. Stil bericht. Bot meldt hoeveel GC het kost (zelf betalen).",
         when: "Iets uit de gemeenschappelijke voorraad halen.",
       },
       {
-        cmd: "/eryndor overview",
+        cmd: "/eryndor overzicht",
         who: "everyone",
         cat: "bekijken",
         what: "Alles-in-één (alleen voor jou): vandaag + volgende volle maan, guild-voorraad, jouw stash, bouwprojecten en productiebronnen.",
         when: "Snel zien waar de wereld en de guild staan.",
       },
       {
-        cmd: "/resource stock",
+        cmd: "/voorraad guild",
         who: "everyone",
         cat: "voorraad",
         what: "Toon de guild-voorraad en de opslaglimiet per type (alleen voor jou).",
         when: "Even kijken wat er nog ligt.",
       },
       {
-        cmd: "/resource personal add",
+        cmd: "/voorraad persoonlijk toevoegen",
         who: "everyone",
         cat: "voorraad",
         what: "Modal: kies grondstof + vul aantal in. Zet grondstoffen in je Persoonlijke voorraad. Stil bericht. Geen GC.",
         when: "Eigen voorraad bijhouden, los van de guild.",
       },
       {
-        cmd: "/resource personal remove",
+        cmd: "/voorraad persoonlijk verwijderen",
         who: "everyone",
         cat: "voorraad",
         what: "Modal: kies uit wat je hebt + vul aantal in. Haal iets uit je Persoonlijke voorraad. Stil bericht. Geen GC.",
         when: "Persoonlijke voorraad gebruiken of corrigeren.",
       },
       {
-        cmd: "/resource personal show",
+        cmd: "/voorraad persoonlijk tonen",
         who: "everyone",
         cat: "voorraad",
         what: "Toon jouw persoonlijke voorraad (alleen voor jou zichtbaar).",
         when: "Even checken wat jij nog hebt.",
       },
       {
-        cmd: "/resource type list",
+        cmd: "/voorraad types",
         who: "everyone",
         cat: "voorraad",
         what: "Lijst van grondstoftypes met sell- en buy-GC.",
@@ -1055,35 +1055,35 @@
         when: "Meer of minder opslagruimte voor de guild.",
       },
       {
-        cmd: "/building deliver",
+        cmd: "/bouw leveren",
         who: "everyone",
         cat: "bouwen",
         what: "Lever materialen aan een open project (één formulier: project + bron + grondstof + aantal). Bron: van buiten óf uit je persoonlijke voorraad. Stil bericht met voortgang. GC = sell × aantal.",
         when: "Zelf materiaal aandragen (net gevonden, of uit je eigen voorraad).",
       },
       {
-        cmd: "/building use-guild-stock",
+        cmd: "/bouw uit-guild",
         who: "everyone",
         cat: "bouwen",
         what: "Zet materialen uit de guild-voorraad in op een open project (één formulier: project + grondstof + aantal). Stil bericht met voortgang van alle materialen. Geen extra GC.",
         when: "Gemeenschappelijke voorraad inzetten voor een project.",
       },
       {
-        cmd: "/building contribute",
+        cmd: "/bouw meewerken",
         who: "everyone",
         cat: "bouwen",
         what: "Besteed tijd aan een project in de bouwfase (één formulier: project + aantal tijd-units). Stil bericht. GC = aantal × 1.",
         when: "Meebouwen zodra de materialen compleet zijn.",
       },
       {
-        cmd: "/building list",
+        cmd: "/bouw lijst",
         who: "everyone",
         cat: "bouwen",
         what: "Overzicht van bouwprojecten en hun status (materialen / in aanbouw / klaar).",
         when: "Wat staat er open?",
       },
       {
-        cmd: "/building status",
+        cmd: "/bouw status",
         who: "everyone",
         cat: "bouwen",
         what: "Detail van een project via menu: ontbrekende materialen, tijd, fase.",
@@ -1118,7 +1118,7 @@
         when: "Project gaat niet door.",
       },
       {
-        cmd: "/production list",
+        cmd: "/productie lijst",
         who: "everyone",
         cat: "productie",
         what: "Overzicht productiebronnen: medewerkers, max, opbrengst, interval (dagelijks/wekelijks).",

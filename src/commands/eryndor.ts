@@ -19,6 +19,7 @@ import { formatTemplate } from '../utils/helpers.js';
 import { buildProductionListEmbed } from './productionWizard.js';
 import { buildEconomyOverviewEmbeds } from './resource.js';
 import { guildNickname } from './resourceEmbeds.js';
+import { replyCurrentWeather } from './weather.js';
 
 export function buildEryndorCommand() {
   return new SlashCommandBuilder()
@@ -26,24 +27,29 @@ export function buildEryndorCommand() {
     .setDescription('Wereldinfo, overzicht en hulp voor de bot')
     .addSubcommand((sub) =>
       sub
-        .setName('overview')
+        .setName('overzicht')
         .setDescription(
           'Alles in één: kalender, voorraad, bouw en productie (alleen voor jou)',
         ),
     )
     .addSubcommand((sub) =>
       sub
-        .setName('help')
+        .setName('weer')
+        .setDescription('Wat voor weer hangt er nu boven de wereld? (alleen voor jou)'),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('hulp')
         .setDescription('Wat kun je met de bot? (DM’s krijgen ook de handout-link)'),
     )
     .addSubcommand((sub) =>
       sub
-        .setName('today')
+        .setName('vandaag')
         .setDescription('Welke dag is het in Eryndor? Maanfase en feestdagen (alleen voor jou)'),
     )
     .addSubcommand((sub) =>
       sub
-        .setName('fullmoon')
+        .setName('vollemaan')
         .setDescription('Wanneer is de volgende exacte volle maan? (alleen voor jou)'),
     );
 }
@@ -94,16 +100,19 @@ export async function handleEryndorCommand(
   }
 
   switch (sub) {
-    case 'overview':
+    case 'overzicht':
       await handleOverview(interaction, deps);
       return;
-    case 'help':
+    case 'weer':
+      await replyCurrentWeather(interaction, weather);
+      return;
+    case 'hulp':
       await handleHelp(interaction, weather, config);
       return;
-    case 'today':
+    case 'vandaag':
       await handleToday(interaction, calendar);
       return;
-    case 'fullmoon':
+    case 'vollemaan':
       await handleFullMoon(interaction, calendar);
       return;
     default:

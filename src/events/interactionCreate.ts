@@ -21,7 +21,6 @@ import {
   RESOURCE_WIZARD_PREFIX,
   handleResourceWizardModal,
 } from '../commands/resourceWizard.js';
-import { handleWeatherCommand } from '../commands/weather.js';
 import type { ActivityLogService } from '../services/ActivityLogService.js';
 import type { AnnounceService } from '../services/AnnounceService.js';
 import type { BuildingService } from '../services/BuildingService.js';
@@ -124,36 +123,32 @@ export function registerInteractionHandler(
           });
           deps.activity.ok('command', '/eryndor', actorUserId);
           return;
-        case 'weather':
-          await handleWeatherCommand(interaction, deps);
-          deps.activity.ok('command', '/weather', actorUserId);
-          return;
         case 'dm':
           await handleDmCommand(interaction, deps);
           deps.activity.ok('command', '/dm', actorUserId);
           return;
-        case 'resource':
+        case 'voorraad':
           await handleResourceCommand(interaction, {
             resources: deps.resources,
             config: deps.config,
           });
-          deps.activity.ok('command', '/resource', actorUserId);
+          deps.activity.ok('command', '/voorraad', actorUserId);
           return;
-        case 'building':
+        case 'bouw':
           await handleBuildingCommand(interaction, {
             buildings: deps.buildings,
             resources: deps.resources,
             config: deps.config,
           });
-          deps.activity.ok('command', '/building', actorUserId);
+          deps.activity.ok('command', '/bouw', actorUserId);
           return;
-        case 'production':
+        case 'productie':
           await handleProductionCommand(interaction, {
             production: deps.production,
             resources: deps.resources,
             config: deps.config,
           });
-          deps.activity.ok('command', '/production', actorUserId);
+          deps.activity.ok('command', '/productie', actorUserId);
           return;
         default:
           return;

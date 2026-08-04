@@ -23,7 +23,7 @@ Posttijd in de handout: **rond 08:30** (Nederlandse tijd). Geen `.env`-keys.
 
 ## Wat Overzicht kort mag zeggen
 
-- Kalender-tile: handmatig `/eryndor today` / `fullmoon` **én** optioneel ochtendpost bij events.
+- Kalender-tile: handmatig `/eryndor vandaag` / `fullmoon` **én** optioneel ochtendpost bij events.
 - Max één setup-command: `` `/dm calendar setup` ``.
 - Geen how-to (clear, exacte tijd-config) op Overzicht.
 

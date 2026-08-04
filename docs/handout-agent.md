@@ -8,7 +8,7 @@ Regels voor agents (en mensen) die de handouts bijwerken:
 **Bot-waarheid** (commands, data, gedrag) = [`agent.md`](./agent.md) + feature-docs.
 **Handout-stijl** (toon, structuur, wat wél/niet uitleggen) = **dit bestand**.
 
-GitHub Pages serveert de map `/docs`; DM-handout: `/handout/` · speler-handout: `/handout/spelers.html`. Logo: `docs/handout/eryndor-logo.jpg`. Speler-URL in de bot = `HANDOUT_URL` + `spelers.html` (zie `playerHandoutUrl` in config); `/eryndor help` voor niet-DM’s linkt daarnaartoe.
+GitHub Pages serveert de map `/docs`; DM-handout: `/handout/` · speler-handout: `/handout/spelers.html`. Logo: `docs/handout/eryndor-logo.jpg`. Speler-URL in de bot = `HANDOUT_URL` + `spelers.html` (zie `playerHandoutUrl` in config); `/eryndor hulp` voor niet-DM’s linkt daarnaartoe.
 
 ---
 
@@ -25,20 +25,20 @@ Beide handouts linken naar elkaar (footer / hero).
 ## Speler-handout (`spelers.html`)
 
 ### Wat erin hoort
-- **Even kijken** — `/eryndor overview` als default; daaronder `<details>` “Bekijk losse commando’s” met alleen stock / building list|status / production list (geen personal show — die staat verderop; weer + kalender blijven aparte tiles)
-- **Guild-voorraad** — donate / buy / persoonlijke voorraad (add|remove|show); GC zelf bijhouden; opslaglimiet + overflow → persoonlijk
-- **Meebouwen** — deliver (bronkeuze), use-guild-stock, contribute
-- Korte tip: `/eryndor help` + formulieren met dropdowns
+- **Even kijken** — `/eryndor overzicht` als default; daaronder `<details>` “Bekijk losse commando’s” met alleen guild / bouw lijst|status / productie lijst (geen persoonlijk tonen — die staat verderop; weer + kalender blijven aparte tiles)
+- **Guild-voorraad** — doneren / kopen / persoonlijke voorraad (toevoegen|verwijderen|tonen); GC zelf bijhouden; opslaglimiet + overflow → persoonlijk
+- **Meebouwen** — leveren (bronkeuze), uit-guild, meewerken
+- Korte tip: `/eryndor hulp` + formulieren met dropdowns
 
 ### Deliver-bronnen (vaste uitleg)
-Bij `/building deliver` altijd **beide** bronnen noemen:
+Bij `/bouw leveren` altijd **beide** bronnen noemen:
 
 | Bron in Discord | Campaign-taal | GC | Voorraad |
 |---|---|---|---|
 | Van buiten | Net gehakt/gevonden; bot hield het nog niet bij | + sell | onaangeroerd |
 | Mijn voorraad | Uit je persoonlijke voorraad | + sell | persoonlijk − |
 
-`/building use-guild-stock` = alleen uit de **guild**-voorraad, **geen** GC. Niet door elkaar halen.
+`/bouw uit-guild` = alleen uit de **guild**-voorraad, **geen** GC. Niet door elkaar halen.
 
 ### Wat er níet in hoort
 - `/dm …`, setup, types aanmaken, costs, cancel, adjust, cap zetten
@@ -47,7 +47,7 @@ Bij `/building deliver` altijd **beide** bronnen noemen:
 
 ### Toon
 - Alsof je aan de speeltafel uitlegt, niet aan een developer
-- Slash-commands wél exact (`/building deliver`)
+- Slash-commands wél exact (`/bouw leveren`)
 - Termen: **persoonlijke voorraad** (niet “bak”), **guild-voorraad**, **Guild Credits (GC)**
 - Zelfde visuele taal als de DM-handout (fonts/kleuren/logo) mag; geen tabs nodig — één scrollbare pagina
 
@@ -124,16 +124,16 @@ Eerst op **wie**, daarna op **categorie**:
 
 | Categorie | Voorbeelden |
 |---|---|
-| Bekijken | `/eryndor overview`, `/weather current`, `/eryndor today`, `/eryndor fullmoon` |
+| Bekijken | `/eryndor overzicht`, `/eryndor weer`, `/eryndor vandaag`, `/eryndor vollemaan` |
 | Inrichten | `/dm weather setup`, `/dm calendar setup` / `clear`, `/dm resource setup` |
 | Instellingen | `/dm weather-settings …` |
 | Acties | `/dm weather` → `roll`, `set`, `schedule`, `pause`, `resume` |
 | Limieten | `/dm weather-severity`, `/dm weather-magical` |
 | Berichten | `/dm announce schedule` / `list` / `cancel` |
-| Voorraad | spelers: `/resource …`; DM: `/dm resource`, `/dm resource-type` |
-| Bouwen | spelers: `/building …`; DM: `/dm building`, `/dm building-cost` |
-| Productie | spelers: `/production list`; DM: `/dm production …` |
-| Info | `/eryndor help`; DM: `/dm weather status` / `next` |
+| Voorraad | spelers: `/voorraad …`; DM: `/dm resource`, `/dm resource-type` |
+| Bouwen | spelers: `/bouw …`; DM: `/dm building`, `/dm building-cost` |
+| Productie | spelers: `/productie lijst`; DM: `/dm production …` |
+| Info | `/eryndor hulp`; DM: `/dm weather status` / `next` |
 
 Alle DM-commands staan onder `/dm` (Discord verbergt die standaard voor gewone leden). Zichtbaarheid in de `/`-picker ≠ `ALLOWED_USER_IDS`: server-admins zien `/dm` altijd; andere DMs moeten hem via **Integraties → bot → `/dm`** krijgen. Runtime blijft allowlist.
 
@@ -156,10 +156,10 @@ Gebruik deze termen consistent:
 - **Guild-voorraad** — gedeelde grondstoffen per server; stille berichten in het voorraadkanaal (`/dm resource setup`)
 - **Persoonlijke voorraad** — per speler, los van de guild (niet “bak”)
 - **Opslaglimiet** — max per grondstoftype (standaard 300); overflow bij spelers → persoonlijke voorraad; bij dagelijkse productie → verloren
-- **Bouwproject** — materialen verzamelen → bouwen (tijd) → voltooid; via `/building`
+- **Bouwproject** — materialen verzamelen → bouwen (tijd) → voltooid; via `/bouw`
 - **Donate (bouw)** — materiaal naar een project: bron *van buiten* of *mijn voorraad* (beide + sell-GC)
 - **Fund (bouw)** — materiaal uit de guild-voorraad naar een project (geen extra GC)
-- **Productiebron** — vaste bron (bijv. hut) die periodiek grondstoffen levert; samenvatting stil ~17:00; via `/production`
+- **Productiebron** — vaste bron (bijv. hut) die periodiek grondstoffen levert; samenvatting stil ~17:00; via `/productie`
 - **Eryndor bot** — productnaam (repo/package mag `weather-bot` / `eryndor-bot` blijven)
 
 Defaults in de handout moeten overeenkomen met content/`weather-rules.json` en schedule-defaults. Wijzigen die in de bot → handout meenemen.
@@ -225,7 +225,7 @@ DB, .env-keys, migraties, …
 - [ ] Sessie-tile alleen als het een veelgebruikte flow is?
 - [ ] Aanlever-tab: geen sfeertekst-veld; JSON als optioneel voorbeeld voor content-beheerder?
 - [ ] Handout-update briefing bijgewerkt of gemarkeerd als verwerkt?
-- [ ] Speler-facing change? → `spelers.html` + `/eryndor help` spelertekst bijgewerkt?
+- [ ] Speler-facing change? → `spelers.html` + `/eryndor hulp` spelertekst bijgewerkt?
 - [ ] Donate/bouw: bronnen *van buiten* / *mijn voorraad* + fund zonder GC correct uitgelegd (DM én speler)?
 - [ ] Geen “bak” — zeg **persoonlijke voorraad**?
 - [ ] Onderlinge links DM ↔ speler-handout nog intact?

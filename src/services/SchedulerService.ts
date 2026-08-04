@@ -231,7 +231,7 @@ export class SchedulerService {
 
   /**
    * Once per local day after calendarEventsPostTime: fetch today; post the same
-   * embed as /eryndor today only when events.length > 0. Empty days are silent.
+   * embed as /eryndor vandaag only when events.length > 0. Empty days are silent.
    */
   private async tickCalendarEvents(now = new Date()): Promise<void> {
     const localDate = localDateIso(now, this.calendarTimeZone);
