@@ -162,6 +162,10 @@ De bot moet dus eerder weten:
 5. Enige tijd vóór de overgang wordt de warning gepost (categorie op basis van het geplande volgende weer — zonder type te lekken).
 6. Op het geplande moment wordt het nieuwe weer actief; daarna opnieuw stap 2 voor de cycle erna.
 
+## Alternatief
+
+Zelfde window gebruiken maar het bericht toevoegen aan de /eryndor weer. Op die manier kan de speler actief kijken of het weer gaat veranderen.
+
 ### DM-interventies (open)
 
 Als het volgende weer al vroeg is gerold, kan een DM dat “oude” toekomstige weer ongeldig maken. Voorbeelden:
