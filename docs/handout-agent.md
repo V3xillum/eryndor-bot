@@ -28,7 +28,7 @@ Beide handouts linken naar elkaar (footer / hero).
 - **Even kijken** — `/eryndor overzicht` als default; daaronder `<details>` “Bekijk losse commando’s” met alleen guild / bouw lijst|status / productie lijst (geen persoonlijk tonen — die staat verderop; weer + kalender blijven aparte tiles)
 - **Guild-voorraad** — doneren / kopen / persoonlijke voorraad (toevoegen|verwijderen|tonen); GC zelf bijhouden; opslaglimiet + overflow → persoonlijk
 - **Meebouwen** — leveren (bronkeuze), uit-guild, meewerken
-- Korte tip: `/eryndor hulp` + formulieren met dropdowns
+- Korte tip onderaan bij **Snel terugvinden**: slash-zoeken in Discord (`/toe`, `/voor`, …); plus `/eryndor hulp` + formulieren met dropdowns
 
 ### Deliver-bronnen (vaste uitleg)
 Bij `/bouw leveren` altijd **beide** bronnen noemen:
