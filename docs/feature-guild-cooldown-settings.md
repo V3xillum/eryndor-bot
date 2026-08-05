@@ -59,18 +59,16 @@ Aparte kolommen, consistent met schedule-settings. Geen Database:Refresh; geen b
 
 | Command | Effect |
 |---|---|
-| `/weather settings show` | Interval + venster + effectieve cooldown (guild of content) |
-| `/weather settings cooldown` | Patch: optioneel `enabled`, `after`, `max_next` (minstens één) |
-| `/weather settings clear scope:…` | `schedule` \| `cooldown` \| `all` |
+| `/dm weather-settings menu` | Hub: toont ritme/venster/afkoeling + dials; dropdown om te wijzigen (modals) of terug te zetten |
+| `/dm weather status` | Zelfde overzicht in embed-vorm (incl. limieten) |
 
-Allowlist only. Cooldown-wijzigingen veranderen huidig weer niet, posten niet, en reschedulen niet (grijpt in bij de *volgende* roll). Schedule-clear rescheduled wel.
+Allowlist only. Via het menu: **Afkoeling** (aan/uit + drempels), **Terugzetten** → scope `schedule` \| `cooldown` \| `all`. Cooldown-wijzigingen veranderen huidig weer niet, posten niet, en reschedulen niet (grijpt in bij de *volgende* roll). Schedule-clear rescheduled wel.
 
-Voorbeelden:
+Voorbeelden (via menu):
 
-- Afkoeling uit: `/weather settings cooldown enabled:False`
-- Strenger: `enabled:True after:3 max_next:1`
-- Alleen drempel: `after:5` (`max_next` blijft content/guild)
-- Terug naar content: `/weather settings clear scope:cooldown`
+- Afkoeling uit: menu → Afkoeling → uit
+- Strenger: Afkoeling → aan, after 3, max_next 1
+- Terug naar content: Terugzetten → Afkoeling
 
 ---
 

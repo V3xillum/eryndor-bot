@@ -88,7 +88,7 @@ Nieuwe tab alleen als er echt een nieuw *soort* content bij komt (zoals voorraad
 
 ### Overzicht
 - Leg uit **wat iets is** en wat de standaardwaarden zijn.
-- Maximaal **één command-verwijzing** om het aan te passen (`Aanpassen: \`/dm weather-settings interval\``), met Nederlandse brug (“ritme (`interval`)”).
+- Maximaal **één command-verwijzing** om het aan te passen (`Aanpassen: \`/dm weather-settings menu\`` → Ritme), met Nederlandse brug.
 - Geen how-to van die commands hier (minuten vs uren, voorbeelden 1–5, enz.) → dat hoort op **Commando’s**.
 - Als hetzelfde concept twee keer dreigt (bijv. afkoeling onder Zwaarte én in de note): één keer uitleggen, elders kort terugverwijzen.
 - Duurcodes (`30m`, `2h`, `1d`) één keer kort in de sessie-note op Overzicht.
@@ -128,7 +128,7 @@ Eerst op **wie**, daarna op **categorie**:
 | Inrichten | `/dm weather setup`, `/dm calendar setup` / `clear`, `/dm resource setup` |
 | Instellingen | `/dm weather-settings …` |
 | Acties | `/dm weather` → `roll`, `set`, `schedule`, `pause`, `resume` |
-| Limieten | `/dm weather-severity`, `/dm weather-magical` |
+| Limieten / config | `/dm weather-settings menu` |
 | Berichten | `/dm announce schedule` / `list` / `cancel` |
 | Voorraad | spelers: `/voorraad …`; DM: `/dm resource`, `/dm resource-type` |
 | Bouwen | spelers: `/bouw …`; DM: `/dm building`, `/dm building-cost` |
@@ -148,14 +148,15 @@ Gebruik deze termen consistent:
 - **Standaard ritme** — tijd tot automatische dobbelsteen (default 6–18 uur; per type of set/schedule kan eerder winnen)
 - **Berichtenvenster** — alleen automatische berichten binnen tijdsvenster (default 06:00–23:00 NL-tijd); handmatig altijd
 - **Zwaarte** — cijfer 1–5; **zwaar** = 4+; afkoeling daarna max zwaarte 2 (defaults uit content; zie bot)
-- **Afkoeling** — na zwaar weer mildere volgende roll; defaults na ≥4 → max 2; per server via `/dm weather-settings cooldown`; `set` negeert
-- **Tijdelijke zwaarte-limiet** — worpen alleen binnen min–max zwaarte, voor een duur (`/dm weather-severity`)
-- **Tijdelijke magie-filter** — alleen magisch of juist geen magisch weer, voor een duur (`/dm weather-magical`)
+- **Afkoeling** — na zwaar weer mildere volgende roll; defaults na ≥4 → max 2; per server via `/dm weather-settings menu`; `set` negeert
+- **Tijdelijke zwaarte-limiet** — worpen alleen binnen min–max zwaarte, voor een duur (settings-menu)
+- **Tijdelijke magie-filter** — alleen magisch of juist geen magisch weer, voor een duur (settings-menu)
 - **Gepland bericht** — vrije tekst die de bot later post in een gekozen kanaal (los van het weerkanaal); via `/dm announce`
 - **Kalender-events kanaal** — ochtendpost (`@everyone` + today-embed) alleen bij events; avondpost bij Full Moon (Rising) (stil) en exacte volle maan (`@everyone`); via `/dm calendar setup` (los van het weerkanaal)
 - **Guild-voorraad** — gedeelde grondstoffen per server; stille berichten in het voorraadkanaal (`/dm resource setup`)
-- **Persoonlijke voorraad** — per speler, los van de guild (niet “bak”)
+- **Persoonlijke voorraad** — per speler, los van de guild (niet “bak”); huisbelasting mogelijk bij toevoegen
 - **Opslaglimiet** — max per grondstoftype (standaard 300); overflow bij spelers → persoonlijke voorraad; bij dagelijkse productie → verloren
+- **Huisbelasting** — met eigen huis + genoeg stuks (≥ drempel): 1 unit naar guild (+ sell-GC); guild vol → speler houdt alles; DM: `/dm resource house-tax`
 - **Bouwproject** — materialen verzamelen → bouwen (tijd) → voltooid; via `/bouw`
 - **Donate (bouw)** — materiaal naar een project: bron *van buiten* of *mijn voorraad* (beide + sell-GC)
 - **Fund (bouw)** — materiaal uit de guild-voorraad naar een project (geen extra GC)

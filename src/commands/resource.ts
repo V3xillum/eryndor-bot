@@ -42,7 +42,9 @@ export function buildResourceCommand() {
         .addSubcommand((sub) =>
           sub
             .setName('toevoegen')
-            .setDescription('Zet materiaal in jouw eigen voorraad (geen GC)'),
+            .setDescription(
+              'Zet materiaal in jouw eigen voorraad (evt. huisbelasting)',
+            ),
         )
         .addSubcommand((sub) =>
           sub
@@ -90,6 +92,27 @@ export function buildResourceAdminSubcommands(
             .setRequired(false)
             .setMinValue(1)
             .setMaxValue(999999),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('house-tax')
+        .setDescription('Huisbelasting op persoonlijke voorraad tonen of zetten')
+        .addBooleanOption((opt) =>
+          opt
+            .setName('enabled')
+            .setDescription('Aan of uit (laat leeg om huidige te zien)')
+            .setRequired(false),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName('threshold')
+            .setDescription(
+              'Vanaf dit aantal (inclusief) geldt 1 unit belasting (standaard 7)',
+            )
+            .setRequired(false)
+            .setMinValue(1)
+            .setMaxValue(9999),
         ),
     );
 }
@@ -253,6 +276,9 @@ export async function dispatchResourceAdmin(
       return;
     case 'cap':
       await handleCap(interaction, resources);
+      return;
+    case 'house-tax':
+      await handleHouseTax(interaction, resources);
       return;
     case 'adjust':
       await handleAdjust(interaction, resources);
@@ -457,6 +483,47 @@ async function handleCap(
   await interaction.reply({
     content: formatTemplate(resources.messages.resourceCapSuccess, {
       cap: String(result.cap),
+    }),
+    ephemeral: true,
+  });
+}
+
+async function handleHouseTax(
+  interaction: ChatInputCommandInteraction,
+  resources: ResourceService,
+): Promise<void> {
+  const enabledOpt = interaction.options.getBoolean('enabled');
+  const thresholdOpt = interaction.options.getInteger('threshold');
+
+  const enabledLabel = (on: boolean) =>
+    on
+      ? resources.messages.resourceHouseTaxEnabledOn
+      : resources.messages.resourceHouseTaxEnabledOff;
+
+  if (enabledOpt == null && thresholdOpt == null) {
+    const current = resources.getHouseTaxSettings(interaction.guildId!);
+    await interaction.reply({
+      content: formatTemplate(resources.messages.resourceHouseTaxShow, {
+        enabled: enabledLabel(current.enabled),
+        threshold: String(current.threshold),
+      }),
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const result = resources.setHouseTaxSettings(interaction.guildId!, {
+    enabled: enabledOpt ?? undefined,
+    threshold: thresholdOpt ?? undefined,
+  });
+  if (!result.ok) {
+    await interaction.reply({ content: result.message, ephemeral: true });
+    return;
+  }
+  await interaction.reply({
+    content: formatTemplate(resources.messages.resourceHouseTaxSuccess, {
+      enabled: enabledLabel(result.enabled),
+      threshold: String(result.threshold),
     }),
     ephemeral: true,
   });

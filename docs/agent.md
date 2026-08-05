@@ -31,14 +31,14 @@ Optional:
 
 ```env
 # Default random delay between automatic updates, in minutes (defaults: 360–1080 = 6–18h).
-# Per-guild override via `/dm weather-settings interval` (stored in SQLite; no restart).
+# Per-guild override via `/dm weather-settings menu` → Ritme (stored in SQLite; no restart).
 WEATHER_UPDATE_MIN_MINUTES=360
 WEATHER_UPDATE_MAX_MINUTES=1080
 
 # Default automatic posts only inside this same-day window (defaults below).
 # Manual /dm weather roll and `/dm weather set` still work outside the window.
 # Set WEATHER_ACTIVE_WINDOW_ENABLED=false for 24/7 auto-updates (useful overnight testing).
-# Per-guild override via `/dm weather-settings window` (timezone always from WEATHER_TIMEZONE).
+# Per-guild override via `/dm weather-settings menu` → Berichtenvenster (timezone always from WEATHER_TIMEZONE).
 WEATHER_ACTIVE_WINDOW_ENABLED=true
 WEATHER_ACTIVE_START=06:00
 WEATHER_ACTIVE_END=23:00
@@ -60,7 +60,9 @@ PRODUCTION_POST_TIME=17:00
 HANDOUT_URL=https://v3xillum.github.io/eryndor-bot/handout/
 
 # Optional status-report DMs (comma-separated user IDs; empty = off).
-# Snapshot: weather active/paused only (no next-update spoilers), usage counts, last issues.
+# Snapshot: weather active/paused only (no next-update spoilers), period usage, rolling slash/unique (40d), last issues.
+# Period usage/issues/ledger cover report-time → report-time (e.g. daily 10:00 → next day 10:00).
+# Rolling slash commands + unique accounts match activity_log retention (40 days).
 STATUS_REPORT_USER_ID=
 STATUS_REPORT_TIME=10:00
 STATUS_REPORT_CADENCE=daily
@@ -221,7 +223,7 @@ Each entry has a numeric **`severity`** (1 = mild … 5 = catastrophic), a boole
 }
 ```
 
-After current weather with `severity >= cooldownAfterSeverity`, the next scheduler/`/dm weather roll` filters to `severity <= cooldownMaxNextSeverity`. If that pool is empty (e.g. an all-evil table), the ceiling rises (3, 4, …) until at least one entry matches. `/dm weather set` bypasses the filter. Per-guild overrides via `/dm weather-settings cooldown` (null columns inherit these content defaults; guild can also disable cooldown). See [`feature-weather-severity-duration.md`](./feature-weather-severity-duration.md) and [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
+After current weather with `severity >= cooldownAfterSeverity`, the next scheduler/`/dm weather roll` filters to `severity <= cooldownMaxNextSeverity`. If that pool is empty (e.g. an all-evil table), the ceiling rises (3, 4, …) until at least one entry matches. `/dm weather set` bypasses the filter. Per-guild overrides via `/dm weather-settings menu` → Afkoeling (null columns inherit these content defaults; guild can also disable cooldown). See [`feature-weather-severity-duration.md`](./feature-weather-severity-duration.md) and [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
 
 **Roll pool order:** severity dial → magical dial → severity cooldown (within that intersection) → one weighted pick. Setting either dial rejects empty pools and empty **intersections** with the other active dial (no silent fallback). See [`feature-weather-magical-dial.md`](./feature-weather-magical-dial.md).
 
@@ -295,12 +297,10 @@ There is **no** `/weather post`. Anything that changes weather also broadcasts t
 Groups (Discord nesting: command → group → sub):
 
 - `/dm weather` — `setup`, `status`, `next`, `roll`, `set`, `schedule`, `pause`, `resume`
-- `/dm weather-severity` — `set`, `clear` (temporary severity band for auto-roll / `/dm weather roll`)
-- `/dm weather-magical` — `set`, `clear` (`only` / `none`)
-- `/dm weather-settings` — `show`, `interval`, `window`, `cooldown`, `clear` (per-guild schedule + cooldown)
+- `/dm weather-settings` — `menu` (hub: ritme, venster, afkoeling, tijdelijke zwaarte-/magie-limieten, clear)
 - `/dm calendar` — `setup`, `clear` (morning events + evening moon posts channel)
 - `/dm announce` — `schedule`, `list`, `cancel` (free-text posts; independent of weather channel)
-- `/dm resource` — `setup`, `clear`, `adjust`, `cap`
+- `/dm resource` — `setup`, `clear`, `adjust`, `cap`, `house-tax`
 - `/dm resource-type` — `add`, `edit`, `remove`
 - `/dm building` — `create`, `cancel`
 - `/dm building-cost` — `add`, `buildtime`
@@ -329,7 +329,7 @@ Responsible for:
 - once per day after `CALENDAR_EVENTS_POST_TIME`, posting the calendar today-embed to `calendar_channel_id` when that day has events — independent of weather destination / pause / active window
 - once per evening after `CALENDAR_FULLMOON_POST_TIME`, posting a moon-night embed for `Full Moon (Rising)` (silent) or exact Full Moon (`@everyone`) — same channel
 - once per day after `PRODUCTION_POST_TIME`, paying due production sources and posting one silent summary on the resource channel (lost overflow shown) — same-day catch-up if the bot starts late
-- once per `STATUS_REPORT_CADENCE` after `STATUS_REPORT_TIME`, DM status reports to `STATUS_REPORT_USER_ID` (active/paused + usage counts + recent issues; no next-update spoilers)
+- once per `STATUS_REPORT_CADENCE` after `STATUS_REPORT_TIME`, DM status reports to `STATUS_REPORT_USER_ID` (active/paused + period usage/issues/ledger since previous report time e.g. daily 10:00→10:00 + rolling slash commands / unique accounts over activity_log retention / 40 days; no next-update spoilers)
 
 Keep this logic entirely out of command handlers — commands trigger immediate one-off actions (`/dm weather roll`, `/dm weather set`); the scheduler owns the recurring automatic updates, due announcements, and morning calendar-event posts.
 
@@ -338,7 +338,7 @@ Keep this logic entirely out of command handlers — commands trigger immediate 
 ### Weather duration precedentie (hoog → laag)
 1. Expliciete DM-duur (`/dm weather set … duration`, `/dm weather schedule`)
 2. Entry `durationMinMinutes` / `durationMaxMinutes`
-3. Guild `/dm weather-settings interval`
+3. Guild `/dm weather-settings menu` → Ritme
 4. `.env` `WEATHER_UPDATE_*_MINUTES`
 
 ## Deploy & GitHub
@@ -372,28 +372,31 @@ Architecture should allow these without major refactoring, but **none should be 
 Per-guild d100 table in SQLite (types + range segments), DM wizard under `/dm weather-table`, switchable source `json` | `db`, default type for gaps, new claim always cuts/splits overlapping segments. Custom images under `storage/`. See [`feature-weather-table-db.md`](./feature-weather-table-db.md).
 
 ### Weather duration (per type) — implemented
-Each weather type may define `durationMinMinutes` / `durationMaxMinutes`. When present, that range schedules the next auto-update after the type becomes current; otherwise the guild `/dm weather-settings interval` applies when set, else the global `.env` interval. Explicit DM duration (`/dm weather set … duration`, `/dm weather schedule`) always wins.
+Each weather type may define `durationMinMinutes` / `durationMaxMinutes`. When present, that range schedules the next auto-update after the type becomes current; otherwise the guild interval from `/dm weather-settings menu` applies when set, else the global `.env` interval. Explicit DM duration (`/dm weather set … duration`, `/dm weather schedule`) always wins.
 
 ### Guild schedule settings — implemented
-`/dm weather-settings` stores optional per-guild overrides on `world_state`: `update_min_minutes` / `update_max_minutes`, `active_window_enabled` / `active_window_start` / `active_window_end`. Null = inherit `.env`. Timezone stays in `.env` (`WEATHER_TIMEZONE`). Changing settings reschedules `next_update_at` immediately. Visible on `/dm weather status` and `/dm weather-settings show`. Clear via `/dm weather-settings clear scope:schedule|all`.
+`/dm weather-settings` stores optional per-guild overrides on `world_state`: `update_min_minutes` / `update_max_minutes`, `active_window_enabled` / `active_window_start` / `active_window_end`. Null = inherit `.env`. Timezone stays in `.env` (`WEATHER_TIMEZONE`). Changing settings reschedules `next_update_at` immediately. Visible on `/dm weather status` and `/dm weather-settings menu`. Clear via menu → Terugzetten (`schedule`|`all`).
 
 ### Severity & transition rules — implemented
 Each entry has numeric **severity**. After weather at or above `cooldownAfterSeverity`, the next auto-roll / `/dm weather roll` must resolve to `severity <= cooldownMaxNextSeverity` (filter + one weighted pick; empty pools escalate the ceiling). Thresholds live in `content/weather-rules.json`. `/dm weather set` bypasses the filter. Per-guild overrides: see guild cooldown settings below.
 
 ### DM severity dial — implemented
-`/dm weather-severity set <min> <max> <duration>` stores a temporary inclusive band on `world_state` (`severity_min` / `severity_max` / `severity_override_until`). Auto-roll and `/dm weather roll` filter to that band first, then apply magical dial (if any) and cooldown within the intersection. Lazy expiry (checked at roll time). `/dm weather-severity clear` removes it early. Visible on `/dm weather status`. `/dm weather set` still bypasses filters. Setting rejects empty bands and empty intersection with an active magical dial.
+Via `/dm weather-settings menu` → Zwaarte-limiet: stores a temporary inclusive band on `world_state` (`severity_min` / `severity_max` / `severity_override_until`). Auto-roll and `/dm weather roll` filter to that band first, then apply magical dial (if any) and cooldown within the intersection. Lazy expiry (checked at roll time). Menu → Zwaarte-limiet opheffen removes it early. Visible on `/dm weather status` and the settings hub. `/dm weather set` still bypasses filters. Setting rejects empty bands and empty intersection with an active magical dial.
 
 ### DM magical dial — implemented
-Each weather entry has boolean **`magical`**. `/dm weather-magical set <only|none> <duration>` stores a temporary filter on `world_state` (`magical_mode` / `magical_override_until`). Roll order: severity dial → magical dial → cooldown → weighted pick. Lazy expiry. `/dm weather-magical clear` removes it early. Visible on `/dm weather status`. `/dm weather set` bypasses. Setting rejects empty magical pools and empty intersection with an active severity dial (no silent fallback / escalate on magical).
+Each weather entry has boolean **`magical`**. Via `/dm weather-settings menu` → Magie-filter: stores a temporary filter on `world_state` (`magical_mode` / `magical_override_until`). Roll order: severity dial → magical dial → cooldown → weighted pick. Lazy expiry. Menu → Magie-filter opheffen removes it early. Visible on `/dm weather status` and the settings hub. `/dm weather set` bypasses. Setting rejects empty magical pools and empty intersection with an active severity dial (no silent fallback / escalate on magical).
 
 ### Guild cooldown settings — implemented
-Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / default on; `0`/`1` = off/on), `cooldown_after_severity`, `cooldown_max_next_severity` (null = inherit `content/weather-rules.json`). Field-level merge. `/dm weather-settings cooldown` patches provided fields; soft-warns when `max_next >= after` or the start pool would be empty (escalate still applies). `/dm weather-settings clear scope:cooldown|all` clears overrides. Visible on `/dm weather status` and `settings show` with source label `guild` | `content`. Does not reschedule. See [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
+Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / default on; `0`/`1` = off/on), `cooldown_after_severity`, `cooldown_max_next_severity` (null = inherit `content/weather-rules.json`). Field-level merge. `/dm weather-settings menu` → Afkoeling patches provided fields; soft-warns when `max_next >= after` or the start pool would be empty (escalate still applies). Menu → Terugzetten clears overrides (`cooldown`|`all`). Visible on `/dm weather status` and the settings hub with source label `guild` | `content`. Does not reschedule. See [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md).
 
 ### Scheduled announcements — implemented
 `/dm announce schedule|list|cancel` stores free-text posts in `scheduled_posts` and posts them via the existing 30s scheduler to a chosen channel (not the weather destination). Relative or absolute `when` in `WEATHER_TIMEZONE`. Modal body max 2000 chars. Allowlist only. See [`feature-scheduled-announcements.md`](./feature-scheduled-announcements.md).
 
 ### Guild resources & buildings — implemented
 `/eryndor overzicht` (calendar + guild/personal stock + buildings + production); players: `/voorraad` (types, doneren/kopen/guild/persoonlijk) and `/bouw` (lijst|status|leveren|uit-guild|meewerken). DM: `/dm resource`, `/dm resource-type`, `/dm building`, `/dm building-cost`. Flexible resource types per guild, two-phase building projects (materials → build time, default **100**). `/bouw leveren` source: **outside** or **personal stock** (both + sell GC); `/bouw uit-guild` from guild stock (no GC). Public silent embeds (leveren/uit-guild show full material progress), ledger + status-report backup. No player GC balance in DB. Player handout: `docs/handout/spelers.html`. See [`feature-guild-resources.md`](./feature-guild-resources.md).
+
+### Personal house tax — implemented
+`/voorraad persoonlijk toevoegen` modal checkbox “eigen huis?” (default on) when enabled. If owns house and `amount >= threshold` (default **7**): 1 unit → guild stock (+ `sell` GC), rest → personal. Guild full → keep all. DM: `/dm resource house-tax` (`enabled`, `threshold`). Settings on `resource_settings`. See [`feature-personal-house-tax.md`](./feature-personal-house-tax.md).
 
 ### Guild production & storage cap — implemented
 `/productie lijst` (players); DM: `/dm production` (add/workers/yield/remove) and `/dm resource cap`. Per-type `storage_cap` (default 300). Interactive overflow → personal stock; auto production overflow → **lost**, shown clearly on the daily silent post after `PRODUCTION_POST_TIME` (default `17:00`). Same same-day catch-up as calendar posts if the bot starts late. See [`feature-guild-production.md`](./feature-guild-production.md).

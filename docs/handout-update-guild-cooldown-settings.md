@@ -22,16 +22,14 @@ Allowlist only (zelfde als andere admin weather-commands).
 
 | Command | Wat het doet |
 |---|---|
-| `/dm weather-settings show` | Toont effectief interval, postvenster **en** afkoeling (guild of default) |
-| `/dm weather-settings cooldown [enabled] [after] [max_next]` | Guild-afkoeling; minstens één optie. `enabled:False` is genoeg om uit te zetten |
-| `/dm weather-settings clear scope:schedule\|cooldown\|all` | Wis overrides per scope → terug naar defaults |
+| `/dm weather-settings menu` | Hub-menu: overzicht + dropdown (ritme, venster, afkoeling, limieten, terugzetten) |
 
-Voorbeelden:
+Voorbeelden (via menu → Afkoeling / Terugzetten):
 
-- Storm-arc zonder afkoeling: `/dm weather-settings cooldown enabled:False`
-- Mildere wereld: `/dm weather-settings cooldown after:5 max_next:3`
-- Terug naar content-defaults: `/dm weather-settings clear scope:cooldown`
-- Alles resetten: `/dm weather-settings clear scope:all`
+- Storm-arc zonder afkoeling: Afkoeling → uit
+- Mildere wereld: after 5, max_next 3
+- Terug naar content-defaults: Terugzetten → Afkoeling
+- Alles resetten: Terugzetten → Alles
 
 ---
 
@@ -39,16 +37,15 @@ Voorbeelden:
 
 1. **Afkoeling** — na zwaar weer (severity ≥ drempel) kiest de volgende auto-roll / `/dm weather roll` mildere types (plafond + escalate als nodig). `/dm weather set` bypass’t dit.
 2. **Per server** — defaults uit content; guild-settings overriden zonder deploy.
-3. **Clear met scope** — één clear-command; kies `schedule`, `cooldown` of `all` (niet per ongeluk alles wissen).
-4. **Status** — `/dm weather status` en `settings show` tonen of afkoeling aan/uit is en de drempels (bron: guild of content).
+3. **Clear met scope** — in het menu onder Terugzetten; kies `schedule`, `cooldown` of `all`.
+4. **Status** — `/dm weather status` en het settings-menu tonen of afkoeling aan/uit is en de drempels (bron: guild of content).
 
 ---
 
 ## Waar in de handout (hints)
 
-- Command-lijst / cheat sheet (bij `/dm weather-settings …`)
-- Sectie Zwaarte / Afkoeling: één zin + command-verwijzing; details op Commando’s-tab
-- Eventueel `settings clear` bijwerken: scope noemen (breaking t.o.v. oude “clear = alleen schedule”)
+- Command-lijst: één entry `/dm weather-settings menu` (niet aparte cooldown/show/clear-subcommands)
+- Sectie Zwaarte / Afkoeling: één zin + menu-verwijzing
 
 ---
 

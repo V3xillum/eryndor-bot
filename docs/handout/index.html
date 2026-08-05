@@ -571,7 +571,7 @@
         Weer vastzetten: <code>/dm weather pause</code> (daarna <code>resume</code>).
         Scene-weer: <code>/dm weather set</code>.
         Live worp: <code>/dm weather roll</code>.
-        Tijdelijk alleen mild/zwaar of magisch: <code>/dm weather-severity</code> / <code>weather-magical</code>.
+        Tijdelijk alleen mild/zwaar of magisch, ritme/venster/afkoeling: <code>/dm weather-settings menu</code>.
         Meer detail: tab <strong>Commando’s</strong>.</p>
       </div>
 
@@ -580,7 +580,7 @@
         Elk weertype heeft een cijfer van mild (1) tot catastrofaal (5).
         Weer van <strong>4 of hoger</strong> telt als zwaar; daarna dobbelt de bot eerst weer tot hoogstens zwaarte <strong>2</strong> (afkoeling).
         Kies je zelf het weer met <code>/dm weather set</code>, dan geldt die afkoeling niet — jij hebt het laatste woord.
-        Afkoeling aanpassen: <code>/dm weather-settings cooldown</code>.
+        Afkoeling aanpassen: <code>/dm weather-settings menu</code> → Afkoeling.
       </p>
       <div class="severity-scale" aria-label="Zwaarte schaal">
         <div class="sev" data-n="1"><strong>1</strong>Mild</div>
@@ -597,15 +597,15 @@
         <p style="margin:0 0 0.75rem"><strong>Standaard ritme</strong><br />
         Hoe vaak de bot zelf opnieuw dobbelt: standaard ergens tussen <strong>6 en 18 uur</strong>.
         Heeft een weertype een eigen duur, of kies jij een duur bij zetten/plannen, dan wint die.
-        Aanpassen: <code>/dm weather-settings interval</code>.</p>
+        Aanpassen: <code>/dm weather-settings menu</code> → Ritme.</p>
         <p style="margin:0 0 0.75rem"><strong>Berichtenvenster</strong><br />
         Automatische weerberichten alleen tussen <strong>06:00 en 23:00</strong> (Nederlandse tijd). Daarbuiten wacht de bot.
-        Handmatig dobbelen of zetten werkt altijd. Aanpassen: <code>/dm weather-settings window</code>.</p>
+        Handmatig dobbelen of zetten werkt altijd. Aanpassen: <code>/dm weather-settings menu</code> → Berichtenvenster.</p>
         <p style="margin:0 0 0.75rem"><strong>Terugzetten &amp; checken</strong><br />
-        Terug naar de standaard: <code>/dm weather-settings clear</code> — kies of je ritme/venster, afkoeling, of alles wilt wissen.
-        Wat geldt er nu?: <code>/dm weather-settings show</code> of <code>/dm weather status</code>.</p>
+        Terug naar de standaard: in hetzelfde menu → Terugzetten (ritme/venster, afkoeling, of alles).
+        Wat geldt er nu?: het menu toont het overzicht, of <code>/dm weather status</code>.</p>
         <p style="margin:0"><strong>Afkoeling</strong><br />
-        Zie <strong>Zwaarte</strong> hierboven (standaard: na 4+ eerst max 2). Aanpassen of uitzetten: <code>/dm weather-settings cooldown</code>.</p>
+        Zie <strong>Zwaarte</strong> hierboven (standaard: na 4+ eerst max 2). Aanpassen of uitzetten: <code>/dm weather-settings menu</code> → Afkoeling.</p>
       </div>
     </section>
 
@@ -625,7 +625,6 @@
           <option value="inrichten">Inrichten</option>
           <option value="instellingen">Instellingen</option>
           <option value="acties">Acties</option>
-          <option value="limieten">Limieten</option>
           <option value="berichten">Berichten</option>
           <option value="voorraad">Voorraad</option>
           <option value="bouwen">Bouwen</option>
@@ -651,7 +650,7 @@
         </article>
         <article class="tile">
           <h3>3. Guild vs persoonlijk</h3>
-          <p><strong>Guild-voorraad:</strong> <code>/eryndor overzicht</code> (alles-in-één, alleen voor jou) / <code>/voorraad doneren</code> / <code>kopen</code> / <code>guild</code>. <strong>Persoonlijk:</strong> <code>persoonlijk toevoegen|verwijderen|tonen</code>. DM-correctie: <code>/dm resource adjust</code>.</p>
+          <p><strong>Guild-voorraad:</strong> <code>/eryndor overzicht</code> (alles-in-één, alleen voor jou) / <code>/voorraad doneren</code> / <code>kopen</code> / <code>guild</code>. <strong>Persoonlijk:</strong> <code>persoonlijk toevoegen|verwijderen|tonen</code>. Bij toevoegen met <strong>eigen huis</strong> en genoeg stuks (≥ drempel, standaard 7): 1 unit huisbelasting naar de guild (+ sell-GC); rest privé. Guild vol → speler houdt alles. Aan/uit + drempel: <code>/dm resource house-tax</code>. DM-correctie: <code>/dm resource adjust</code>.</p>
         </article>
         <article class="tile">
           <h3>4. Opslaglimiet</h3>
@@ -673,7 +672,7 @@
         </article>
         <article class="tile">
           <h3>7. Bouwtijd</h3>
-          <p>Standaard <strong>100 eenheden werk</strong>. Elke contribute-eenheid kost <strong>1 GC</strong> (melding; zelf bijhouden). Pas de totale bouwtijd aan met <code>/dm building-cost buildtime</code> — alleen vóór er materiaal gestort is.</p>
+          <p>Standaard <strong>100 uur</strong>. Elk uur meewerken kost <strong>1 GC</strong> (melding; zelf bijhouden). Pas de totale bouwtijd aan met <code>/dm building-cost buildtime</code> — alleen vóór er materiaal gestort is.</p>
         </article>
         <article class="tile">
           <h3>8. Productiebronnen</h3>
@@ -758,7 +757,6 @@
       { id: "inrichten", label: "Inrichten" },
       { id: "instellingen", label: "Instellingen" },
       { id: "acties", label: "Acties" },
-      { id: "limieten", label: "Limieten" },
       { id: "berichten", label: "Berichten" },
       { id: "voorraad", label: "Voorraad" },
       { id: "bouwen", label: "Bouwen" },
@@ -810,39 +808,11 @@
         when: "Geen automatische event-berichten meer in dat kanaal.",
       },
       {
-        cmd: "/dm weather-settings show",
+        cmd: "/dm weather-settings menu",
         who: "dm",
         cat: "instellingen",
-        what: "Toont welk ritme, berichtenvenster en afkoeling nu gelden voor deze server (eigen waarden of de standaard).",
-        when: "Even checken wat er actief is.",
-      },
-      {
-        cmd: "/dm weather-settings interval",
-        who: "dm",
-        cat: "instellingen",
-        what: "Stel het standaard ritme in voor deze server (wachttijd tussen automatische updates, in minuten). Geldt als het huidige type geen eigen duur heeft. De bot zet de volgende update meteen opnieuw klaar.",
-        when: "Als je wilt dat het weer vaker of juist minder vaak vanzelf wisselt (standaard ongeveer 6–18 uur).",
-      },
-      {
-        cmd: "/dm weather-settings window",
-        who: "dm",
-        cat: "instellingen",
-        what: "Berichtenvenster aan of uit, optioneel start/eind (bijv. 06:00–23:00). Alleen automatische weerberichten wachten hierop; handmatig werkt altijd. De bot zet de volgende update meteen opnieuw klaar.",
-        when: "Kortere dagen, of automatisch weer op elk moment van de dag (venster uit).",
-      },
-      {
-        cmd: "/dm weather-settings cooldown",
-        who: "dm",
-        cat: "instellingen",
-        what: "Afkoeling voor deze server: aan/uit, vanaf welke zwaarte “zwaar” telt (after), en max zwaarte daarna (max_next). Laat velden leeg om ze te houden. /dm weather set negeert afkoeling altijd.",
-        when: "Storm-periode zonder afkoeling (uit), of een mildere/strengere wereld (andere drempels).",
-      },
-      {
-        cmd: "/dm weather-settings clear",
-        who: "dm",
-        cat: "instellingen",
-        what: "Wis server-aanpassingen terug naar de standaard. Kies wat je wist: schedule (ritme + berichtenvenster), cooldown (afkoeling), of all (alles). Bij ritme/venster zet de bot de volgende update opnieuw klaar.",
-        when: "Terug naar de normale campagne-instellingen — zonder per ongeluk alles te wissen.",
+        what: "Eén menu: toont ritme, berichtenvenster, afkoeling en actieve limieten. Daarna kies je wat je wilt wijzigen (dropdown → modal). Inclusief tijdelijke zwaarte-limiet en magie-filter (zetten/opheffen) en terugzetten naar standaard.",
+        when: "Alles rond weer-config: ritme, venster, afkoeling, limieten.",
       },
       {
         cmd: "/dm weather roll",
@@ -901,34 +871,6 @@
         when: "Scene gewijzigd of bericht niet meer nodig.",
       },
       {
-        cmd: "/dm weather-severity set",
-        who: "dm",
-        cat: "limieten",
-        what: "Tijdelijke zwaarte-limiet: nieuwe worpen alleen binnen min–max zwaarte (1 mild tot 5 catastrofaal), voor een duur.",
-        when: "Escalatie-avond of juist een rustige trek.",
-      },
-      {
-        cmd: "/dm weather-severity clear",
-        who: "dm",
-        cat: "limieten",
-        what: "Zet de zwaarte-limiet uit → weer normaal dobbelen.",
-        when: "Limiet niet meer nodig.",
-      },
-      {
-        cmd: "/dm weather-magical set",
-        who: "dm",
-        cat: "limieten",
-        what: "Tijdelijke magie-filter: alleen magisch weer (only) of juist geen magisch weer (none), voor een duur.",
-        when: "Arcane-thema of juist “gewone lucht”.",
-      },
-      {
-        cmd: "/dm weather-magical clear",
-        who: "dm",
-        cat: "limieten",
-        what: "Zet de magie-filter uit.",
-        when: "Limiet niet meer nodig.",
-      },
-      {
         cmd: "/dm weather status",
         who: "dm",
         cat: "info",
@@ -981,14 +923,14 @@
         cmd: "/voorraad persoonlijk toevoegen",
         who: "everyone",
         cat: "voorraad",
-        what: "Modal: kies grondstof + vul aantal in. Zet grondstoffen in je Persoonlijke voorraad. Stil bericht. Geen GC.",
-        when: "Eigen voorraad bijhouden, los van de guild.",
+        what: "Modal: kies grondstof + vul aantal in. Checkbox “eigen huis?” (default aan, alleen als huisbelasting aan staat). Zet je ≥ drempel (standaard 7) met huis aan? Dan 1 unit naar de guild (+ sell-GC), rest naar je Persoonlijke voorraad. Guild-opslag vol → alles privé. Stil bericht.",
+        when: "Na een werkdag: wat je houdt, in je privé-voorraad zetten.",
       },
       {
         cmd: "/voorraad persoonlijk verwijderen",
         who: "everyone",
         cat: "voorraad",
-        what: "Modal: kies uit wat je hebt + vul aantal in. Haal iets uit je Persoonlijke voorraad. Stil bericht. Geen GC.",
+        what: "Tot 5 types tegelijk: vul per type een aantal in (leeg = overslaan). Meer dan 5 in je stash? Eerst kiezen welke, daarna aantallen. Stil bericht. Geen GC.",
         when: "Persoonlijke voorraad gebruiken of corrigeren.",
       },
       {
@@ -1044,7 +986,7 @@
         cmd: "/dm resource adjust",
         who: "dm",
         cat: "voorraad",
-        what: "Modal: kies type, kies toevoegen of verminderen, vul een positief aantal in. Corrigeert de guild-voorraad zonder publieke GC-melding. Overflow bij volle opslag → jouw Persoonlijke voorraad.",
+        what: "Modal: kies type, vul de gewenste voorraadstand in (absoluut, 0–9999). Corrigeert de guild-voorraad zonder publieke GC-melding. Overflow bij volle opslag → jouw Persoonlijke voorraad.",
         when: "DM-correctie of housekeeping.",
       },
       {
@@ -1055,24 +997,31 @@
         when: "Meer of minder opslagruimte voor de guild.",
       },
       {
+        cmd: "/dm resource house-tax",
+        who: "dm",
+        cat: "voorraad",
+        what: "Toon of zet huisbelasting op persoonlijk toevoegen: enabled aan/uit, threshold (vanaf welk aantal 1 unit naar de guild; standaard 7). Zonder opties = huidige waarden. Tax = 1 × sell-GC. Guild vol → speler houdt alles.",
+        when: "Belasting uitzetten, of drempel tunen (strenger/soepeler dan 7).",
+      },
+      {
         cmd: "/bouw leveren",
         who: "everyone",
         cat: "bouwen",
-        what: "Lever materialen aan een open project (één formulier: project + bron + grondstof + aantal). Bron: van buiten óf uit je persoonlijke voorraad. Stil bericht met voortgang. GC = sell × aantal.",
+        what: "Kies project → bron (van buiten of persoonlijke voorraad) → tot 5 materialen tegelijk (aantal per type; leeg = overslaan). Bij ≤5 open materialen meteen amounts. Stil bericht met voortgang. GC = sell × aantal.",
         when: "Zelf materiaal aandragen (net gevonden, of uit je eigen voorraad).",
       },
       {
         cmd: "/bouw uit-guild",
         who: "everyone",
         cat: "bouwen",
-        what: "Zet materialen uit de guild-voorraad in op een open project (één formulier: project + grondstof + aantal). Stil bericht met voortgang van alle materialen. Geen extra GC.",
+        what: "Kies project → tot 5 open materialen tegelijk (aantal per type; leeg = overslaan). Bij meer dan 5 open: eerst kiezen. Uit guild-voorraad. Stil bericht met voortgang. Geen extra GC.",
         when: "Gemeenschappelijke voorraad inzetten voor een project.",
       },
       {
         cmd: "/bouw meewerken",
         who: "everyone",
         cat: "bouwen",
-        what: "Besteed tijd aan een project in de bouwfase (één formulier: project + aantal tijd-units). Stil bericht. GC = aantal × 1.",
+        what: "Besteed uren aan een project in de bouwfase (één formulier: project + aantal uren). Stil bericht. GC = aantal × 1.",
         when: "Meebouwen zodra de materialen compleet zijn.",
       },
       {
@@ -1100,14 +1049,14 @@
         cmd: "/dm building-cost add",
         who: "dm",
         cat: "bouwen",
-        what: "Voeg een materiaalkost toe: kies project → vul grondstof (bijv. Hout) en aantal in. Daarna knop om nog een kost toe te voegen. Alleen zolang er nog niets gestort is.",
+        what: "Kies project → tot 5 grondstoffen selecteren → vul aantallen in (leeg = overslaan). Knop om nog een ronde toe te voegen. Alleen zolang er nog niets gestort is.",
         when: "Kostenlijst van een nieuw project vullen.",
       },
       {
         cmd: "/dm building-cost buildtime",
         who: "dm",
         cat: "bouwen",
-        what: "Zet de bouwtijd voor fase 2 (menu → modal). Nieuwe projecten starten op 100. Eén tijd-unit = 1 GC bij contribute. Alleen vóór stortingen.",
+        what: "Zet de bouwtijd voor fase 2 (menu → modal). Nieuwe projecten starten op 100 uur. Eén uur = 1 GC bij meewerken. Alleen vóór stortingen.",
         when: "Andere bouwtijd dan de standaard 100.",
       },
       {

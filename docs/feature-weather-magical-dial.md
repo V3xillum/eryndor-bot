@@ -2,7 +2,7 @@
 
 Ontwerp + implementatie van een DM-filter op magisch vs niet-magisch weer, parallel aan de severity dial.
 
-**Status:** implemented — `magical` op table entries, `/weather magical set|clear`, intersectie-validatie met severity dial, zichtbaar in `/weather status`.
+**Status:** implemented — `magical` op table entries, via `/dm weather-settings menu` (Magie-filter), intersectie-validatie met severity dial, zichtbaar in `/dm weather status`.
 
 **Doel:** tijdelijk alleen magisch weer (of juist géén) voor auto-roll / `/weather roll`, zonder type-namen hard te coderen.
 
@@ -58,10 +58,10 @@ Lazy expiry: dial is actief alleen als `override_until` in de toekomst ligt.
 
 ## Commands
 
-- `/weather magical set <mode> <duration>` — `mode`: `only` | `none`; duration: `30m` / `2h` / `1d`
-- `/weather magical clear`
+- `/dm weather-settings menu` → Magie-filter zetten (`only` | `none` + duur `30m` / `2h` / `1d`)
+- Zelfde menu → Magie-filter opheffen
 - Allowlist only; verandert huidig weer niet; post niet naar het kanaal
-- Zichtbaar in `/weather status`
+- Zichtbaar in `/dm weather status` en het settings-menu
 
 ---
 

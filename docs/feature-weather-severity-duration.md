@@ -43,7 +43,7 @@ Geen aparte `maxDurationMinutes`: `durationMaxMinutes` *is* al leidend.
 
 1. Expliciete DM-duur (`/weather set … duration`, `/weather schedule`) — wint altijd
 2. Entry heeft `durationMinMinutes` / `durationMaxMinutes` → random interval in die range
-3. Guild `/weather settings interval` (SQLite)
+3. Guild `/dm weather-settings menu` → Ritme (SQLite)
 4. Anders → globale env (`WEATHER_UPDATE_*_MINUTES`)
 
 Alleen types die van de globale ritme afwijken krijgen duration-velden; de rest valt terug op guild/`.env`.
@@ -179,7 +179,7 @@ Mild types zonder duration-velden → globale env-interval.
 - Per-guild duration override via slash command + DB
 
 ### DM severity dial — implemented
-`/weather severity set min max duration` → tijdelijke band op `world_state`; lazy expiry; `/weather severity clear`; zichtbaar in `/weather status`. Roll-volgorde: dial-band → cooldown-filter binnen band → één pick. `/weather set` bypass.
+`/dm weather-settings menu` → Zwaarte-limiet → tijdelijke band op `world_state`; lazy expiry; menu → opheffen; zichtbaar in `/dm weather status`. Roll-volgorde: dial-band → cooldown-filter binnen band → één pick. `/dm weather set` bypass.
 
 ---
 

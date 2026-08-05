@@ -245,6 +245,51 @@ export class ResourceService {
     return { ok: true, cap };
   }
 
+  isHouseTaxEnabled(guildId: string): boolean {
+    return dbQueries.isHouseTaxEnabled(this.db, guildId);
+  }
+
+  getHouseTaxThreshold(guildId: string): number {
+    return dbQueries.getHouseTaxThreshold(this.db, guildId);
+  }
+
+  getHouseTaxSettings(guildId: string): {
+    enabled: boolean;
+    threshold: number;
+  } {
+    return {
+      enabled: this.isHouseTaxEnabled(guildId),
+      threshold: this.getHouseTaxThreshold(guildId),
+    };
+  }
+
+  setHouseTaxSettings(
+    guildId: string,
+    patch: { enabled?: boolean; threshold?: number },
+  ): ResourceResult<{ enabled: boolean; threshold: number }> {
+    if (patch.enabled == null && patch.threshold == null) {
+      return { ok: false, message: this.messages.resourceHouseTaxNothingSet };
+    }
+    if (
+      patch.threshold != null &&
+      (!Number.isInteger(patch.threshold) ||
+        patch.threshold < 1 ||
+        patch.threshold > 9999)
+    ) {
+      return { ok: false, message: this.messages.resourceInvalidHouseTaxThreshold };
+    }
+    const settings = dbQueries.getResourceSettings(this.db, guildId);
+    if (!settings) {
+      return { ok: false, message: this.messages.resourceNotConfigured };
+    }
+    dbQueries.setHouseTaxSettings(this.db, guildId, patch);
+    return {
+      ok: true,
+      enabled: this.isHouseTaxEnabled(guildId),
+      threshold: this.getHouseTaxThreshold(guildId),
+    };
+  }
+
   donate(input: {
     guildId: string;
     keyRaw: string;
@@ -463,6 +508,56 @@ export class ResourceService {
     };
   }
 
+  /** Absolute guild stock set. Increase uses storage cap (overflow → personal). */
+  setStock(input: {
+    guildId: string;
+    keyRaw: string;
+    target: number;
+    actorUserId: string;
+    actorNickname: string;
+  }): ResourceResult<{
+    type: ResourceType;
+    delta: number;
+    added: number;
+    overflow: number;
+    stockAfter: number;
+    personalAfter: number | null;
+  }> {
+    if (
+      !Number.isInteger(input.target) ||
+      input.target < 0 ||
+      input.target > AMOUNT_MAX
+    ) {
+      return { ok: false, message: this.messages.resourceInvalidAmount };
+    }
+
+    const typeResult = this.requireType(input.guildId, input.keyRaw);
+    if (!typeResult.ok) return typeResult;
+    const type = typeResult.type;
+
+    const current = dbQueries.getStockQuantity(this.db, input.guildId, type.key);
+    const delta = input.target - current;
+    if (delta === 0) {
+      return {
+        ok: true,
+        type,
+        delta: 0,
+        added: 0,
+        overflow: 0,
+        stockAfter: current,
+        personalAfter: null,
+      };
+    }
+
+    return this.adjust({
+      guildId: input.guildId,
+      keyRaw: type.key,
+      delta,
+      actorUserId: input.actorUserId,
+      actorNickname: input.actorNickname,
+    });
+  }
+
   personalOverview(
     guildId: string,
     userId: string,
@@ -505,10 +600,21 @@ export class ResourceService {
     keyRaw: string;
     amount: number;
     actorNickname: string;
+    /** Speler vinkte “eigen huis?” aan. Genegeerd als tax uit staat. */
+    ownsHouse?: boolean;
   }): ResourceResult<{
     type: ResourceType;
+    /** Ingevoerd totaal in de modal. */
     amount: number;
+    /** Hoeveel naar persoonlijke voorraad ging. */
+    personalAmount: number;
     stockAfter: number;
+    /** 1 als tax in guild landde, anders 0. */
+    taxAdded: number;
+    /** True als tax van toepassing was maar guild geen plek had. */
+    taxSkippedFull: boolean;
+    gc: number;
+    guildStockAfter: number | null;
   }> {
     const amountCheck = this.validatePositiveAmount(input.amount);
     if (!amountCheck.ok) return amountCheck;
@@ -517,12 +623,50 @@ export class ResourceService {
     if (!typeResult.ok) return typeResult;
     const type = typeResult.type;
 
+    const taxEnabled = this.isHouseTaxEnabled(input.guildId);
+    const threshold = this.getHouseTaxThreshold(input.guildId);
+    const ownsHouse = input.ownsHouse === true;
+    const taxDue =
+      taxEnabled && ownsHouse && input.amount >= threshold ? 1 : 0;
+
+    let taxAdded = 0;
+    let taxSkippedFull = false;
+    let gc = 0;
+    let guildStockAfter: number | null = null;
+
+    if (taxDue > 0) {
+      const capped = dbQueries.addGuildStockCapped(
+        this.db,
+        input.guildId,
+        type.key,
+        taxDue,
+      );
+      taxAdded = capped.added;
+      guildStockAfter = capped.stockAfter;
+      if (taxAdded === 0) {
+        taxSkippedFull = true;
+      } else {
+        gc = taxAdded * type.sell_gc;
+        dbQueries.insertResourceLedger(this.db, {
+          guildId: input.guildId,
+          actorUserId: input.userId,
+          actorNickname: input.actorNickname,
+          action: 'personal_house_tax',
+          resourceKey: type.key,
+          amount: taxAdded,
+          gcDelta: gc,
+          stockAfter: guildStockAfter,
+        });
+      }
+    }
+
+    const personalAmount = input.amount - taxAdded;
     const stockAfter = dbQueries.addPlayerStockQuantity(
       this.db,
       input.guildId,
       input.userId,
       type.key,
-      input.amount,
+      personalAmount,
     );
 
     dbQueries.insertResourceLedger(this.db, {
@@ -531,12 +675,22 @@ export class ResourceService {
       actorNickname: input.actorNickname,
       action: 'personal_add',
       resourceKey: type.key,
-      amount: input.amount,
+      amount: personalAmount,
       gcDelta: 0,
       stockAfter,
     });
 
-    return { ok: true, type, amount: input.amount, stockAfter };
+    return {
+      ok: true,
+      type,
+      amount: input.amount,
+      personalAmount,
+      stockAfter,
+      taxAdded,
+      taxSkippedFull,
+      gc,
+      guildStockAfter,
+    };
   }
 
   personalRemove(input: {

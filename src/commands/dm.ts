@@ -31,9 +31,7 @@ import {
 } from './resource.js';
 import {
   buildWeatherAdminSubcommands,
-  buildWeatherMagicalSubcommands,
   buildWeatherSettingsSubcommands,
-  buildWeatherSeveritySubcommands,
   dispatchWeatherAdmin,
 } from './weather.js';
 
@@ -48,24 +46,10 @@ export function buildDmCommand() {
       ),
     )
     .addSubcommandGroup((group) =>
-      buildWeatherSeveritySubcommands(
-        group
-          .setName('weather-severity')
-          .setDescription('Tijdelijk alleen mild of juist heftig weer'),
-      ),
-    )
-    .addSubcommandGroup((group) =>
-      buildWeatherMagicalSubcommands(
-        group
-          .setName('weather-magical')
-          .setDescription('Tijdelijk alleen magisch weer, of juist niet'),
-      ),
-    )
-    .addSubcommandGroup((group) =>
       buildWeatherSettingsSubcommands(
         group
           .setName('weather-settings')
-          .setDescription('Ritme, berichtenvenster en afkoeling'),
+          .setDescription('Ritme, venster, afkoeling en tijdelijke limieten'),
       ),
     )
     .addSubcommandGroup((group) =>
@@ -168,12 +152,6 @@ export async function handleDmCommand(
   switch (group) {
     case 'weather':
       await dispatchWeatherAdmin(interaction, deps, { group: null, sub });
-      return;
-    case 'weather-severity':
-      await dispatchWeatherAdmin(interaction, deps, { group: 'severity', sub });
-      return;
-    case 'weather-magical':
-      await dispatchWeatherAdmin(interaction, deps, { group: 'magical', sub });
       return;
     case 'weather-settings':
       await dispatchWeatherAdmin(interaction, deps, { group: 'settings', sub });

@@ -143,6 +143,61 @@ export function buildBuildingDonateEmbed(
     .setTimestamp();
 }
 
+export function buildBuildingDonateMultiEmbed(
+  messages: Messages,
+  input: {
+    nickname: string;
+    buildingName: string;
+    gc: number;
+    progress: string;
+    phaseNote: string;
+    fromPersonal: boolean;
+    lines: Array<{
+      amount: number;
+      typeName: string;
+      personalAfter?: number;
+    }>;
+  },
+): EmbedBuilder {
+  const lines = input.lines
+    .map((line) =>
+      formatTemplate(
+        input.fromPersonal
+          ? messages.resourceEmbedBuildingDonatePersonalMultiLine
+          : messages.resourceEmbedBuildingDonateMultiLine,
+        {
+          amount: String(line.amount),
+          type: line.typeName,
+          personal: String(line.personalAfter ?? 0),
+        },
+      ),
+    )
+    .join('\n');
+
+  const body = formatTemplate(
+    input.fromPersonal
+      ? messages.resourceEmbedBuildingDonatePersonalMultiDesc
+      : messages.resourceEmbedBuildingDonateMultiDesc,
+    {
+      nickname: input.nickname,
+      building: input.buildingName,
+      gc: String(input.gc),
+      lines,
+      progress: input.progress,
+    },
+  );
+
+  return new EmbedBuilder()
+    .setColor(COLOR_BUILDING_DONATE)
+    .setTitle(
+      input.fromPersonal
+        ? messages.resourceEmbedBuildingDonatePersonalTitle
+        : messages.resourceEmbedBuildingDonateTitle,
+    )
+    .setDescription(withPhase(body, input.phaseNote).slice(0, 4000))
+    .setTimestamp();
+}
+
 export function buildBuildingFundEmbed(
   messages: Messages,
   input: {
@@ -168,6 +223,40 @@ export function buildBuildingFundEmbed(
     .setColor(COLOR_BUILDING_FUND)
     .setTitle(messages.resourceEmbedBuildingFundTitle)
     .setDescription(withPhase(body, input.phaseNote))
+    .setTimestamp();
+}
+
+export function buildBuildingFundMultiEmbed(
+  messages: Messages,
+  input: {
+    nickname: string;
+    buildingName: string;
+    lines: Array<{ amount: number; typeName: string; stockAfter: number }>;
+    progress: string;
+    phaseNote: string;
+  },
+): EmbedBuilder {
+  const lines = input.lines
+    .map((line) =>
+      formatTemplate(messages.resourceEmbedBuildingFundMultiLine, {
+        amount: String(line.amount),
+        type: line.typeName,
+        stock: String(line.stockAfter),
+      }),
+    )
+    .join('\n');
+
+  const body = formatTemplate(messages.resourceEmbedBuildingFundMultiDesc, {
+    nickname: input.nickname,
+    building: input.buildingName,
+    lines,
+    progress: input.progress,
+  });
+
+  return new EmbedBuilder()
+    .setColor(COLOR_BUILDING_FUND)
+    .setTitle(messages.resourceEmbedBuildingFundTitle)
+    .setDescription(withPhase(body, input.phaseNote).slice(0, 4000))
     .setTimestamp();
 }
 
@@ -202,21 +291,46 @@ export function buildPersonalAddEmbed(
   input: {
     nickname: string;
     amount: number;
+    personalAmount: number;
     typeName: string;
     stockAfter: number;
+    taxAdded: number;
+    taxSkippedFull: boolean;
+    gc: number;
+    guildStockAfter: number | null;
   },
 ): EmbedBuilder {
+  let description: string;
+  if (input.taxAdded > 0) {
+    description = formatTemplate(messages.resourceEmbedPersonalAddTaxDesc, {
+      nickname: input.nickname,
+      personal: String(input.personalAmount),
+      tax: String(input.taxAdded),
+      type: input.typeName,
+      gc: String(input.gc),
+      stock: String(input.stockAfter),
+      guild: String(input.guildStockAfter ?? 0),
+    });
+  } else if (input.taxSkippedFull) {
+    description = formatTemplate(messages.resourceEmbedPersonalAddTaxSkippedDesc, {
+      nickname: input.nickname,
+      amount: String(input.amount),
+      type: input.typeName,
+      stock: String(input.stockAfter),
+    });
+  } else {
+    description = formatTemplate(messages.resourceEmbedPersonalAddDesc, {
+      nickname: input.nickname,
+      amount: String(input.personalAmount),
+      type: input.typeName,
+      stock: String(input.stockAfter),
+    });
+  }
+
   return new EmbedBuilder()
     .setColor(COLOR_PERSONAL_ADD)
     .setTitle(messages.resourceEmbedPersonalAddTitle)
-    .setDescription(
-      formatTemplate(messages.resourceEmbedPersonalAddDesc, {
-        nickname: input.nickname,
-        amount: String(input.amount),
-        type: input.typeName,
-        stock: String(input.stockAfter),
-      }),
-    )
+    .setDescription(description)
     .setTimestamp();
 }
 
@@ -239,6 +353,35 @@ export function buildPersonalRemoveEmbed(
         type: input.typeName,
         stock: String(input.stockAfter),
       }),
+    )
+    .setTimestamp();
+}
+
+export function buildPersonalRemoveMultiEmbed(
+  messages: Messages,
+  input: {
+    nickname: string;
+    lines: Array<{ amount: number; typeName: string; stockAfter: number }>;
+  },
+): EmbedBuilder {
+  const lines = input.lines
+    .map((line) =>
+      formatTemplate(messages.resourceEmbedPersonalRemoveMultiLine, {
+        amount: String(line.amount),
+        type: line.typeName,
+        stock: String(line.stockAfter),
+      }),
+    )
+    .join('\n');
+
+  return new EmbedBuilder()
+    .setColor(COLOR_PERSONAL_REMOVE)
+    .setTitle(messages.resourceEmbedPersonalRemoveTitle)
+    .setDescription(
+      formatTemplate(messages.resourceEmbedPersonalRemoveMultiDesc, {
+        nickname: input.nickname,
+        lines,
+      }).slice(0, 4000),
     )
     .setTimestamp();
 }

@@ -317,6 +317,109 @@ export class BuildingService {
     };
   }
 
+  /** DM: set deposited funding to an absolute amount (clamped 0…required). */
+  setFunding(input: {
+    guildId: string;
+    buildingId: number;
+    keyRaw: string;
+    target: number;
+    actorUserId: string;
+    actorNickname: string;
+  }): BuildingResult<{
+    building: Building;
+    type: ResourceType;
+    delta: number;
+    fundedAfter: number;
+    clamped: boolean;
+    phaseNote: string;
+  }> {
+    if (
+      !Number.isInteger(input.target) ||
+      input.target < 0 ||
+      input.target > AMOUNT_MAX
+    ) {
+      return { ok: false, message: this.messages.resourceInvalidAmount };
+    }
+
+    const building = this.getInGuild(input.guildId, input.buildingId);
+    if (!building) {
+      return {
+        ok: false,
+        message: formatTemplate(this.messages.buildingUnknown, {
+          name: String(input.buildingId),
+        }),
+      };
+    }
+    if (building.status !== 'funding') {
+      return { ok: false, message: this.messages.buildingFundingAdjustLocked };
+    }
+
+    const typeResult = this.requireType(input.guildId, input.keyRaw);
+    if (!typeResult.ok) return typeResult;
+    const type = typeResult.type;
+
+    const costs = dbQueries.listBuildingCosts(this.db, building.id);
+    const cost = costs.find((c) => c.resource_key === type.key);
+    if (!cost) {
+      return {
+        ok: false,
+        message: formatTemplate(this.messages.buildingFundingTypeNotOnProject, {
+          type: type.display_name,
+          building: building.name,
+        }),
+      };
+    }
+
+    const current = dbQueries.getBuildingFundingQty(this.db, building.id, type.key);
+    const clampedTarget = Math.min(input.target, cost.required_qty);
+    const clamped = clampedTarget !== input.target;
+    const delta = clampedTarget - current;
+
+    if (delta === 0) {
+      return {
+        ok: true,
+        building,
+        type,
+        delta: 0,
+        fundedAfter: current,
+        clamped,
+        phaseNote: '',
+      };
+    }
+
+    const fundedAfter = dbQueries.addBuildingFunding(
+      this.db,
+      building.id,
+      type.key,
+      delta,
+    );
+    dbQueries.insertResourceLedger(this.db, {
+      guildId: input.guildId,
+      actorUserId: input.actorUserId,
+      actorNickname: input.actorNickname,
+      action: 'building_funding_adjust',
+      resourceKey: type.key,
+      amount: delta,
+      buildingId: building.id,
+    });
+
+    let updated = dbQueries.getBuildingById(this.db, building.id)!;
+    const phaseNote = this.maybeAdvanceFromFunding(updated);
+    if (phaseNote) {
+      updated = dbQueries.getBuildingById(this.db, building.id)!;
+    }
+
+    return {
+      ok: true,
+      building: updated,
+      type,
+      delta,
+      fundedAfter,
+      clamped,
+      phaseNote,
+    };
+  }
+
   /** DM: correct time_spent on a project (no GC). */
   adjustTimeSpent(input: {
     guildId: string;
@@ -387,6 +490,85 @@ export class BuildingService {
       building: updated,
       delta: input.delta,
       spentAfter: updated.time_spent,
+      phaseNote,
+    };
+  }
+
+  /** Absolute set of time_spent, clamped to [0, time_required]. */
+  setTimeSpent(input: {
+    guildId: string;
+    buildingId: number;
+    target: number;
+    actorUserId: string;
+    actorNickname: string;
+  }): BuildingResult<{
+    building: Building;
+    delta: number;
+    spentAfter: number;
+    clamped: boolean;
+    phaseNote: string;
+  }> {
+    if (
+      !Number.isInteger(input.target) ||
+      input.target < 0 ||
+      input.target > AMOUNT_MAX
+    ) {
+      return { ok: false, message: this.messages.resourceInvalidAmount };
+    }
+
+    const building = this.getInGuild(input.guildId, input.buildingId);
+    if (!building) {
+      return {
+        ok: false,
+        message: formatTemplate(this.messages.buildingUnknown, {
+          name: String(input.buildingId),
+        }),
+      };
+    }
+    if (building.status !== 'building') {
+      return { ok: false, message: this.messages.buildingSpentAdjustLocked };
+    }
+    if (building.time_required <= 0) {
+      return { ok: false, message: this.messages.buildingBuildtimeLocked };
+    }
+
+    const clampedTarget = Math.min(input.target, building.time_required);
+    const clamped = clampedTarget !== input.target;
+    const delta = clampedTarget - building.time_spent;
+
+    if (delta === 0) {
+      return {
+        ok: true,
+        building,
+        delta: 0,
+        spentAfter: building.time_spent,
+        clamped,
+        phaseNote: '',
+      };
+    }
+
+    dbQueries.updateBuildingTimeSpent(this.db, building.id, clampedTarget);
+    dbQueries.insertResourceLedger(this.db, {
+      guildId: input.guildId,
+      actorUserId: input.actorUserId,
+      actorNickname: input.actorNickname,
+      action: 'building_spent_adjust',
+      amount: delta,
+      buildingId: building.id,
+    });
+
+    let updated = dbQueries.getBuildingById(this.db, building.id)!;
+    const phaseNote = this.maybeComplete(updated);
+    if (phaseNote) {
+      updated = dbQueries.getBuildingById(this.db, building.id)!;
+    }
+
+    return {
+      ok: true,
+      building: updated,
+      delta,
+      spentAfter: updated.time_spent,
+      clamped,
       phaseNote,
     };
   }

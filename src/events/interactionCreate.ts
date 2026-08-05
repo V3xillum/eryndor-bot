@@ -20,7 +20,13 @@ import { handleResourceCommand } from '../commands/resource.js';
 import {
   RESOURCE_WIZARD_PREFIX,
   handleResourceWizardModal,
+  handleResourceWizardSelect,
 } from '../commands/resourceWizard.js';
+import {
+  WEATHER_SETTINGS_WIZARD_PREFIX,
+  handleWeatherSettingsWizardModal,
+  handleWeatherSettingsWizardSelect,
+} from '../commands/weatherSettingsWizard.js';
 import type { ActivityLogService } from '../services/ActivityLogService.js';
 import type { AnnounceService } from '../services/AnnounceService.js';
 import type { BuildingService } from '../services/BuildingService.js';
@@ -75,6 +81,14 @@ export function registerInteractionHandler(
             resources: deps.resources,
           });
           deps.activity.ok('command', 'production wizard modal', actorUserId);
+          return;
+        }
+        if (interaction.customId.startsWith(WEATHER_SETTINGS_WIZARD_PREFIX)) {
+          await handleWeatherSettingsWizardModal(interaction, {
+            weather: deps.weather,
+            config: deps.config,
+          });
+          deps.activity.ok('command', 'weather settings modal', actorUserId);
         }
         return;
       }
@@ -105,6 +119,19 @@ export function registerInteractionHandler(
             resources: deps.resources,
           });
           deps.activity.ok('command', 'production wizard', actorUserId);
+          return;
+        }
+        if (interaction.customId.startsWith(RESOURCE_WIZARD_PREFIX)) {
+          await handleResourceWizardSelect(interaction, deps.resources);
+          deps.activity.ok('command', 'resource wizard select', actorUserId);
+          return;
+        }
+        if (interaction.customId.startsWith(WEATHER_SETTINGS_WIZARD_PREFIX)) {
+          await handleWeatherSettingsWizardSelect(interaction, {
+            weather: deps.weather,
+            config: deps.config,
+          });
+          deps.activity.ok('command', 'weather settings select', actorUserId);
         }
         return;
       }

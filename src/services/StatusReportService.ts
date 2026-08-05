@@ -14,7 +14,10 @@ import {
   type StatusReportCadence,
 } from '../utils/statusReportPeriod.js';
 import { formatTemplate } from '../utils/helpers.js';
-import type { ActivityLogService } from './ActivityLogService.js';
+import {
+  ACTIVITY_LOG_RETENTION_DAYS,
+  type ActivityLogService,
+} from './ActivityLogService.js';
 import type { BuildingService } from './BuildingService.js';
 import type { ResourceService } from './ResourceService.js';
 import type { WeatherService } from './WeatherService.js';
@@ -61,7 +64,7 @@ export class StatusReportService {
   }
 
   windowStart(now = new Date()): Date {
-    return statusReportWindowStart(now, this.cadence, this.timeZone);
+    return statusReportWindowStart(now, this.cadence, this.timeZone, this.postTime);
   }
 
   async sendReport(now = new Date()): Promise<void> {
@@ -83,6 +86,7 @@ export class StatusReportService {
   private buildEmbed(now: Date): EmbedBuilder {
     const since = this.windowStart(now);
     const summary = this.activity.summarize(since);
+    const retained = this.activity.summarizeRetained(now);
     const cadenceLabel = formatTemplate(this.messages.statusReportCadenceLabel, {
       cadence: this.cadence,
       time: formatTimeOfDay(this.postTime),
@@ -114,6 +118,11 @@ export class StatusReportService {
       uniqueUsers: String(summary.uniqueUsers),
     });
 
+    const usageRetained = formatTemplate(this.messages.statusReportUsageRetainedBody, {
+      command: String(retained.command),
+      uniqueUsers: String(retained.uniqueUsers),
+    });
+
     let issues = this.messages.statusReportIssuesNone;
     if (summary.issues.length > 0) {
       issues = summary.issues
@@ -135,8 +144,7 @@ export class StatusReportService {
             minutes: String(uptimeMin),
           });
 
-    const { stockBody, buildingsBody, ledgerBody, personalBody } =
-      this.buildResourceBackup(since);
+    const { stockBody, buildingsBody, ledgerBody } = this.buildResourceBackup(since);
 
     return new EmbedBuilder()
       .setTitle(this.messages.statusReportTitle)
@@ -156,16 +164,18 @@ export class StatusReportService {
           value: usage.slice(0, 1024),
         },
         {
+          name: formatTemplate(this.messages.statusReportFieldUsageRetained, {
+            days: String(ACTIVITY_LOG_RETENTION_DAYS),
+          }),
+          value: usageRetained.slice(0, 1024),
+        },
+        {
           name: this.messages.statusReportFieldIssues,
           value: issues.slice(0, 1024),
         },
         {
           name: this.messages.statusReportFieldStock,
           value: stockBody.slice(0, 1024),
-        },
-        {
-          name: this.messages.statusReportFieldPersonal,
-          value: personalBody.slice(0, 1024),
         },
         {
           name: this.messages.statusReportFieldBuildings,
@@ -183,7 +193,6 @@ export class StatusReportService {
     stockBody: string;
     buildingsBody: string;
     ledgerBody: string;
-    personalBody: string;
   } {
     const guildIds = new Set<string>([
       ...this.weather.listGuildStates().map((s) => s.guild_id),
@@ -193,7 +202,6 @@ export class StatusReportService {
     const stockLines: string[] = [];
     const buildingLines: string[] = [];
     const ledgerLines: string[] = [];
-    const personalLines: string[] = [];
     let ledgerShown = 0;
     let ledgerTotal = 0;
 
@@ -205,29 +213,6 @@ export class StatusReportService {
         for (const row of stock) {
           stockLines.push(
             formatTemplate(this.messages.statusReportStockLine, {
-              type: row.type.display_name,
-              key: row.type.key,
-              qty: String(row.quantity),
-            }),
-          );
-        }
-      }
-
-      const personal = this.resources.allPersonalStock(guildId);
-      if (personal.length > 0) {
-        personalLines.push(`**${guildName}**`);
-        for (const row of personal) {
-          const member = this.client.guilds.cache
-            .get(guildId)
-            ?.members.cache.get(row.userId);
-          const nickname =
-            member?.displayName ??
-            this.client.users.cache.get(row.userId)?.username ??
-            row.userId;
-          personalLines.push(
-            formatTemplate(this.messages.statusReportPersonalLine, {
-              nickname,
-              userId: row.userId,
               type: row.type.display_name,
               qty: String(row.quantity),
             }),
@@ -297,10 +282,6 @@ export class StatusReportService {
         ledgerLines.length > 0
           ? ledgerLines.join('\n')
           : this.messages.statusReportLedgerNone,
-      personalBody:
-        personalLines.length > 0
-          ? personalLines.join('\n')
-          : this.messages.statusReportPersonalNone,
     };
   }
 }

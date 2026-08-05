@@ -100,7 +100,7 @@ On restart, if `next_update_at` is in the past and the guild is not paused, the 
 
 ## Status report DMs
 
-Optional. Set `STATUS_REPORT_USER_ID` (comma-separated) plus `STATUS_REPORT_TIME` / `STATUS_REPORT_CADENCE` (`daily` | `weekly` | `monthly`). After that local time, once per period, the bot DMs a snapshot: weather **active/paused** only (no next-update spoilers), usage counts, and recent warnings/errors. Empty user list disables the feature.
+Optional. Set `STATUS_REPORT_USER_ID` (comma-separated) plus `STATUS_REPORT_TIME` / `STATUS_REPORT_CADENCE` (`daily` | `weekly` | `monthly`). After that local time, once per period, the bot DMs a snapshot: weather **active/paused** only (no next-update spoilers), period usage, rolling slash-command + unique-account counts over the last 40 days (`activity_log` retention), and recent warnings/errors. Period usage/issues/ledger cover the previous report time → now (e.g. daily 10:00→10:00). Empty user list disables the feature.
 
 ## Run in the background (PM2)
 

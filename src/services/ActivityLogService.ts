@@ -11,12 +11,27 @@ import {
 const PRUNE_AFTER_DAYS = 40;
 const ISSUE_MESSAGE_MAX = 160;
 
+/** How long `activity_log` rows are kept (and the rolling usage window in status reports). */
+export const ACTIVITY_LOG_RETENTION_DAYS = PRUNE_AFTER_DAYS;
+
 export type ActivityCategory =
   | 'weather'
   | 'calendar'
   | 'announce'
   | 'command'
   | 'system';
+
+export type ActivityUsageSummary = {
+  weather: number;
+  calendar: number;
+  announce: number;
+  command: number;
+  uniqueUsers: number;
+};
+
+export type ActivitySummary = ActivityUsageSummary & {
+  issues: Array<{ created_at: string; level: string; category: string; message: string }>;
+};
 
 export class ActivityLogService {
   constructor(private readonly db: Database.Database) {}
@@ -47,15 +62,26 @@ export class ActivityLogService {
     this.write('error', category, detail, actorUserId);
   }
 
-  summarize(since: Date): {
-    weather: number;
-    calendar: number;
-    announce: number;
-    command: number;
-    uniqueUsers: number;
-    issues: Array<{ created_at: string; level: string; category: string; message: string }>;
-  } {
+  summarize(since: Date): ActivitySummary {
     const sinceIso = since.toISOString();
+    return {
+      ...this.usageSince(sinceIso),
+      issues: listActivityIssues(this.db, sinceIso, 8),
+    };
+  }
+
+  /** Usage over the retained activity_log window (same horizon as prune). */
+  summarizeRetained(now = new Date()): ActivityUsageSummary {
+    const since = new Date(now.getTime() - ACTIVITY_LOG_RETENTION_DAYS * 86_400_000);
+    return this.usageSince(since.toISOString());
+  }
+
+  pruneOld(): void {
+    const cutoff = new Date(Date.now() - PRUNE_AFTER_DAYS * 86_400_000).toISOString();
+    pruneActivityLog(this.db, cutoff);
+  }
+
+  private usageSince(sinceIso: string): ActivityUsageSummary {
     const counts = countActivityByCategory(this.db, sinceIso, 'ok');
     return {
       weather: counts.weather ?? 0,
@@ -63,13 +89,7 @@ export class ActivityLogService {
       announce: counts.announce ?? 0,
       command: counts.command ?? 0,
       uniqueUsers: countDistinctActivityActors(this.db, sinceIso, 'command'),
-      issues: listActivityIssues(this.db, sinceIso, 8),
     };
-  }
-
-  pruneOld(): void {
-    const cutoff = new Date(Date.now() - PRUNE_AFTER_DAYS * 86_400_000).toISOString();
-    pruneActivityLog(this.db, cutoff);
   }
 
   private write(

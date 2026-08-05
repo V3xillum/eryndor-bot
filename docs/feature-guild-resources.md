@@ -16,7 +16,7 @@ Zie ook: [`agent.md`](./agent.md), [`feature-guild-production.md`](./feature-gui
 - **Publiek + stil:** donate/buy (en vergelijkbare economy-acties) posten in een geconfigureerd kanaal met `SuppressNotifications` (geen ping/sound), zodat de tafel het kan zien zonder ruis.
 - **Flexibele types:** de wereld is nog niet volledig ontdekt → DM voegt types runtime toe via een weergavenaam; interne `key` is een vaste slug daarvan.
 - **Gebouwen = projecten**, niet alleen catalogus: `funding` → `building` → `complete`. Meerdere tegelijk.
-- **Persoonlijke voorraad:** per Discord-user (snowflake) een aparte voorraad — toevoegen/weghalen voor eigen gebruik; los van guild-donaties.
+- **Persoonlijke voorraad:** per Discord-user (snowflake) een aparte voorraad — toevoegen/weghalen voor eigen gebruik; los van guild-donaties. Optioneel huisbelasting: zie [`feature-personal-house-tax.md`](./feature-personal-house-tax.md).
 
 ---
 
@@ -48,10 +48,11 @@ Zelfde patroon als `/dm weather setup` / `/dm calendar setup`: per Discord-guild
 | `/voorraad kopen` | Modal: grondstof-dropdown + aantal. Stock moet ≥ amount. Stock −= amount. Publieke silent post. Kosten = `amount × buy` (melding) |
 | `/voorraad guild` | Overzicht huidige voorraad (ephemeral) |
 | `/eryndor overzicht` | Ephemeral: vandaag + volgende volle maan, guild-voorraad, persoonlijke voorraad, bouwprojecten, productie |
-| `/voorraad persoonlijk toevoegen` | Modal: type + aantal. Persoonlijke voorraad += amount. Publieke silent embed. Geen GC |
-| `/voorraad persoonlijk verwijderen` | Modal: type + aantal (alleen wat je hebt). Persoonlijke voorraad −= amount. Publieke silent embed. Geen GC |
+| `/voorraad persoonlijk toevoegen` | Modal: type + aantal + (indien huisbelasting aan) checkbox “eigen huis?” (default aan). Persoonlijke voorraad += rest; bij tax: 1 → guild (+ sell-GC). Publieke silent embed |
+| `/voorraad persoonlijk verwijderen` | Modal: tot **5** types tegelijk (aantal per type; leeg = overslaan). Bij >5 types in je stash: eerst multi-select (max 5), daarna amounts. Publieke silent embed. Geen GC |
 | `/voorraad persoonlijk tonen` | Eigen persoonlijke voorraad (ephemeral) |
-| `/dm resource adjust` | Modal: type + toevoegen/verminderen + aantal. Allowlist: correctie zonder publieke GC-post; wél ledger |
+| `/dm resource adjust` | Modal: type + gewenste stand (absoluut). Allowlist: correctie zonder publieke GC-post; wél ledger; overflow → persoonlijk |
+| `/dm resource house-tax` | Allowlist: toon/zet `enabled` + `threshold` voor huisbelasting op persoonlijk toevoegen |
 
 `amount` limiet: **1–9999** per command (anti-typo).
 
@@ -62,12 +63,12 @@ Create/cost/cancel = allowlist (`/dm …`). leveren / uit-guild / meewerken / li
 | Command | Effect |
 |---|---|
 | `/dm building create name` | Nieuw project, status `funding`. `time_required` default **100** (fase 2). Meerdere tegelijk OK |
-| `/dm building-cost add` | Menu: project → modal (grondstof + aantal) → knop “nog een toevoegen” |
+| `/dm building-cost add` | Project kiezen → tot 5 types selecteren → amounts (leeg = overslaan). Knop “nog een toevoegen” voor meer |
 | `/dm building-cost buildtime` | Menu: project → modal bouwtijd (fase 2). Corrigeert de default 100 |
 | `/bouw lijst` | Alle projecten + statusfase |
 | `/bouw status` | Menu: project → detail (materialen / tijd / fase) |
-| `/bouw uit-guild` | Modal: project + grondstof + aantal. Uit guild-stock. Geen extra GC. Silent post toont voortgang van **alle** materialen |
-| `/bouw leveren` | Modal: project + **bron** (van buiten / persoonlijke voorraad) + grondstof + aantal. GC = sell. Silent post toont voortgang van **alle** materialen |
+| `/bouw uit-guild` | Project kiezen → tot 5 open materialen tegelijk (amounts; leeg = overslaan). Uit guild-stock. Geen extra GC. Silent post toont voortgang van **alle** materialen |
+| `/bouw leveren` | Project → bron (buiten / persoonlijk) → tot 5 materialen tegelijk (≤5 open = direct amounts). GC = sell. Silent post toont alle materialen |
 | `/bouw meewerken` | Modal: project + tijd. GC = amount × 1 |
 | `/dm building cancel name` | Allowlist. Funding terug naar guild-stock. Ledger `building_cancel`. Geen GC-terugdraai (GC was al “betaald” aan spelers) |
 
@@ -121,6 +122,7 @@ Ephemeral reply naar de caller: korte bevestiging (succes / fout: te weinig stoc
 | `building contribute` | + `amount × 1` | — | time + |
 | `adjust` | geen publieke GC | ± | — |
 | `building cancel` | geen | funding terug | project weg / cancelled |
+| `personal_house_tax` (via persoonlijk toevoegen) | + `1 × sell` | guild +1 / persoonlijk −1 t.o.v. input | — |
 
 `buy` default bij type-aanmaak: `2 × sell` als niet opgegeven. Mag later via `type edit` afwijken.
 
@@ -132,16 +134,18 @@ Bot slaat **geen** player GC-balans op.
 
 Elke mutatie → rij in `resource_ledger` (audit + disaster recovery).
 
-Velden: `id`, `guild_id`, `created_at`, `actor_user_id`, `actor_nickname`, `action` (`donate` \| `buy` \| `adjust` \| `building_donate` \| `building_donate_personal` \| `building_fund` \| `building_contribute` \| `building_cancel` \| `type_add` \| …), `resource_key` (nullable bij time), `amount`, `gc_delta` (kan 0), `building_id` (nullable), `stock_after` (nullable; bij personal deliver = persoonlijke voorraad na aftrek).
+Velden: `id`, `guild_id`, `created_at`, `actor_user_id`, `actor_nickname`, `action` (`donate` \| `buy` \| `adjust` \| `building_donate` \| `building_donate_personal` \| `building_fund` \| `building_contribute` \| `building_cancel` \| `personal_add` \| `personal_house_tax` \| `type_add` \| …), `resource_key` (nullable bij time), `amount`, `gc_delta` (kan 0), `building_id` (nullable), `stock_after` (nullable; bij personal deliver = persoonlijke voorraad na aftrek).
+
+**Huisbelasting:** zie [`feature-personal-house-tax.md`](./feature-personal-house-tax.md) — bij `/voorraad persoonlijk toevoegen` met eigen huis en amount ≥ drempel: 1 unit naar guild (+ sell-GC) als er plek is.
 
 Note: slash-commands heten `leveren` / `uit-guild`; ledger-actions blijven `building_donate*` / `building_fund` (history).
 
 **Dagelijkse backup:** uitbreiding van bestaande status-report DM naar `STATUS_REPORT_USER_ID` (zelfde cadence/time als nu):
 
-- Snapshot: alle resource types + stock quantities per guild
-- Persoonlijke voorraden per user
+- Snapshot: alle resource types + stock quantities per guild (display name + qty; geen key)
 - Open buildings: naam, status, funding progress, time progress
-- Ledger sinds vorige report-window: entries in de periode; bij Discord-limiet truncaten met “+N meer”
+- Geen persoonlijke voorraden in de DM (te lang; blijft in `/eryndor overzicht` / `/voorraad`)
+- Ledger/usage/issues sinds vorige report-tijd (bijv. daily 10:00→10:00, niet middernacht→10:00); bij Discord-limiet truncaten met “+N meer”
 
 Doel: als `world.sqlite` corrupt raakt, heb je een recente human-readable backup in DM. Geen tweede database.
 
@@ -157,6 +161,9 @@ CREATE TABLE IF NOT EXISTS resource_settings (
   channel_id TEXT NOT NULL,
   updated_at DATETIME NOT NULL
 );
+-- Additive later: storage_cap, production_last_post_date,
+-- house_tax_enabled DEFAULT 1, house_tax_threshold DEFAULT 7
+-- (zie feature-personal-house-tax.md / feature-guild-production.md)
 
 CREATE TABLE IF NOT EXISTS resource_types (
   guild_id TEXT NOT NULL,

@@ -135,7 +135,9 @@ function migrate(db: Database.Database): void {
       channel_id TEXT NOT NULL,
       updated_at DATETIME NOT NULL,
       storage_cap INTEGER NOT NULL DEFAULT 300,
-      production_last_post_date TEXT
+      production_last_post_date TEXT,
+      house_tax_enabled INTEGER NOT NULL DEFAULT 1,
+      house_tax_threshold INTEGER NOT NULL DEFAULT 7
     );
 
     CREATE TABLE IF NOT EXISTS resource_types (
@@ -253,6 +255,16 @@ function migrate(db: Database.Database): void {
   }
   if (!rsNames.has('production_last_post_date')) {
     db.exec(`ALTER TABLE resource_settings ADD COLUMN production_last_post_date TEXT`);
+  }
+  if (!rsNames.has('house_tax_enabled')) {
+    db.exec(
+      `ALTER TABLE resource_settings ADD COLUMN house_tax_enabled INTEGER NOT NULL DEFAULT 1`,
+    );
+  }
+  if (!rsNames.has('house_tax_threshold')) {
+    db.exec(
+      `ALTER TABLE resource_settings ADD COLUMN house_tax_threshold INTEGER NOT NULL DEFAULT 7`,
+    );
   }
 
   // Additive column on activity_log (older DBs).
@@ -826,6 +838,46 @@ export function setStorageCap(
   db.prepare(
     `UPDATE resource_settings SET storage_cap = ?, updated_at = ? WHERE guild_id = ?`,
   ).run(cap, nowIso(), guildId);
+  return getResourceSettings(db, guildId);
+}
+
+export const DEFAULT_HOUSE_TAX_ENABLED = true;
+export const DEFAULT_HOUSE_TAX_THRESHOLD = 7;
+
+export function isHouseTaxEnabled(db: Database.Database, guildId: string): boolean {
+  const settings = getResourceSettings(db, guildId);
+  if (settings == null) return DEFAULT_HOUSE_TAX_ENABLED;
+  return settings.house_tax_enabled !== 0;
+}
+
+export function getHouseTaxThreshold(db: Database.Database, guildId: string): number {
+  const settings = getResourceSettings(db, guildId);
+  const t = settings?.house_tax_threshold;
+  if (typeof t === 'number' && Number.isInteger(t) && t >= 1) return t;
+  return DEFAULT_HOUSE_TAX_THRESHOLD;
+}
+
+/** Patch house-tax settings. Requires existing resource_settings row. */
+export function setHouseTaxSettings(
+  db: Database.Database,
+  guildId: string,
+  patch: { enabled?: boolean; threshold?: number },
+): ResourceSettings | null {
+  const existing = getResourceSettings(db, guildId);
+  if (!existing) return null;
+  const enabled =
+    patch.enabled != null
+      ? patch.enabled
+        ? 1
+        : 0
+      : existing.house_tax_enabled;
+  const threshold =
+    patch.threshold != null ? patch.threshold : existing.house_tax_threshold;
+  db.prepare(
+    `UPDATE resource_settings
+     SET house_tax_enabled = ?, house_tax_threshold = ?, updated_at = ?
+     WHERE guild_id = ?`,
+  ).run(enabled, threshold, nowIso(), guildId);
   return getResourceSettings(db, guildId);
 }
 

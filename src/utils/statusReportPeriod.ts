@@ -1,4 +1,4 @@
-import { zonedCivilToUtc, zonedParts } from './activeWindow.js';
+import { zonedCivilToUtc, zonedParts, type TimeOfDay } from './activeWindow.js';
 
 export type StatusReportCadence = 'daily' | 'weekly' | 'monthly';
 
@@ -19,22 +19,54 @@ export function statusReportPeriodKey(
   return `${isoYear}-W${String(week).padStart(2, '0')}`;
 }
 
-/** Start of the current cadence window in `timeZone` (inclusive), as UTC Date. */
+/**
+ * Start of the activity window for the status report being sent “now”.
+ * Report-time → report-time (not midnight → report-time), so daily at 10:00
+ * covers yesterday 10:00 inclusive through “now”.
+ */
 export function statusReportWindowStart(
   now: Date,
   cadence: StatusReportCadence,
   timeZone: string,
+  postTime: TimeOfDay,
 ): Date {
   const parts = zonedParts(now, timeZone);
+
   if (cadence === 'daily') {
-    return requireCivil(parts.year, parts.month, parts.day, 0, 0, timeZone);
+    const prev = addCivilDays(parts.year, parts.month, parts.day, -1);
+    return requireCivil(
+      prev.year,
+      prev.month,
+      prev.day,
+      postTime.hours,
+      postTime.minutes,
+      timeZone,
+    );
   }
+
   if (cadence === 'monthly') {
-    return requireCivil(parts.year, parts.month, 1, 0, 0, timeZone);
+    const prev = addCivilMonths(parts.year, parts.month, 1, -1);
+    return requireCivil(
+      prev.year,
+      prev.month,
+      1,
+      postTime.hours,
+      postTime.minutes,
+      timeZone,
+    );
   }
+
   const { isoYear, week } = isoWeekFromLocalDate(parts.year, parts.month, parts.day);
   const monday = isoWeekMonday(isoYear, week);
-  return requireCivil(monday.year, monday.month, monday.day, 0, 0, timeZone);
+  const prevMonday = addCivilDays(monday.year, monday.month, monday.day, -7);
+  return requireCivil(
+    prevMonday.year,
+    prevMonday.month,
+    prevMonday.day,
+    postTime.hours,
+    postTime.minutes,
+    timeZone,
+  );
 }
 
 function requireCivil(
@@ -50,6 +82,34 @@ function requireCivil(
     throw new Error(`Could not resolve local time ${year}-${month}-${day} in ${timeZone}`);
   }
   return date;
+}
+
+function addCivilDays(
+  year: number,
+  month: number,
+  day: number,
+  delta: number,
+): { year: number; month: number; day: number } {
+  const d = new Date(Date.UTC(year, month - 1, day + delta));
+  return {
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth() + 1,
+    day: d.getUTCDate(),
+  };
+}
+
+function addCivilMonths(
+  year: number,
+  month: number,
+  day: number,
+  delta: number,
+): { year: number; month: number; day: number } {
+  const d = new Date(Date.UTC(year, month - 1 + delta, day));
+  return {
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth() + 1,
+    day: d.getUTCDate(),
+  };
 }
 
 /** ISO week number + ISO week-year for a civil Y-M-D. */
