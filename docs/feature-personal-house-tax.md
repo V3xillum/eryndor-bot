@@ -52,7 +52,7 @@ Feature uit (`enabled: false`): modal zonder checkbox; gedrag = oude `personal_a
 
 ### Publieke silent post
 
-Zelfde kanaal als overige voorraadposts (`/dm resource menu` → Kanaal setup), `SuppressNotifications`.
+Zelfde kanaal als overige voorraadposts (`/dm setup menu` → Voorraadkanaal), `SuppressNotifications`.
 
 - Geen tax: bestaande tekst (alles privé).
 - Tax betaald: persoonlijk aantal + regel huisbelasting (1 naar guild + GC) + stock-regels.

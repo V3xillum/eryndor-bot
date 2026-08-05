@@ -28,8 +28,7 @@ Alles via **`/dm resource menu`** (dropdown → channel-picker / modal / bestaan
 
 | Menu-optie | Effect |
 |---|---|
-| Kanaal setup | Kanaal voor publieke silent posts (donate/buy/deliver/use-guild-stock/contribute) |
-| Setup wissen | Setup wissen (commands die posten falen tot opnieuw setup) |
+| Kanaal setup / wissen | Via **`/dm setup menu`** → Voorraadkanaal (niet in dit resource-menu) |
 | Type toevoegen / bewerken / verwijderen | Zelfde regels als voorheen: `key` = slug van naam; buy default `2 × sell`; remove alleen als stock = 0 en niet in actieve costs/funding/productie |
 | Voorraad corrigeren | Modal: type + gewenste stand (absoluut); geen publieke GC-post; overflow → persoonlijk |
 | Opslaglimiet | Toon/zet `storage_cap` per type (default 300) |
@@ -87,7 +86,7 @@ Create/cost/cancel/correcties = allowlist via **`/dm building menu`**. leveren /
 
 ## Publieke silent posts
 
-Kanaal: via `/dm resource menu` → Kanaal setup.
+Kanaal: via `/dm setup menu` → Voorraadkanaal.
 
 Flags: `MessageFlags.SuppressNotifications` (Discord “silent”). Posts are **embeds** (title, description), niet plain text. Bij building deliver / use-guild-stock toont **Voortgang** alle materiaalkosten (`funded / required` per type), niet alleen het type van deze actie.
 
@@ -275,7 +274,7 @@ Domain-logica Discord-agnostisch houden waar mogelijk (zelfde scheiding als weat
 ## Testplan
 
 1. `npm run register-commands`
-2. Allowlist: `/dm resource menu` → Kanaal setup + Type toevoegen (Hout, sell 1) → key `hout`, buy default 2
+2. Allowlist: `/dm setup menu` → Voorraadkanaal + `/dm resource menu` → Type toevoegen (Hout, sell 1) → key `hout`, buy default 2
 3. Speler: `/voorraad doneren` → modal (type + aantal, bijv. hout 7) → stock 7, silent post met nickname + 7 GC, ledger-rij
 4. Speler: `/voorraad kopen hout 2` → stock 5, silent post “voor 4 GC”
 5. Buy met te weinig stock → ephemeral fout, geen post

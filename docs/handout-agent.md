@@ -7,6 +7,7 @@ Regels voor agents (en mensen) die de handouts bijwerken:
 
 **Bot-waarheid** (commands, data, gedrag) = [`agent.md`](./agent.md) + feature-docs.
 **Handout-stijl** (toon, structuur, wat wél/niet uitleggen) = **dit bestand**.
+Structuur-rework (2 tabs): [`handout-update-dm-rework.md`](./handout-update-dm-rework.md).
 
 GitHub Pages serveert de map `/docs`; DM-handout: `/handout/` · speler-handout: `/handout/spelers.html`. Logo: `docs/handout/eryndor-logo.jpg`. Speler-URL in de bot = `HANDOUT_URL` + `spelers.html` (zie `playerHandoutUrl` in config); `/eryndor hulp` voor niet-DM’s linkt daarnaartoe.
 
@@ -14,11 +15,13 @@ GitHub Pages serveert de map `/docs`; DM-handout: `/handout/` · speler-handout:
 
 ## Doel
 
-Een **DM-handout** in het Nederlands: wat de bot doet, welke slash-commands er zijn, en wat je moet aanleveren voor een nieuw weertype.
+Een **DM-handout** in het Nederlands: wat de bot op Discord doet, korte startchecklist, en welke slash-commands er zijn (hubs als één kaart). Optioneel: checklist voor een nieuw weertype (geen catalogus, geen JSON).
 
-Een **speler-handout** (`spelers.html`): kort, campaign-taal, geen tech — wat *jij* tussen sessies kunt doen (info, voorraad, meebouwen). Geen DM-commands, geen setup, geen allowlist.
+Een **speler-handout** (`spelers.html`): kort, campaign-taal, geen tech — wat *jij* op Discord kunt doen (info, voorraad, meebouwen). Geen DM-commands, geen setup, geen allowlist.
 
 Beide handouts linken naar elkaar (footer / hero).
+
+**Framing:** Discord-first (West Marches / RP op Discord). Live tafel is een uitzondering → alleen relevant voor weer pauzeren. Niet schrijven alsof Discord “tussen sessies” is.
 
 ---
 
@@ -46,13 +49,13 @@ Bij `/bouw leveren` altijd **beide** bronnen noemen:
 - Lange command-tabellen of DM-how-to
 
 ### Toon
-- Alsof je aan de speeltafel uitlegt, niet aan een developer
+- Alsof je een Discord-DM uitlegt, niet een developer (en niet alsof Discord “naast de tafel” hangt)
 - Slash-commands wél exact (`/bouw leveren`)
 - Termen: **persoonlijke voorraad** (niet “bak”), **guild-voorraad**, **Guild Credits (GC)**
 - Zelfde visuele taal als de DM-handout (fonts/kleuren/logo) mag; geen tabs nodig — één scrollbare pagina
 
 ### Sync
-Speler-facing gedrag wijzigt → **beide** handouts + help-tekst (`helpEveryoneBody` / speler-help embed) meenemen. DM-only wijzigingen → alleen `index.html` (+ dit bestand / briefing).
+Speler-facing gedrag wijzigt → **beide** handouts + help-tekst (`helpEveryoneBody` / speler-help embed) meenemen. DM-only wijzigingen → alleen `index.html` (+ dit bestand / briefing). Help-link naar DM-handout (`helpEmbedDescription`) mag geen catalogus van weertypes beloven.
 
 ---
 
@@ -69,47 +72,48 @@ Engelse **keuzes in Discord** (`only` / `none`, option-namen) mag je noemen naas
 
 **Brug altijd Nederlands ↔ Discord:** schrijf eerst het begrip (ritme, berichtenvenster, afkoeling), dan pas de Discord-naam tussen haakjes of in een code-pill (`interval`, `window`, `cooldown`). Nooit alleen de Engelse optienaam zonder Nederlandse zin. Vermijd losse tech-woorden (`scope`, `plant opnieuw`, `dial`) — zeg wat de DM moet *kiezen* of *doen*. Gebruik **niet** “draaiknop”; zeg **zwaarte-limiet** / **magie-filter**.
 
-Lezers zijn DMs die D&D snappen, geen bot-developers. Als een zin “sorry, wat?” oproept bij iemand die Discord-slash-commands half kent: herschrijven.
+Lezers zijn DMs die D&D én Discord-RP snappen, geen bot-developers. Framing is **Discord-first**. “Tijdens een sessie / mid-combat / tussen sessies” alleen waar het echt over live tafel gaat (pause). Als een zin “sorry, wat?” oproept bij iemand die Discord-slash-commands half kent: herschrijven.
 
 ---
 
 ## Tabs (niet zomaar herschikken)
 
-1. **Overzicht** — wat doet de bot, korte sessie-cheat (pause/set/roll), zwaarte/afkoeling, huidige types, ritme/venster (kort)
-2. **Commando’s** — volledige lijst, gegroepeerd + filters
-3. **Voorraad & bouw** — guild-grondstoffen, bouwprojecten, productie (DM-uitleg + flows)
-4. **Nieuw weertype** — wat aanleveren (geen formulier)
+Exact **2** tabs:
 
-Nieuwe tab alleen als er echt een nieuw *soort* content bij komt (zoals voorraad/bouw/productie t.o.v. weer/kalender).
+1. **Intro** — wat de bot op Discord doet, wie (incl. Integraties-tip), korte **Start hier**-checklist (`/dm setup menu` + economy klaarzetten), kleine aside voor live tafel (pause), zwaarte met `.severity-scale`, GC, optioneel `<details>` nieuw weertype. Geen weertypes-grid, geen tiles/cards, zo min mogelijk slash-commands buiten de startchecklist.
+2. **Commando’s** — zoekbare lijst; hubs als één kaart; default-filter `cmdWho === "dm"`; spelercommands via filter “iedereen”. `/dm setup menu` **niet** in de lijst (staat op Intro).
+
+Geen aparte Setup-tab — te dun sinds kanalen één hub zijn.
 
 ---
 
 ## Schrijfstijl per plek
 
-### Overzicht
-- Leg uit **wat iets is** en wat de standaardwaarden zijn.
-- Maximaal **één command-verwijzing** om het aan te passen (`Aanpassen: \`/dm weather-settings menu\`` → Ritme), met Nederlandse brug.
-- Geen how-to van die commands hier (minuten vs uren, voorbeelden 1–5, enz.) → dat hoort op **Commando’s**.
-- Als hetzelfde concept twee keer dreigt (bijv. afkoeling onder Zwaarte én in de note): één keer uitleggen, elders kort terugverwijzen.
-- Duurcodes (`30m`, `2h`, `1d`) één keer kort in de sessie-note op Overzicht.
-- Sessie-cheat: één compacte note (pause / set / roll / limieten) — geen aparte tab meer.
+### Intro
+- Discord-first lead; geen “de tafel speelt, Discord houdt bij”.
+- Startchecklist kort (kanalen + economy starten); economy-hubs blijven doorlopend in Commando’s.
+- Live tafel: één kleine note over pauzeren — niet als hoofdonderwerp.
+- Integraties-tip voor DM’s die geen server-admin zijn.
+- Zwaarte: `.severity-scale` (1–5) + korte afkoeling-zin.
+- Geen tile-grid op Intro.
 
 ### Commando’s
-- Per command: **wat het doet** + **wanneer** — in DM-taal, daarna Discord-details.
-- Vriendelijk DM-taal, wel precies genoeg (bijv. set negeert afkoeling en limieten).
-- Option-namen uit Discord (`after`, `max_next`, `schedule`/`all`) altijd met Nederlandse betekenis ernaast.
-- Houd de `COMMANDS`-array en `CATEGORIES` in de HTML in sync met de echte bot (`agent.md` / README).
+- Per command: **wat het doet** + **wanneer** — Discord-DM-taal, geen tafel-sessie-framing tenzij pause.
+- **Hubs = één kaart**, niet één kaart per oude subcommand.
+- Default `cmdWho` = `dm`; documenteer dat in de lead.
+- Option-namen uit Discord altijd met Nederlandse betekenis ernaast.
+- Houd de `COMMANDS`-array in de HTML in sync met de echte bot (`agent.md`).
+- Verwijs kanaal-setup naar Intro.
 
 ### Layout
-- Tile-grids (`.grid-2`): max **3 kolommen** (op smal: 2 / 1).
-- Zwaarte-schaal (`.severity-scale`): altijd **5** kolommen (op heel smal: 2).
+- Tile-grids (`.grid-2`): max **3** kolommen (op smal: 2 / 1) — niet op Intro.
+- Zwaarte-schaal (`.severity-scale`): **5** kolommen (op heel smal: 2); welkom op Intro.
 
-### Nieuw weertype
-- Checklist van wat de DM/content-persoon **aanlevert** — in gewone taal (naam, plaatje, zwaarte, …).
-- **Geen sfeer-/flavortekst** — Discord post alleen het plaatje; sfeer zit in de art.
-- Optioneel: **voorbeeld-JSON** van één entry in de HTML (geen aparte download van de live tabel), met korte toelichting dat dit voor wie de content bijwerkt is.
-- Ranges 1–100 moeten sluitend blijven; wijzigingen gaan via wie `content/weather-table.json` beheert.
-- Geen interactief formulier tenzij de gebruiker dat expliciet terugvraagt.
+### Nieuw weertype (Intro `<details>`)
+- Checklist in gewone taal (naam, plaatje, zwaarte, magisch?, kans d100, optionele duur).
+- **Geen sfeer-/flavortekst** — Discord post alleen het plaatje.
+- **Geen JSON-voorbeeld** in de handout (JSON leeft in de content-repo / `weather-table.json`).
+- Geen interactief formulier.
 
 ---
 
@@ -120,12 +124,12 @@ Eerst op **wie**, daarna op **categorie**:
 | Wie | Categorieën |
 |---|---|
 | Iedereen | Bekijken · Voorraad · Bouwen · Productie |
-| DM | Inrichten · Instellingen · Acties · Limieten · Berichten · Voorraad · Bouwen · Productie · Info |
+| DM | Instellingen · Acties · Limieten · Berichten · Voorraad · Bouwen · Productie · Info |
 
 | Categorie | Voorbeelden |
 |---|---|
 | Bekijken | `/eryndor overzicht`, `/eryndor weer`, `/eryndor vandaag`, `/eryndor vollemaan` |
-| Inrichten | `/dm weather setup`, `/dm calendar setup` / `clear`, `/dm resource menu` → Kanaal setup |
+| Setup (alleen op Intro, niet in Commando’s) | `/dm setup menu` (weer / kalender / voorraad) |
 | Instellingen | `/dm weather-settings menu` |
 | Acties | `/dm weather` → `roll`, `set`, `schedule`, `pause`, `resume` |
 | Limieten / config | `/dm weather-settings menu` |
@@ -152,8 +156,8 @@ Gebruik deze termen consistent:
 - **Tijdelijke zwaarte-limiet** — worpen alleen binnen min–max zwaarte, voor een duur (settings-menu)
 - **Tijdelijke magie-filter** — alleen magisch of juist geen magisch weer, voor een duur (settings-menu)
 - **Gepland bericht** — vrije tekst die de bot later post in een gekozen kanaal (los van het weerkanaal); via `/dm announce`
-- **Kalender-events kanaal** — ochtendpost (`@everyone` + today-embed) alleen bij events; avondpost bij Full Moon (Rising) (stil) en exacte volle maan (`@everyone`); via `/dm calendar setup` (los van het weerkanaal)
-- **Guild-voorraad** — gedeelde grondstoffen per server; stille berichten in het voorraadkanaal (`/dm resource menu` → Kanaal setup)
+- **Kalender-events kanaal** — ochtendpost (`@everyone` + today-embed) alleen bij events; avondpost bij Full Moon (Rising) (stil) en exacte volle maan (`@everyone`); via `/dm setup menu` → Kalenderkanaal (los van het weerkanaal)
+- **Guild-voorraad** — gedeelde grondstoffen per server; stille berichten in het voorraadkanaal (`/dm setup menu` → Voorraadkanaal)
 - **Persoonlijke voorraad** — per speler, los van de guild (niet “bak”); huisbelasting mogelijk bij toevoegen
 - **Opslaglimiet** — max per grondstoftype (standaard 300); overflow bij spelers → persoonlijke voorraad; bij dagelijkse productie → verloren
 - **Huisbelasting** — met eigen huis + genoeg stuks (≥ drempel): 1 unit naar guild (+ sell-GC); guild vol → speler houdt alles; DM: `/dm resource menu` → Huisbelasting
@@ -170,11 +174,11 @@ Defaults in de handout moeten overeenkomen met content/`weather-rules.json` en s
 ## Workflow: feature → handout
 
 1. Feature **implemented** in de bot (zie feature-doc + `agent.md`).
-2. Schrijf een korte briefing: `docs/handout-update-<onderwerp>.md` (zie o.a. [`handout-update-guild-schedule-settings.md`](./handout-update-guild-schedule-settings.md), [`handout-update-guild-resources.md`](./handout-update-guild-resources.md)).
-3. Werk `docs/handout/index.html` bij volgens **dit** bestand + die briefing.
+2. Schrijf een korte briefing: `docs/handout-update-<onderwerp>.md` (zie o.a. [`handout-update-dm-rework.md`](./handout-update-dm-rework.md)).
+3. Werk `docs/handout/index.html` bij volgens **dit** bestand + die briefing. Oude briefings die nog een Voorraad-tab beschrijven zijn **geen** bron voor structuur.
 4. Raakt het **spelers** (nieuwe/ gewijzigde player-commands of flows)? → ook `docs/handout/spelers.html` + speler-help in `content/messages.json` bijwerken.
 5. Geen secrets, geen interne implementatiedetails in de handouts.
-6. Proposed features (bijv. [`feature-guild-cooldown-settings.md`](./feature-guild-cooldown-settings.md)) → **geen** handout tot status = implemented.
+6. Proposed features → **geen** handout tot status = implemented.
 
 ### Briefing-template (handout-update)
 
@@ -188,10 +192,10 @@ Feature is **implemented**. Zie agent.md / feature-doc.
 ## Commands om toe te voegen
 | Command | Wat het doet (DM-taal) | Categorie | Wie |
 
-## Wat Overzicht kort mag zeggen
-(wat het is + eventueel welk command — geen how-to)
+## Wat Intro kort mag zeggen
+(wat het is + startchecklist — geen how-to)
 
-## Wat Commando’s / Sessie moeten krijgen
+## Wat Commando’s moeten krijgen
 …
 
 ## Speler-handout (`spelers.html`)
@@ -207,7 +211,7 @@ DB, .env-keys, migraties, …
 
 - DM: `docs/handout/index.html` (CSS/JS inline is ok; tabs).
 - Speler: `docs/handout/spelers.html` (één pagina, geen tabs nodig; mag CSS delen/spiegelen).
-- Weertypes in de DM-pagina (`WEATHER_TYPES`): sync met `content/weather-table.json` als die wijzigt.
+- Geen hardcoded weertypes-catalogus (`WEATHER_TYPES` / `#typeGrid`) in de DM-HTML — dat was sync-schuld t.o.v. `weather-table.json`.
 - Redirect: `docs/index.html` → `handout/`.
 - Visueel: donkere basis + perkament/logo-accenten; clean houden, geen dashboard-rommel.
 - Geen build-stap voor Pages.
@@ -216,15 +220,18 @@ DB, .env-keys, migraties, …
 
 ## Checklist voor de agent
 
-- [ ] `WEATHER_TYPES` in de DM-HTML gelijk aan `content/weather-table.json` als types wijzigen?
-- [ ] Klopt het met de **echte** commands/gedrag in de bot?
+- [ ] Exact 2 tabs: Intro, Commando’s?
+- [ ] Discord-first toon (tafel alleen bij pause)?
+- [ ] `/dm setup menu` alleen op Intro, niet in COMMANDS?
+- [ ] Geen weertypes-grid / geen orphan `typeGrid` / geen `WEATHER_TYPES`?
+- [ ] Default `cmdWho === "dm"`?
+- [ ] Klopt het met de **echte** commands/gedrag in de bot (hubs)?
 - [ ] Nederlands, vaste termen, geen tech-jargon in lopende tekst?
 - [ ] Nederlandse brug naast Discord-optienamen (`ritme` → `interval`)?
-- [ ] Overzicht kort; details op Commando’s?
-- [ ] Sessie-tiles: eerst waarom, dan command?
+- [ ] Intro kort; details op Commando’s?
 - [ ] Nieuwe commands in goede **wie** + **categorie**?
-- [ ] Sessie-tile alleen als het een veelgebruikte flow is?
-- [ ] Aanlever-tab: geen sfeertekst-veld; JSON als optioneel voorbeeld voor content-beheerder?
+- [ ] Weertype-checklist alleen in `<details>`, zonder JSON?
+- [ ] `helpEmbedDescription` belooft geen weertypes-catalogus?
 - [ ] Handout-update briefing bijgewerkt of gemarkeerd als verwerkt?
 - [ ] Speler-facing change? → `spelers.html` + `/eryndor hulp` spelertekst bijgewerkt?
 - [ ] Donate/bouw: bronnen *van buiten* / *mijn voorraad* + fund zonder GC correct uitgelegd (DM én speler)?

@@ -1,7 +1,7 @@
 # Eryndor bot
 
 ## Project Goal
-Build **Eryndor bot** — a Discord bot for the Eryndor (West Marches) D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), gives authorized users full manual control during sessions through slash commands, exposes Eryndor calendar info (`/eryndor vandaag`, `/eryndor vollemaan`) from the static Calendar of Eryndor JSON API, and can post that same “today” embed each morning to a separate channel **only on days with calendar events** (`/dm calendar setup`).
+Build **Eryndor bot** — a Discord bot for the Eryndor (West Marches) D&D server that makes the world feel alive between sessions. The bot automatically posts atmospheric weather updates to a configured channel (or thread), gives authorized users full manual control during sessions through slash commands, exposes Eryndor calendar info (`/eryndor vandaag`, `/eryndor vollemaan`) from the static Calendar of Eryndor JSON API, and can post that same “today” embed each morning to a separate channel **only on days with calendar events** (`/dm setup menu` → Kalenderkanaal).
 
 **DM handout:** static site under [`docs/handout/`](./handout/). Style and update rules for agents: [`handout-agent.md`](./handout-agent.md). Bot behaviour remains defined in **this** file.
 
@@ -50,7 +50,7 @@ ERYNDOR_CALENDAR_BASE_URL=https://v3xillum.github.io/eryndor
 ERYNDOR_CALENDAR_FALLBACK_URL=https://raw.githubusercontent.com/V3xillum/eryndor/main
 # Morning auto-post of /eryndor vandaag embed — only when events exist (local WEATHER_TIMEZONE).
 CALENDAR_EVENTS_POST_TIME=08:30
-# Evening Full Moon (Rising) + exact Full Moon posts to the same /dm calendar setup channel.
+# Evening Full Moon (Rising) + exact Full Moon posts to the same /dm setup menu calendar channel.
 CALENDAR_FULLMOON_POST_TIME=20:00
 
 # Daily guild production summary on the resource channel (silent). Local WEATHER_TIMEZONE.
@@ -70,7 +70,7 @@ STATUS_REPORT_CADENCE=daily
 
 **Active window behaviour:** the scheduler never auto-posts outside the **effective** window for that guild (guild override, else `.env`). If `next_update_at` falls overnight, it waits until the next window start. When scheduling the next update, candidates outside the window are clamped to the next window start. Half-open interval: `[start, end)` in `WEATHER_TIMEZONE`.
 
-`guild` destination is per server via `/dm weather setup`. Interval and active window **defaults** live in `.env` (restart required to change defaults). Per-guild overrides via `/dm weather-settings` live in SQLite and take effect immediately (next update is rescheduled). Changing only `.env` does not rewrite existing `next_update_at` until weather is rolled/set/resumed/settings-changed.
+`guild` destination is per server via `/dm setup menu` → Weerkanaal. Interval and active window **defaults** live in `.env` (restart required to change defaults). Per-guild overrides via `/dm weather-settings` live in SQLite and take effect immediately (next update is rescheduled). Changing only `.env` does not rewrite existing `next_update_at` until weather is rolled/set/resumed/settings-changed.
 
 `guild_id` is a real Discord concept: a *guild* is a Discord server. Each server has a unique snowflake ID. The bot stores one weather state row per guild so the same bot can later run in multiple servers without a rewrite. Slash commands receive `interaction.guildId` from Discord — operators do not need to know or type it during setup.
 
@@ -118,7 +118,7 @@ One row per guild (`guild_id` = Discord server ID). Multi-server support later i
 ```sql
 CREATE TABLE world_state (
   guild_id TEXT PRIMARY KEY,
-  channel_id TEXT,                -- set via /dm weather setup
+  channel_id TEXT,                -- set via /dm setup menu → Weerkanaal
   thread_id TEXT,                 -- optional; NULL = post in channel
   current_weather_type TEXT,
   current_weather_rolled_at DATETIME,
@@ -163,11 +163,11 @@ CREATE TABLE scheduled_posts (
 
 On restart: if `next_update_at` is in the past and the guild isn't paused, post immediately and reschedule. This means state never needs a separate "missed update" recovery path.
 
-Automated posts go to `thread_id` when set, otherwise to `channel_id`. If neither is configured, skip posting for that guild (log a warning) until `/dm weather setup` has been run.
+Automated posts go to `thread_id` when set, otherwise to `channel_id`. If neither is configured, skip posting for that guild (log a warning) until `/dm setup menu` → Weerkanaal has been run.
 
 Pending rows in `scheduled_posts` with `post_at` in the past are posted on the next scheduler tick (same 30s loop). Announcements ignore the weather active window and pause.
 
-Morning calendar-event posts use `calendar_channel_id` (from `/dm calendar setup`), independent of the weather destination. Once per local day after `CALENDAR_EVENTS_POST_TIME` (default `08:30` in `WEATHER_TIMEZONE`): fetch today; post `@everyone` + the same embed as `/eryndor vandaag` **only if** `events.length > 0`; otherwise stay silent. `calendar_events_last_handled_date` prevents duplicates (and skips empty days). Missed morning after restart → catch-up on the next tick after the post time.
+Morning calendar-event posts use `calendar_channel_id` (from `/dm setup menu` → Kalenderkanaal), independent of the weather destination. Once per local day after `CALENDAR_EVENTS_POST_TIME` (default `08:30` in `WEATHER_TIMEZONE`): fetch today; post `@everyone` + the same embed as `/eryndor vandaag` **only if** `events.length > 0`; otherwise stay silent. `calendar_events_last_handled_date` prevents duplicates (and skips empty days). Missed morning after restart → catch-up on the next tick after the post time.
 
 Evening full-moon posts use the **same** channel after `CALENDAR_FULLMOON_POST_TIME` (default `20:00`):
 - `moon.phase === "Full Moon (Rising)"` → moon-night embed, no `@everyone`, `MessageFlags.SuppressNotifications`
@@ -296,15 +296,15 @@ There is **no** `/weather post`. Anything that changes weather also broadcasts t
 
 Groups (Discord nesting: command → group → sub):
 
-- `/dm weather` — `setup`, `status`, `next`, `roll`, `set`, `schedule`, `pause`, `resume`
+- `/dm setup` — `menu` (hub: weer-/kalender-/voorraadkanaal status + zetten/wissen)
+- `/dm weather` — `status`, `next`, `roll`, `set`, `schedule`, `pause`, `resume`
 - `/dm weather-settings` — `menu` (hub: ritme, venster, afkoeling, tijdelijke zwaarte-/magie-limieten, clear)
-- `/dm calendar` — `setup`, `clear` (morning events + evening moon posts channel)
 - `/dm announce` — `schedule`, `list`, `cancel` (free-text posts; independent of weather channel)
-- `/dm resource` — `menu` (hub: setup/clear, adjust, cap, house-tax, type add/edit/remove)
+- `/dm resource` — `menu` (hub: adjust, cap, house-tax, type add/edit/remove)
 - `/dm building` — `menu` (hub: create, cancel, cost add, buildtime, funding adjust, spent adjust)
 - `/dm production` — `menu` (hub: add, workers, yield, remove)
 
-Behaviour of each subcommand is unchanged from the former top-level paths (`/dm weather roll` → `/dm weather roll`, `/announce schedule` → `/dm announce schedule`, `/dm calendar setup` → `/dm calendar setup`, etc.). Daily production summary still posts after `PRODUCTION_POST_TIME` on the resource channel.
+Behaviour of each subcommand is unchanged from the former top-level paths (`/dm weather roll` → `/dm weather roll`, `/announce schedule` → `/dm announce schedule`, etc.). Channel setup is now `/dm setup menu` (was `/dm weather setup`, `/dm calendar setup`/`clear`, resource setup in resource menu). Daily production summary still posts after `PRODUCTION_POST_TIME` on the resource channel.
 
 Slash commands are registered globally via `npm run register-commands` (`Routes.applicationCommands`). Global commands can take up to ~1 hour to appear in Discord clients; guild-scoped registration is faster for single-server testing if needed later.
 
@@ -344,7 +344,7 @@ Keep this logic entirely out of command handlers — commands trigger immediate 
 - GitHub holds the **code and content**, not secrets. Use `.gitignore` for `.env` and `storage/*.sqlite` (or document how local DB files are treated).
 - The bot is a **long-running Node process**. GitHub Actions alone is not a host — Actions jobs are short-lived.
 - Target workflow: develop and test on a personal machine or private VPS (`git pull` + `node` / PM2 / Docker), with `.env` filled locally. Later the same repo can deploy to a PaaS that connects to GitHub (e.g. Railway, Render, Fly.io) using environment variables there.
-- One Discord application/bot token can be invited to multiple guilds; each guild runs `/dm weather setup` independently. No second codebase needed for a second server.
+- One Discord application/bot token can be invited to multiple guilds; each guild runs `/dm setup menu` independently. No second codebase needed for a second server.
 
 ## Code Style
 - TypeScript strict mode.
@@ -400,12 +400,12 @@ Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / def
 `/productie lijst` (players); DM: `/dm production menu` and `/dm resource menu` → Opslaglimiet. Per-type `storage_cap` (default 300). Interactive overflow → personal stock; auto production overflow → **lost**, shown clearly on the daily silent post after `PRODUCTION_POST_TIME` (default `17:00`). Same same-day catch-up as calendar posts if the bot starts late. See [`feature-guild-production.md`](./feature-guild-production.md).
 
 ### Calendar events channel — implemented
-`/dm calendar setup` stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/eryndor vandaag` embed **only when** `events.length > 0`. Empty days stay silent. `/dm calendar clear` disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
+`/dm setup menu` → Kalenderkanaal stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/eryndor vandaag` embed **only when** `events.length > 0`. Empty days stay silent. Same menu → wissen disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).
 
 **Possible adjustment (not built):** post the today-embed **every** morning. Days with events: keep `@everyone` (and normal notifications). Empty days: no `@everyone`, plus Discord `MessageFlags.SuppressNotifications` (no sound/push). Current preference remains “only post on event days” — a daily date post is likely noise; anyone curious can run `/eryndor vandaag` on demand.
 
 ### Calendar full moon evening posts — implemented
-Same `/dm calendar setup` channel. Each evening after `CALENDAR_FULLMOON_POST_TIME` (default `20:00`):
+Same `/dm setup menu` calendar channel. Each evening after `CALENDAR_FULLMOON_POST_TIME` (default `20:00`):
 - **Full Moon (Rising)** (avond vóór exacte volle maan) → moon embed, no ping, `SuppressNotifications`
 - **exact Full Moon** (`isExactFullMoon`) → moon embed + `@everyone`
 No flavor-text pool — phase + Harptos date + calendar link. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).

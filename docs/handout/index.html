@@ -224,6 +224,59 @@
 
     .tile p { margin: 0; color: var(--mist); font-size: 0.95rem; }
 
+    .setup-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .setup-list li {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.95rem 1rem;
+      background: rgba(8, 12, 18, 0.35);
+      color: var(--mist);
+      font-size: 0.95rem;
+    }
+
+    .setup-list strong {
+      display: block;
+      color: var(--parchment);
+      margin-bottom: 0.25rem;
+      font-size: 0.98rem;
+    }
+
+    .setup-list .n {
+      display: inline-block;
+      min-width: 1.4rem;
+      color: #f3e7cf;
+      font-weight: 700;
+    }
+
+    details.extra {
+      margin-top: 1.15rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      background: rgba(8, 12, 18, 0.3);
+      color: var(--mist);
+    }
+
+    details.extra summary {
+      cursor: pointer;
+      color: var(--parchment);
+      font-weight: 700;
+    }
+
+    details.extra ul {
+      margin: 0.75rem 0 0;
+      padding-left: 1.2rem;
+    }
+
+    details.extra li { margin: 0.35rem 0; }
+
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -232,10 +285,7 @@
     }
 
     .toolbar input,
-    .toolbar select,
-    .form-grid input,
-    .form-grid select,
-    .form-grid textarea {
+    .toolbar select {
       width: 100%;
       border: 1px solid var(--line);
       background: rgba(8, 12, 18, 0.55);
@@ -262,12 +312,7 @@
       background: rgba(8, 12, 18, 0.45);
     }
 
-    .cmd.hidden { display: none; }
-
-    .who-block {
-      margin-top: 1.35rem;
-    }
-
+    .who-block { margin-top: 1.35rem; }
     .who-block:first-child { margin-top: 0.35rem; }
 
     .who-block > h3 {
@@ -280,9 +325,7 @@
       border-bottom: 1px solid var(--line);
     }
 
-    .cat-block {
-      margin: 0 0 1.1rem;
-    }
+    .cat-block { margin: 0 0 1.1rem; }
 
     .cat-block h4 {
       margin: 0 0 0.55rem;
@@ -304,6 +347,8 @@
     .cmd code,
     .tile code,
     .note code,
+    .setup-list code,
+    details.extra code,
     footer code {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.9rem;
@@ -340,7 +385,7 @@
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 0.45rem;
-      margin: 1rem 0 1.25rem;
+      margin: 0.75rem 0 0.35rem;
     }
 
     .sev {
@@ -366,131 +411,6 @@
     .sev[data-n="4"] { border-color: rgba(212, 131, 106, 0.45); }
     .sev[data-n="5"] { border-color: rgba(212, 106, 106, 0.5); background: rgba(80, 28, 28, 0.2); }
 
-    .types {
-      display: grid;
-      gap: 0.65rem;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      margin-top: 0.75rem;
-    }
-
-    .type-card {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 0.85rem;
-      background: rgba(8, 12, 18, 0.35);
-    }
-
-    .type-card .name {
-      font-weight: 700;
-      margin-bottom: 0.35rem;
-    }
-
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-      margin-bottom: 0.4rem;
-    }
-
-    .chip {
-      font-size: 0.75rem;
-      padding: 0.18rem 0.45rem;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      color: var(--muted);
-    }
-
-    .chip.magic { color: #c9b6ef; border-color: rgba(180, 150, 230, 0.35); }
-    .type-card .range { font-size: 0.85rem; color: var(--muted); }
-
-    .form-grid {
-      display: grid;
-      gap: 0.85rem;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    }
-
-    .field { display: grid; gap: 0.35rem; }
-    .field label { font-size: 0.85rem; color: var(--mist); font-weight: 600; }
-    .field.full { grid-column: 1 / -1; }
-
-    .checks {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem 1.1rem;
-      margin-top: 0.25rem;
-    }
-
-    .checks label {
-      display: flex;
-      gap: 0.4rem;
-      align-items: center;
-      color: var(--mist);
-      font-size: 0.95rem;
-      cursor: pointer;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      margin-top: 1rem;
-    }
-
-    .btn {
-      appearance: none;
-      display: inline-block;
-      text-decoration: none;
-      border: 1px solid rgba(201, 168, 106, 0.5);
-      background: rgba(201, 168, 106, 0.16);
-      color: #f6ecd7;
-      font: 700 0.95rem var(--font-body);
-      padding: 0.7rem 1rem;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: transform 0.15s, background 0.2s;
-    }
-
-    .btn:hover { background: rgba(201, 168, 106, 0.28); transform: translateY(-1px); }
-    .btn.secondary {
-      background: transparent;
-      border-color: var(--line);
-      color: var(--mist);
-      font-weight: 600;
-    }
-
-    .output {
-      margin-top: 1rem;
-      border: 1px dashed rgba(201, 168, 106, 0.4);
-      border-radius: 12px;
-      padding: 1rem;
-      background: rgba(8, 12, 18, 0.45);
-      white-space: pre-wrap;
-      font-size: 0.95rem;
-      color: #f0e6c8;
-      min-height: 6rem;
-    }
-
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 1.25rem;
-      transform: translateX(-50%) translateY(120%);
-      background: #2a2318;
-      color: #f6ecd7;
-      border: 1px solid rgba(201, 168, 106, 0.5);
-      padding: 0.7rem 1rem;
-      border-radius: 999px;
-      font-weight: 600;
-      opacity: 0;
-      transition: transform 0.25s, opacity 0.25s;
-      z-index: 20;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
     .note {
       margin-top: 1rem;
       padding: 0.85rem 1rem;
@@ -499,6 +419,22 @@
       color: var(--mist);
       border-radius: 0 10px 10px 0;
       font-size: 0.92rem;
+    }
+
+    .intro-block {
+      margin-top: 1.25rem;
+    }
+
+    .intro-block h3 {
+      margin: 0 0 0.4rem;
+      font-size: 1.05rem;
+      color: var(--parchment);
+    }
+
+    .intro-block p {
+      margin: 0;
+      color: var(--mist);
+      font-size: 0.98rem;
     }
 
     footer {
@@ -524,105 +460,87 @@
         <img src="eryndor-logo.jpg" alt="Eryndor Campaign" width="220" height="220" />
       </div>
       <h1 class="hero-brand">Eryndor bot<span>DM-handout</span></h1>
-      <p>Wat de bot voor jullie tafel doet: weer en kalender, guild-voorraad en bouw, en wat je doorgeeft als er een nieuw weertype bij komt.</p>
-      <p style="margin-top:0.65rem;font-size:0.95rem"><a href="spelers.html" style="color:#c9a86a">Speler-handout</a> — korte uitleg voor de tafel (voorraad, bouwen, info).</p>
+      <p>De bot houdt Eryndor levend op Discord: weer, kalender, en de guild-economy (voorraad, bouw, productie).</p>
+      <p style="margin-top:0.65rem;font-size:0.95rem"><a href="spelers.html" style="color:#c9a86a">Speler-handout</a> — korte uitleg voor spelers (voorraad, bouwen, info).</p>
     </header>
 
     <nav class="nav" role="tablist" aria-label="Handout secties">
-      <button type="button" role="tab" aria-selected="true" data-panel="overzicht">Overzicht</button>
+      <button type="button" role="tab" aria-selected="true" data-panel="intro">Intro</button>
       <button type="button" role="tab" aria-selected="false" data-panel="commands">Commando’s</button>
-      <button type="button" role="tab" aria-selected="false" data-panel="voorraad">Voorraad &amp; bouw</button>
-      <button type="button" role="tab" aria-selected="false" data-panel="aanleveren">Nieuw weertype</button>
     </nav>
 
-    <section id="overzicht" class="panel active" role="tabpanel">
+    <section id="intro" class="panel active" role="tabpanel">
       <h2>Wat doet de bot?</h2>
-      <p class="lead">Eryndor bot houdt de wereld levend tussen sessies: weerkaarten, kalender, geplande berichten, én guild-voorraad met bouw en productie. Tussendoor dobbelt hij zelf — jij grijpt in wanneer de tafel dat vraagt.</p>
+      <p class="lead">De meeste RP speelt zich af op Discord — daar is deze bot voor. Hij post automatisch weer en kalender, en houdt guild-voorraad, bouw en productie bij. Jij stuurt bij wanneer de wereld of de guild dat vraagt.</p>
 
-      <div class="grid-2">
-        <article class="tile">
-          <h3>Automatisch</h3>
-          <p>De bot dobbelt zelf nieuw weer volgens het standaard ritme (zie hieronder). Zwaar weer blijft meestal korter als dat type een eigen duur heeft. Na een zware storm volgt eerst milder weer — dat heet <strong>afkoeling</strong>.</p>
-        </article>
-        <article class="tile">
-          <h3>Jij als DM</h3>
-          <p>Alle DM-commands zitten onder <code>/dm</code> (verborgen voor spelers). Eén keer aanzetten: Serverinstellingen → Integraties → Eryndor-Bot → <code>/dm</code> → toestaan voor aangewezen DM’s of een DM-rol. Daarna: weer, kalenderkanaal, berichten, voorraad, bouw en productie via die boom.</p>
-        </article>
-        <article class="tile">
-          <h3>Spelers</h3>
-          <p>Iedereen mag weer en kalender raadplegen. Tussen sessies op Discord: doneren, kopen, meebouwen en productie/lijsten bekijken. Speler-uitleg: <a href="spelers.html" style="color:#c9a86a">speler-handout</a> of <code>/eryndor hulp</code>. Alleen aangewezen DM’s richten types, limieten en bronnen in (DM’s zien via help ook de DM-handout-link).</p>
-        </article>
-        <article class="tile">
-          <h3>Kalender</h3>
-          <p><code>/eryndor vandaag</code> en <code>/eryndor vollemaan</code> geven de Eryndor-datum (Harptos), maanfase en feestdagen — alleen voor jou zichtbaar (ook in <code>/eryndor overzicht</code>), zonder te verklappen wanneer het weer wisselt. Optioneel post de bot ’s ochtends (rond 08:30) bij events, en ’s avonds (rond 20:00) bij <strong>Full Moon (Rising)</strong> en de exacte volle maan, naar een apart kanaal. Inrichten: <code>/dm calendar setup</code>.</p>
-        </article>
-        <article class="tile">
-          <h3>Geplande berichten</h3>
-          <p>Zet sfeer- of wereldtekst klaar; de bot post die op het gekozen moment in een <strong>ander kanaal</strong> dan het weer. Commando: <code>/dm announce schedule</code>.</p>
-        </article>
-        <article class="tile">
-          <h3>Voorraad &amp; bouw</h3>
-          <p>Discord-downtime: grondstoffen, bouwprojecten en productie. Geen tafel-feature — de tafel speelt, Discord houdt de economy bij. Uitleg: tab <strong>Voorraad &amp; bouw</strong>. DM-hubs: <code>/dm resource menu</code>, <code>/dm building menu</code>, <code>/dm production menu</code>.</p>
-        </article>
+      <div class="intro-block">
+        <h3>Wie</h3>
+        <p>Spelers doen hun ding via de <a href="spelers.html" style="color:#c9a86a">speler-handout</a>. Aangewezen DM’s sturen de bot aan.</p>
+        <p style="margin-top:0.65rem">Ben je DM maar geen server-admin? Dan zie je de DM-commands niet vanzelf. Eén keer: <strong>Serverinstellingen → Integraties → Eryndor-Bot</strong> → DM-commands toestaan voor jou of een DM-rol.</p>
       </div>
 
-      <div class="note" style="margin-top:1.1rem">
-        <p style="margin:0"><strong>Tijdens een sessie</strong> — duur schrijf je als <code>30m</code> / <code>2h</code> / <code>1d</code>.
-        Weer vastzetten: <code>/dm weather pause</code> (daarna <code>resume</code>).
-        Scene-weer: <code>/dm weather set</code>.
-        Live worp: <code>/dm weather roll</code>.
-        Tijdelijk alleen mild/zwaar of magisch, ritme/venster/afkoeling: <code>/dm weather-settings menu</code>.
-        Meer detail: tab <strong>Commando’s</strong>.</p>
+      <div class="intro-block">
+        <h3>Start hier (eenmalig)</h3>
+        <ol class="setup-list">
+          <li>
+            <strong><span class="n">1.</span> Kanalen</strong>
+            <code>/dm setup menu</code> — weer-, kalender- en voorraadkanaal. Kalender: ochtend events én avond volle maan op hetzelfde kanaal. Voorraadberichten zijn stil.
+          </li>
+          <li>
+            <strong><span class="n">2.</span> Economy klaarzetten</strong>
+            Types via <code>/dm resource menu</code>; daarna optioneel limiet/huisbelasting, een bouwproject (<code>/dm building menu</code>) en productie (<code>/dm production menu</code>). Die menus blijf je ook later gebruiken — zie <strong>Commando’s</strong>.
+          </li>
+        </ol>
       </div>
 
-      <h2 style="margin-top:1.5rem">Zwaarte (1–5)</h2>
-      <p class="lead">
-        Elk weertype heeft een cijfer van mild (1) tot catastrofaal (5).
-        Weer van <strong>4 of hoger</strong> telt als zwaar; daarna dobbelt de bot eerst weer tot hoogstens zwaarte <strong>2</strong> (afkoeling).
-        Kies je zelf het weer met <code>/dm weather set</code>, dan geldt die afkoeling niet — jij hebt het laatste woord.
-        Afkoeling aanpassen: <code>/dm weather-settings menu</code> → Afkoeling.
-      </p>
-      <div class="severity-scale" aria-label="Zwaarte schaal">
-        <div class="sev" data-n="1"><strong>1</strong>Mild</div>
-        <div class="sev" data-n="2"><strong>2</strong>Merkbaar</div>
-        <div class="sev" data-n="3"><strong>3</strong>Lastig</div>
-        <div class="sev" data-n="4"><strong>4</strong>Gevaarlijk</div>
-        <div class="sev" data-n="5"><strong>5</strong>Catastrofaal</div>
+      <div class="note" style="margin-top:1.15rem">
+        <p style="margin:0"><strong>Live aan tafel?</strong> Zet het automatische weer even stil, zodat er niets tussendoor post. Hervatten als je klaar bent. Details: tab <strong>Commando’s</strong> (pause / resume).</p>
       </div>
 
-      <h2>Huidige weertypes</h2>
-      <p class="lead">Wat er nu in de dobbel-tabel staat: kans op de d100, zwaarte, of het magisch is, en hoe lang het ongeveer blijft.</p>
-      <div class="types" id="typeGrid"></div>
-      <div class="note">
-        <p style="margin:0 0 0.75rem"><strong>Standaard ritme</strong><br />
-        Hoe vaak de bot zelf opnieuw dobbelt: standaard ergens tussen <strong>6 en 18 uur</strong>.
-        Heeft een weertype een eigen duur, of kies jij een duur bij zetten/plannen, dan wint die.
-        Aanpassen: <code>/dm weather-settings menu</code> → Ritme.</p>
-        <p style="margin:0 0 0.75rem"><strong>Berichtenvenster</strong><br />
-        Automatische weerberichten alleen tussen <strong>06:00 en 23:00</strong> (Nederlandse tijd). Daarbuiten wacht de bot.
-        Handmatig dobbelen of zetten werkt altijd. Aanpassen: <code>/dm weather-settings menu</code> → Berichtenvenster.</p>
-        <p style="margin:0 0 0.75rem"><strong>Terugzetten &amp; checken</strong><br />
-        Terug naar de standaard: in hetzelfde menu → Terugzetten (ritme/venster, afkoeling, of alles).
-        Wat geldt er nu?: het menu toont het overzicht, of <code>/dm weather status</code>.</p>
-        <p style="margin:0"><strong>Afkoeling</strong><br />
-        Zie <strong>Zwaarte</strong> hierboven (standaard: na 4+ eerst max 2). Aanpassen of uitzetten: <code>/dm weather-settings menu</code> → Afkoeling.</p>
+      <div class="intro-block">
+        <h3>Zwaarte (1–5)</h3>
+        <p>Elk weertype heeft een cijfer van mild tot catastrofaal. Weer van <strong>4 of hoger</strong> telt als zwaar; daarna dobbelt de bot eerst milder (afkoeling).</p>
+        <div class="severity-scale" aria-label="Zwaarte schaal">
+          <div class="sev" data-n="1"><strong>1</strong>Mild</div>
+          <div class="sev" data-n="2"><strong>2</strong>Merkbaar</div>
+          <div class="sev" data-n="3"><strong>3</strong>Lastig</div>
+          <div class="sev" data-n="4"><strong>4</strong>Gevaarlijk</div>
+          <div class="sev" data-n="5"><strong>5</strong>Catastrofaal</div>
+        </div>
       </div>
+
+      <div class="intro-block">
+        <h3>Guild Credits (GC)</h3>
+        <p>De bot houdt <strong>geen</strong> saldo bij. Hij meldt alleen bedragen — iedereen houdt GC zelf bij.</p>
+      </div>
+
+      <details class="extra">
+        <summary>Nieuw weertype aanleveren</summary>
+        <p style="margin:0.75rem 0 0">Lever dit aan bij wie de content bijwerkt. In Discord zie je alleen de weerkaart — geen aparte sfeertekst.</p>
+        <ul>
+          <li><strong>Naam</strong> — hoe het type heet (bijv. storm)</li>
+          <li><strong>Plaatje</strong> — de Discord-weerkaart; sfeer zit in de art</li>
+          <li><strong>Zwaarte</strong> — 1 t/m 5</li>
+          <li><strong>Magisch?</strong> — ja of nee</li>
+          <li><strong>Kans op de d100</strong> — bijv. 87–90 (samen met de rest moet 1–100 sluitend blijven)</li>
+          <li><strong>Duur</strong> (optioneel) — hoe lang het ongeveer blijft; weglaten = standaard ritme</li>
+        </ul>
+      </details>
     </section>
 
     <section id="commands" class="panel" role="tabpanel" hidden>
       <h2>Commando’s</h2>
-      <p class="lead">Gegroepeerd op wie mag gebruiken, daarna op soort. Zoek op woord of kies wie/categorie om iets terug te vinden.</p>
+      <p class="lead">Standaard zie je de DM-commands. Zoek of filter op “iedereen” voor spelercommands — detail staat in de speler-handout. Kanalen inrichten: <code>/dm setup menu</code> (zie Intro).</p>
       <div class="toolbar">
         <input type="search" id="cmdSearch" placeholder="Zoek (bijv. voorraad, bouw, productie…)" aria-label="Zoek commando" />
         <select id="cmdWho" aria-label="Filter op wie">
-          <option value="all">Iedereen + DM</option>
+          <option value="dm" selected>Alleen DM</option>
           <option value="everyone">Alleen iedereen</option>
-          <option value="dm">Alleen DM</option>
+          <option value="all">Iedereen + DM</option>
         </select>
         <select id="cmdCat" aria-label="Filter op categorie">
           <option value="all">Alle categorieën</option>
           <option value="bekijken">Bekijken</option>
-          <option value="inrichten">Inrichten</option>
           <option value="instellingen">Instellingen</option>
           <option value="acties">Acties</option>
           <option value="berichten">Berichten</option>
@@ -635,101 +553,6 @@
       <div id="cmdList"></div>
     </section>
 
-    <section id="voorraad" class="panel" role="tabpanel" hidden>
-      <h2>Voorraad, bouw &amp; productie</h2>
-      <p class="lead">Drie onderdelen voor Discord <strong>tussen sessies</strong>: <strong>voorraad</strong> (grondstoffen), <strong>bouw</strong> (projecten), <strong>productie</strong> (dagelijkse/wekelijkse opbrengst). De bot houdt <strong>geen</strong> GC-saldo bij — hij meldt alleen hoeveel GC iemand ontvangt of moet betalen; iedereen houdt dat zelf bij.</p>
-
-      <div class="grid-2">
-        <article class="tile">
-          <h3>1. Voorraad (DM-hub)</h3>
-          <p>Alles via <code>/dm resource menu</code>: kanaal setup/wissen, types toevoegen/bewerken/verwijderen, guild-voorraad corrigeren, opslaglimiet, huisbelasting. Spelers zien types met <code>/voorraad types</code>.</p>
-        </article>
-        <article class="tile">
-          <h3>2. Guild vs persoonlijk</h3>
-          <p><strong>Guild:</strong> <code>/eryndor overzicht</code> / <code>/voorraad doneren</code> / <code>kopen</code> / <code>guild</code>. <strong>Persoonlijk:</strong> <code>persoonlijk toevoegen|verwijderen|tonen</code>. Met <strong>eigen huis</strong> en genoeg stuks (≥ drempel, standaard 7): 1 unit huisbelasting naar de guild (+ sell-GC); rest privé. Guild vol → speler houdt alles. Drempel/aan-uit: resource-menu → Huisbelasting.</p>
-        </article>
-        <article class="tile">
-          <h3>3. Opslaglimiet</h3>
-          <p>Standaard max <strong>300 per type</strong> (niet opgeteld). Via resource-menu → Opslaglimiet. Guild vol? Rest van donatie/correctie → <strong>persoonlijke voorraad</strong>. Dagelijkse productie die niet past is <strong>verloren</strong> (avondpost).</p>
-        </article>
-        <article class="tile">
-          <h3>4. Bouwproject — zo werkt het</h3>
-          <p><strong>1.</strong> DM: <code>/dm building menu</code> → Nieuw project → Materiaalkosten → eventueel Bouwtijd (standaard 100 uur).<br />
-          <strong>2.</strong> Materialen verzamelen tot alles binnen is.<br />
-          <strong>3.</strong> Meebouwen met <code>/bouw meewerken</code> tot de bouwtijd vol is → klaar.<br />
-          Annuleren / funding- of urencorrectie: zelfde building-menu.</p>
-        </article>
-        <article class="tile">
-          <h3>5. Materiaal naar een project</h3>
-          <p>Drie verschillende acties — niet door elkaar halen:<br />
-          <code>/voorraad doneren</code> / <code>kopen</code> — loot in/uit de <strong>guild-voorraad</strong> (formulier; ± GC).<br />
-          <code>/bouw leveren</code> — materiaal naar een project: <strong>van buiten</strong> of uit je <strong>persoonlijke voorraad</strong> (formulier; + GC).<br />
-          <code>/bouw uit-guild</code> — materiaal uit de <strong>guild-voorraad</strong> naar een project (geen extra GC).</p>
-        </article>
-        <article class="tile">
-          <h3>6. Bouwtijd</h3>
-          <p>Standaard <strong>100 uur</strong>. Elk uur meewerken kost <strong>1 GC</strong> (melding; zelf bijhouden). Totale bouwtijd: building-menu → Bouwtijd (alleen vóór stortingen).</p>
-        </article>
-        <article class="tile">
-          <h3>7. Productiebronnen</h3>
-          <p>Los van bouw: dagelijkse/wekelijkse opbrengst (bijv. Houthakkershut → Hout). Alles via <code>/dm production menu</code> (toevoegen, medewerkers, opbrengst, verwijderen). Overzicht: <code>/productie lijst</code>. Rond <strong>17:00</strong> één stille samenvatting op het voorraadkanaal.</p>
-        </article>
-      </div>
-      <p class="note" style="margin-top:1rem">
-        Details van elk commando staan onder <strong>Commando’s</strong> (filter op Voorraad, Bouwen of Productie).
-        Alleen aangewezen DM’s beheren types, limiet, projecten aanmaken/annuleren en productiebronnen.
-      </p>
-    </section>
-
-    <section id="aanleveren" class="panel" role="tabpanel" hidden>
-      <h2>Nieuw weertype aanleveren</h2>
-      <p class="lead">Wil je een nieuw weertype? Lever onderstaande keuzes + een plaatje aan bij wie de content bijwerkt. In Discord zie je alleen de weerkaart — geen aparte sfeertekst.</p>
-
-      <div class="grid-2">
-        <article class="tile">
-          <h3>1. Naam</h3>
-          <p>Hoe het type heet (bijv. <code>storm</code> of <code>Clockwork clouds</code>). Dit zie je terug in status en bij <code>/dm weather set</code>.</p>
-        </article>
-        <article class="tile">
-          <h3>2. Plaatje</h3>
-          <p>De Discord-weerkaart. Bestandsnaam het liefst gelijk aan de type-naam (bijv. <code>ashen_fog.png</code>). Hier zit de sfeer.</p>
-        </article>
-        <article class="tile">
-          <h3>3. Zwaarte (1–5)</h3>
-          <p>Hoe heftig is dit weer? Bepaalt of er afkoeling volgt na zwaar weer, en of een tijdelijke zwaarte-limiet het kan kiezen.</p>
-        </article>
-        <article class="tile">
-          <h3>4. Magisch?</h3>
-          <p>Ja of nee. Nodig als je tijdelijk “alleen magisch” of “geen magisch” weer wilt forceren.</p>
-        </article>
-        <article class="tile">
-          <h3>5. Kans op de d100</h3>
-          <p>Hoe vaak mag het vallen? Bijv. “87 tot 90”. Samen met de andere types moet 1–100 sluitend blijven — dat regelt wie de content bijwerkt.</p>
-        </article>
-        <article class="tile">
-          <h3>6. Duur (optioneel)</h3>
-          <p>Hoe lang dit weer ongeveer blijft (min/max in minuten). Weglaten = standaard ritme (nu 6–18 uur).</p>
-        </article>
-      </div>
-
-      <h2 style="margin-top:1.5rem">Voorbeeld (voor wie de content bijwerkt)</h2>
-      <p class="lead">Zo ziet één type er technisch uit. Jij hoeft dit niet zelf te schrijven — handig om mee te sturen als je de cijfers al hebt.</p>
-      <pre class="output" id="jsonSnippet">{
-  "min": 87,
-  "max": 90,
-  "type": "ashen_fog",
-  "image": "ashen_fog.png",
-  "severity": 3,
-  "magical": false,
-  "durationMinMinutes": 120,
-  "durationMaxMinutes": 240
-}</pre>
-      <p class="note" style="margin-top:0.85rem">
-        Duur-velden zijn optioneel (beide of geen).
-        Stuur wijzigingen + nieuwe afbeeldingen terug naar wie de bot-content beheert — de d100-ranges moeten samen 1–100 blijven.
-      </p>
-    </section>
-
     <footer>
       Eryndor bot · DM-handout ·
       <a href="spelers.html">Speler-handout</a>
@@ -737,20 +560,8 @@
   </div>
 
   <script>
-    const WEATHER_TYPES = [
-      { type: "clear", min: 1, max: 22, severity: 1, magical: false },
-      { type: "cloudy", min: 23, max: 42, severity: 1, magical: false },
-      { type: "fog", min: 43, max: 58, severity: 1, magical: false },
-      { type: "Clockwork clouds", min: 59, max: 68, severity: 2, magical: true },
-      { type: "rain", min: 69, max: 74, severity: 2, magical: false },
-      { type: "wind", min: 75, max: 86, severity: 2, magical: false },
-      { type: "storm", min: 87, max: 94, severity: 4, magical: false, durationMinMinutes: 120, durationMaxMinutes: 360 },
-      { type: "arcane_storm", min: 95, max: 100, severity: 5, magical: true, durationMinMinutes: 15, durationMaxMinutes: 60 },
-    ];
-
     const CATEGORIES = [
       { id: "bekijken", label: "Bekijken" },
-      { id: "inrichten", label: "Inrichten" },
       { id: "instellingen", label: "Instellingen" },
       { id: "acties", label: "Acties" },
       { id: "berichten", label: "Berichten" },
@@ -766,63 +577,42 @@
         who: "everyone",
         cat: "bekijken",
         what: "Laat jou alleen voor jezelf zien welk weer er nu staat. Post niets in het kanaal.",
-        when: "Even checken zonder de tafel te storen.",
+        when: "Even checken zonder iets te posten.",
       },
       {
         cmd: "/eryndor vandaag",
         who: "everyone",
         cat: "bekijken",
         what: "Huidige Harptos-dag (Eryndor-kalender), maanfase en events (alleen voor jou).",
-        when: "Wereldtijd / feestdagen aan tafel.",
+        when: "Wereldtijd, feestdagen of events checken.",
       },
       {
         cmd: "/eryndor vollemaan",
         who: "everyone",
         cat: "bekijken",
         what: "Wanneer de volgende exacte volle maan is (alleen voor jou).",
-        when: "Lycantropie, rituelen, nacht-scenes.",
-      },
-      {
-        cmd: "/dm weather setup",
-        who: "dm",
-        cat: "inrichten",
-        what: "Kies in welk kanaal (en optioneel thread) weerupdates verschijnen.",
-        when: "Eenmalig bij start, of als het kanaal wijzigt.",
-      },
-      {
-        cmd: "/dm calendar setup",
-        who: "dm",
-        cat: "inrichten",
-        what: "Kies in welk kanaal kalenderposts komen. Ochtend (~08:30): @everyone + /eryndor vandaag-embed alleen bij events. Avond (~20:00): Full Moon (Rising) stil, exacte volle maan met @everyone. Los van het weerkanaal.",
-        when: "Eenmalig als je feestdagen/verjaardagen en volle-maan-avonden automatisch wilt laten zien.",
-      },
-      {
-        cmd: "/dm calendar clear",
-        who: "dm",
-        cat: "inrichten",
-        what: "Zet automatische ochtend-kalenderposts uit.",
-        when: "Geen automatische event-berichten meer in dat kanaal.",
+        when: "Lycantropie, rituelen, nacht-RP.",
       },
       {
         cmd: "/dm weather-settings menu",
         who: "dm",
         cat: "instellingen",
-        what: "Eén menu: toont ritme, berichtenvenster, afkoeling en actieve limieten. Daarna kies je wat je wilt wijzigen (dropdown → modal). Inclusief tijdelijke zwaarte-limiet en magie-filter (zetten/opheffen) en terugzetten naar standaard.",
-        when: "Alles rond weer-config: ritme, venster, afkoeling, limieten.",
+        what: "Eén menu: ritme, berichtenvenster, afkoeling, tijdelijke zwaarte-limiet en magie-filter, plus terugzetten naar standaard.",
+        when: "Weer-config aanpassen zonder de host te storen.",
       },
       {
         cmd: "/dm weather roll",
         who: "dm",
         cat: "acties",
         what: "Dobbel nieuw weer (met afkoeling en actieve limieten) en post meteen in het weerkanaal.",
-        when: "Live dobbelen tijdens de sessie.",
+        when: "Nu een nieuwe worp in het weerkanaal willen.",
       },
       {
         cmd: "/dm weather set",
         who: "dm",
         cat: "acties",
-        what: "Kies zelf het weer: typ een weertype (bijv. storm) of gooi zelf een d100 en vul die score in. Optioneel hoe lang het blijft (30m, 2h, 1d). Negeert afkoeling en limieten — jij hebt het laatste woord.",
-        when: "Als je zelf wilt dobbelen, of gewoon dit weer wilt omdat het bij de scene past.",
+        what: "Kies zelf het weer: typ een weertype (bijv. storm) of vul een d100-score in. Optioneel hoe lang het blijft (30m, 2h, 1d). Negeert afkoeling en limieten — jij hebt het laatste woord.",
+        when: "Dit weer past bij de scene, of je wilt zelf dobbelen.",
       },
       {
         cmd: "/dm weather schedule",
@@ -836,20 +626,20 @@
         who: "dm",
         cat: "acties",
         what: "Zet automatische updates stil voor een duur (30m, 2h, 1d). Het huidige weer blijft staan tot jij hervat of de pauze verloopt.",
-        when: "Sessie starten — geen verrassingen mid-combat.",
+        when: "Live aan tafel — geen nieuw weer tussendoor.",
       },
       {
         cmd: "/dm weather resume",
         who: "dm",
         cat: "acties",
         what: "Hef de pauze op; de bot plant weer de volgende automatische update.",
-        when: "Na de sessie of als je automatisch weer wilt.",
+        when: "Automatisch weer weer aan.",
       },
       {
         cmd: "/dm announce schedule",
         who: "dm",
         cat: "berichten",
-        what: "Plan een tekstbericht: kies kanaal en wanneer (30m, 2h, 1d, of bijv. 31-07-2026 08:00). Daarna vul je de tekst in (max 2000 tekens). Post naar dat kanaal — los van het weerkanaal. Volgt niet het berichtenvenster en stopt niet bij een weer-pauze.",
+        what: "Plan een tekstbericht: kies kanaal en wanneer (30m, 2h, 1d, of bijv. 31-07-2026 08:00). Daarna vul je de tekst in. Post naar dat kanaal — los van het weerkanaal.",
         when: "Wereldgebeurtenis of sfeertekst klaarzetten voor later.",
       },
       {
@@ -864,7 +654,7 @@
         who: "dm",
         cat: "berichten",
         what: "Annuleer een openstaand gepland bericht op nummer (het id uit list).",
-        when: "Scene gewijzigd of bericht niet meer nodig.",
+        when: "Bericht niet meer nodig.",
       },
       {
         cmd: "/dm weather status",
@@ -885,20 +675,20 @@
         who: "dm",
         cat: "info",
         what: "Wanneer de volgende automatische update gepland staat (alleen voor jou zichtbaar).",
-        when: "Planning tussen scenes.",
+        when: "Weten wanneer het weer weer wisselt.",
       },
       {
         cmd: "/voorraad doneren",
         who: "everyone",
         cat: "voorraad",
-        what: "Modal: kies grondstof + vul aantal in. Doneer aan de guild-voorraad. Stil bericht in het voorraadkanaal. Bot meldt hoeveel GC je ontvangt (zelf bijhouden). Past de opslag niet? Rest gaat naar je Persoonlijke voorraad.",
+        what: "Doneer aan de guild-voorraad. Stil bericht. Bot meldt hoeveel GC je ontvangt (zelf bijhouden). Past de opslag niet? Rest gaat naar je persoonlijke voorraad.",
         when: "Loot of crafting-opbrengst in de gedeelde voorraad stoppen.",
       },
       {
         cmd: "/voorraad kopen",
         who: "everyone",
         cat: "voorraad",
-        what: "Modal: kies grondstof + vul aantal in. Koop uit de guild-voorraad. Stil bericht. Bot meldt hoeveel GC het kost (zelf betalen).",
+        what: "Koop uit de guild-voorraad. Stil bericht. Bot meldt hoeveel GC het kost (zelf betalen).",
         when: "Iets uit de gemeenschappelijke voorraad halen.",
       },
       {
@@ -919,14 +709,14 @@
         cmd: "/voorraad persoonlijk toevoegen",
         who: "everyone",
         cat: "voorraad",
-        what: "Modal: kies grondstof + vul aantal in. Checkbox “eigen huis?” (default aan, alleen als huisbelasting aan staat). Zet je ≥ drempel (standaard 7) met huis aan? Dan 1 unit naar de guild (+ sell-GC), rest naar je Persoonlijke voorraad. Guild-opslag vol → alles privé. Stil bericht.",
-        when: "Na een werkdag: wat je houdt, in je privé-voorraad zetten.",
+        what: "Zet stuks in je persoonlijke voorraad. Met eigen huis en genoeg stuks kan 1 unit huisbelasting naar de guild gaan (+ sell-GC); rest privé.",
+        when: "Wat je houdt in je privé-voorraad zetten.",
       },
       {
         cmd: "/voorraad persoonlijk verwijderen",
         who: "everyone",
         cat: "voorraad",
-        what: "Tot 5 types tegelijk: vul per type een aantal in (leeg = overslaan). Meer dan 5 in je stash? Eerst kiezen welke, daarna aantallen. Stil bericht. Geen GC.",
+        what: "Haal stuks uit je persoonlijke voorraad (tot 5 types tegelijk). Stil bericht. Geen GC.",
         when: "Persoonlijke voorraad gebruiken of corrigeren.",
       },
       {
@@ -947,28 +737,28 @@
         cmd: "/dm resource menu",
         who: "dm",
         cat: "voorraad",
-        what: "Eén menu: kanaal setup/wissen, types (add/edit/remove), guild-voorraad absoluut corrigeren, opslaglimiet, huisbelasting. Dropdown → modal of channel-picker.",
-        when: "Alles rond voorraad-config en DM-correcties.",
+        what: "Eén menu: types, guild-voorraad corrigeren, opslaglimiet, huisbelasting. Kanalen: zie Intro (`/dm setup menu`).",
+        when: "Voorraad-config en DM-correcties.",
       },
       {
         cmd: "/bouw leveren",
         who: "everyone",
         cat: "bouwen",
-        what: "Kies project → bron (van buiten of persoonlijke voorraad) → tot 5 materialen tegelijk (aantal per type; leeg = overslaan). Bij ≤5 open materialen meteen amounts. Stil bericht met voortgang. GC = sell × aantal.",
+        what: "Materiaal naar een project: van buiten of uit je persoonlijke voorraad. Stil bericht met voortgang. GC = sell × aantal.",
         when: "Zelf materiaal aandragen (net gevonden, of uit je eigen voorraad).",
       },
       {
         cmd: "/bouw uit-guild",
         who: "everyone",
         cat: "bouwen",
-        what: "Kies project → tot 5 open materialen tegelijk (aantal per type; leeg = overslaan). Bij meer dan 5 open: eerst kiezen. Uit guild-voorraad. Stil bericht met voortgang. Geen extra GC.",
+        what: "Materiaal uit de guild-voorraad naar een project. Stil bericht met voortgang. Geen extra GC.",
         when: "Gemeenschappelijke voorraad inzetten voor een project.",
       },
       {
         cmd: "/bouw meewerken",
         who: "everyone",
         cat: "bouwen",
-        what: "Besteed uren aan een project in de bouwfase (één formulier: project + aantal uren). Stil bericht. GC = aantal × 1.",
+        what: "Besteed uren aan een project in de bouwfase. Stil bericht. GC = aantal × 1.",
         when: "Meebouwen zodra de materialen compleet zijn.",
       },
       {
@@ -989,7 +779,7 @@
         cmd: "/dm building menu",
         who: "dm",
         cat: "bouwen",
-        what: "Eén menu: nieuw project, annuleren, materiaalkosten, bouwtijd, funding-correctie (absoluut), uren-correctie (absoluut). Dropdown → wizard/modal.",
+        what: "Eén menu: nieuw project, annuleren, materiaalkosten, bouwtijd, funding- en uren-correctie.",
         when: "Projecten opzetten, bijsturen of stoppen.",
       },
       {
@@ -1003,8 +793,8 @@
         cmd: "/dm production menu",
         who: "dm",
         cat: "productie",
-        what: "Eén menu: bron toevoegen, medewerkers, opbrengst per medewerker, verwijderen. Dropdown → bestaande wizards.",
-        when: "Productiebronnen beheren tussen sessies.",
+        what: "Eén menu: bron toevoegen, medewerkers, opbrengst per medewerker, verwijderen.",
+        when: "Productiebronnen beheren.",
       },
     ];
 
@@ -1022,24 +812,6 @@
         });
       });
     });
-
-    const typeGrid = document.getElementById("typeGrid");
-    typeGrid.innerHTML = WEATHER_TYPES.map((t) => {
-      const dur =
-        t.durationMinMinutes != null
-          ? `${t.durationMinMinutes}–${t.durationMaxMinutes} min`
-          : "standaard (6–18u)";
-      return `
-        <article class="type-card">
-          <div class="name">${t.type}</div>
-          <div class="meta">
-            <span class="chip">zwaarte ${t.severity}</span>
-            ${t.magical ? '<span class="chip magic">magisch</span>' : '<span class="chip">normaal</span>'}
-            <span class="chip">${dur}</span>
-          </div>
-          <div class="range">d100: ${t.min}–${t.max}</div>
-        </article>`;
-    }).join("");
 
     function cmdCard(c) {
       const label = c.who === "everyone" ? "Iedereen" : "DM";

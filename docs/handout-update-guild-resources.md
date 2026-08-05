@@ -20,7 +20,7 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 | `/voorraad persoonlijk verwijderen` | Tot 5 types tegelijk (aantal per type). Bij >5 in stash: eerst kiezen. Stil bericht. | Voorraad | Iedereen |
 | `/voorraad persoonlijk tonen` | Toon jouw persoonlijke voorraad (alleen voor jou). | Voorraad | Iedereen |
 | `/voorraad types` | Lijst van types + sell/buy. | Voorraad | Iedereen |
-| `/dm resource menu` | Hub: kanaal setup/wissen, types, adjust, cap, huisbelasting. | Voorraad | DM |
+| `/dm resource menu` | Hub: types, adjust, cap, huisbelasting. Kanalen: `/dm setup menu`. | Voorraad | DM |
 
 ### Bouwen (`/bouw`)
 

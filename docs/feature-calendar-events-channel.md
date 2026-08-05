@@ -16,8 +16,7 @@ Zie ook: [`agent.md`](./agent.md), [`feature-eryndor-calendar.md`](./feature-ery
 
 | Command | Effect |
 |---|---|
-| `/dm calendar setup channel` | Zet `calendar_channel_id` |
-| `/dm calendar clear` | Zet `calendar_channel_id` op null |
+| `/dm setup menu` → Kalenderkanaal | Zet of wis `calendar_channel_id` |
 | `/eryndor vandaag` / `fullmoon` | Ephemeral (alleen voor de caller); ongewijzigd gedrag verder |
 
 ### Ochtend (events)
@@ -80,4 +79,4 @@ Timezone blijft `WEATHER_TIMEZONE`. Restart nodig om tijden te wijzigen.
 2. Ochtend: dag mét events → embed + `@everyone`; lege dag → stil.
 3. Avond Rising: tijdelijk `CALENDAR_FULLMOON_POST_TIME` in het verleden + mock/check op een Rising-dag → stil post (geen ping).
 4. Avond exact Full Moon → post + `@everyone`.
-5. `/dm calendar clear` → geen posts meer.
+5. `/dm setup menu` → Kalenderkanaal → Wissen → geen posts meer.

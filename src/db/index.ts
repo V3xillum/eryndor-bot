@@ -309,7 +309,7 @@ export function listGuildStates(db: Database.Database): WorldState[] {
 export function updateSetup(
   db: Database.Database,
   guildId: string,
-  channelId: string,
+  channelId: string | null,
   threadId: string | null,
 ): void {
   ensureGuild(db, guildId);

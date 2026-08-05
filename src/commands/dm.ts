@@ -16,11 +16,7 @@ import {
 import { startBuildingHub } from './dmBuildingHub.js';
 import { startProductionHub } from './dmProductionHub.js';
 import { startResourceHub } from './dmResourceHub.js';
-import {
-  buildCalendarClearSubcommand,
-  buildCalendarSetupSubcommand,
-  dispatchEryndorAdmin,
-} from './eryndor.js';
+import { startSetupHub } from './dmSetupHub.js';
 import {
   buildWeatherAdminSubcommands,
   buildWeatherSettingsSubcommands,
@@ -33,6 +29,16 @@ export function buildDmCommand() {
     .setDescription('DM-tools voor Eryndor (verborgen voor spelers)')
     .setDefaultMemberPermissions(0)
     .addSubcommandGroup((group) =>
+      group
+        .setName('setup')
+        .setDescription('Bestemmingskanalen: weer, kalender, voorraad')
+        .addSubcommand((sub) =>
+          sub
+            .setName('menu')
+            .setDescription('Hub: status + zetten/wissen van kanalen'),
+        ),
+    )
+    .addSubcommandGroup((group) =>
       buildWeatherAdminSubcommands(
         group.setName('weather').setDescription('Weer sturen tijdens en tussen sessies'),
       ),
@@ -43,13 +49,6 @@ export function buildDmCommand() {
           .setName('weather-settings')
           .setDescription('Ritme, venster, afkoeling en tijdelijke limieten'),
       ),
-    )
-    .addSubcommandGroup((group) =>
-      group
-        .setName('calendar')
-        .setDescription('Kanaal voor kalender-events en volle maan')
-        .addSubcommand((sub) => buildCalendarSetupSubcommand(sub))
-        .addSubcommand((sub) => buildCalendarClearSubcommand(sub)),
     )
     .addSubcommandGroup((group) =>
       group
@@ -66,7 +65,7 @@ export function buildDmCommand() {
         .addSubcommand((sub) =>
           sub
             .setName('menu')
-            .setDescription('Hub: setup, adjust, cap, house-tax, types'),
+            .setDescription('Hub: adjust, cap, house-tax, types'),
         ),
     )
     .addSubcommandGroup((group) =>
@@ -125,14 +124,20 @@ export async function handleDmCommand(
   }
 
   switch (group) {
+    case 'setup':
+      if (sub === 'menu') {
+        await startSetupHub(interaction, {
+          weather: deps.weather,
+          resources: deps.resources,
+        });
+        return;
+      }
+      break;
     case 'weather':
       await dispatchWeatherAdmin(interaction, deps, { group: null, sub });
       return;
     case 'weather-settings':
       await dispatchWeatherAdmin(interaction, deps, { group: 'settings', sub });
-      return;
-    case 'calendar':
-      await dispatchEryndorAdmin(interaction, deps, sub);
       return;
     case 'announce':
       await handleAnnounceCommand(interaction, {

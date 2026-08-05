@@ -724,6 +724,13 @@ export class WeatherService {
     dbQueries.updateSetup(this.db, guildId, channelId, threadId);
   }
 
+  clearWeatherDestination(guildId: string): boolean {
+    const state = dbQueries.getWorldState(this.db, guildId);
+    if (!state?.channel_id && !state?.thread_id) return false;
+    dbQueries.updateSetup(this.db, guildId, null, null);
+    return true;
+  }
+
   setupCalendarChannel(guildId: string, channelId: string): void {
     dbQueries.updateCalendarSetup(this.db, guildId, channelId);
   }

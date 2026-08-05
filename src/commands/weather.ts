@@ -1,5 +1,4 @@
 import {
-  ChannelType,
   SlashCommandSubcommandGroupBuilder,
   type ChatInputCommandInteraction,
 } from 'discord.js';
@@ -35,29 +34,6 @@ export function buildWeatherAdminSubcommands(
   group: SlashCommandSubcommandGroupBuilder,
 ): SlashCommandSubcommandGroupBuilder {
   return group
-    .addSubcommand((sub) =>
-      sub
-        .setName('setup')
-        .setDescription('Kies in welk kanaal (of thread) het weer verschijnt')
-        .addChannelOption((opt) =>
-          opt
-            .setName('channel')
-            .setDescription('Kanaal voor weerberichten')
-            .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
-            .setRequired(true),
-        )
-        .addChannelOption((opt) =>
-          opt
-            .setName('thread')
-            .setDescription('Optionele thread voor weerberichten')
-            .addChannelTypes(
-              ChannelType.PublicThread,
-              ChannelType.PrivateThread,
-              ChannelType.AnnouncementThread,
-            )
-            .setRequired(false),
-        ),
-    )
     .addSubcommand((sub) =>
       sub
         .setName('status')
@@ -165,9 +141,6 @@ export async function dispatchWeatherAdmin(
   }
 
   switch (sub) {
-    case 'setup':
-      await handleSetup(interaction, weather);
-      return;
     case 'status':
       await handleStatus(interaction, weather);
       return;
@@ -192,29 +165,6 @@ export async function dispatchWeatherAdmin(
     default:
       await interaction.reply({ content: weather.messages.unknownSubcommand, ephemeral: true });
   }
-}
-
-async function handleSetup(
-  interaction: ChatInputCommandInteraction,
-  weather: WeatherService,
-): Promise<void> {
-  const channel = interaction.options.getChannel('channel', true);
-  const thread = interaction.options.getChannel('thread');
-
-  const guildId = interaction.guildId!;
-  weather.setup(guildId, channel.id, thread?.id ?? null);
-
-  // Start the auto-update clock if this guild has never been scheduled.
-  const state = weather.getWorldState(guildId);
-  if (!state?.next_update_at) {
-    weather.scheduleNextUpdate(guildId);
-  }
-
-  const target = thread ? `<#${thread.id}>` : `<#${channel.id}>`;
-  await interaction.reply({
-    content: formatTemplate(weather.messages.setupSuccess, { target }),
-    ephemeral: true,
-  });
 }
 
 async function handleStatus(

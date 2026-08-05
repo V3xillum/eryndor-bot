@@ -20,10 +20,14 @@ import {
 } from '../commands/dmProductionHub.js';
 import {
   DM_RESOURCE_HUB_PREFIX,
-  handleResourceHubChannelSelect,
   handleResourceHubModal,
   handleResourceHubSelect,
 } from '../commands/dmResourceHub.js';
+import {
+  DM_SETUP_HUB_PREFIX,
+  handleSetupHubChannelSelect,
+  handleSetupHubSelect,
+} from '../commands/dmSetupHub.js';
 import { handleEryndorCommand } from '../commands/eryndor.js';
 import { handleProductionCommand } from '../commands/production.js';
 import {
@@ -136,17 +140,27 @@ export function registerInteractionHandler(
       }
 
       if (interaction.isChannelSelectMenu()) {
-        if (interaction.customId.startsWith(DM_RESOURCE_HUB_PREFIX)) {
-          await handleResourceHubChannelSelect(interaction, {
+        if (interaction.customId.startsWith(DM_SETUP_HUB_PREFIX)) {
+          await handleSetupHubChannelSelect(interaction, {
+            weather: deps.weather,
             resources: deps.resources,
             config: deps.config,
           });
-          deps.activity.ok('command', 'resource hub channel', actorUserId);
+          deps.activity.ok('command', 'setup hub channel', actorUserId);
         }
         return;
       }
 
       if (interaction.isStringSelectMenu()) {
+        if (interaction.customId.startsWith(DM_SETUP_HUB_PREFIX)) {
+          await handleSetupHubSelect(interaction, {
+            weather: deps.weather,
+            resources: deps.resources,
+            config: deps.config,
+          });
+          deps.activity.ok('command', 'setup hub select', actorUserId);
+          return;
+        }
         if (interaction.customId.startsWith(DM_BUILDING_HUB_PREFIX)) {
           await handleBuildingHubSelect(interaction, {
             buildings: deps.buildings,

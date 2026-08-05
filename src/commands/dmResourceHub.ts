@@ -1,7 +1,5 @@
 import {
   ActionRowBuilder,
-  ChannelSelectMenuBuilder,
-  ChannelType,
   LabelBuilder,
   ModalBuilder,
   StringSelectMenuBuilder,
@@ -9,7 +7,6 @@ import {
   TextInputBuilder,
   TextInputStyle,
   type ChatInputCommandInteraction,
-  type ChannelSelectMenuInteraction,
   type GuildMember,
   type ModalSubmitInteraction,
   type StringSelectMenuInteraction,
@@ -25,8 +22,6 @@ import { startResourceAmountWizard } from './resourceWizard.js';
 export const DM_RESOURCE_HUB_PREFIX = 'drh:';
 
 type ResourceHubAction =
-  | 'setup'
-  | 'clear'
   | 'adjust'
   | 'cap'
   | 'house_tax'
@@ -38,8 +33,7 @@ function nicknameFrom(
   interaction:
     | ChatInputCommandInteraction
     | StringSelectMenuInteraction
-    | ModalSubmitInteraction
-    | ChannelSelectMenuInteraction,
+    | ModalSubmitInteraction,
 ): string {
   const member =
     interaction.member && 'displayName' in interaction.member
@@ -61,8 +55,6 @@ export async function startResourceHub(
       .setCustomId(`${DM_RESOURCE_HUB_PREFIX}pick:${interaction.user.id}`)
       .setPlaceholder(resources.messages.dmResourceHubPlaceholder.slice(0, 150))
       .addOptions(
-        opt(resources, 'dmResourceHubOptSetup', 'setup'),
-        opt(resources, 'dmResourceHubOptClear', 'clear'),
         opt(resources, 'dmResourceHubOptAdjust', 'adjust'),
         opt(resources, 'dmResourceHubOptCap', 'cap'),
         opt(resources, 'dmResourceHubOptHouseTax', 'house_tax'),
@@ -82,8 +74,6 @@ export async function startResourceHub(
 function opt(
   resources: ResourceService,
   labelKey:
-    | 'dmResourceHubOptSetup'
-    | 'dmResourceHubOptClear'
     | 'dmResourceHubOptAdjust'
     | 'dmResourceHubOptCap'
     | 'dmResourceHubOptHouseTax'
@@ -159,32 +149,6 @@ export async function handleResourceHubSelect(
 
   const action = interaction.values[0] as ResourceHubAction;
 
-  if (action === 'setup') {
-    const row = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
-      new ChannelSelectMenuBuilder()
-        .setCustomId(`${DM_RESOURCE_HUB_PREFIX}setup:${interaction.user.id}`)
-        .setPlaceholder(resources.messages.dmResourceHubSetupPlaceholder.slice(0, 150))
-        .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
-        .setMinValues(1)
-        .setMaxValues(1),
-    );
-    await hubMessage(interaction, {
-      content: resources.messages.dmResourceHubSetupPrompt,
-      components: [row],
-    });
-    return;
-  }
-
-  if (action === 'clear') {
-    const cleared = resources.clear(interaction.guildId);
-    await hubMessage(interaction, {
-      content: cleared
-        ? resources.messages.resourceClearSuccess
-        : resources.messages.resourceClearNone,
-    });
-    return;
-  }
-
   if (action === 'adjust') {
     await startResourceAmountWizard(interaction, resources, 'adjust');
     return;
@@ -241,46 +205,6 @@ export async function handleResourceHubSelect(
   }
 
   await hubMessage(interaction, { content: resources.messages.unknownSubcommand });
-}
-
-export async function handleResourceHubChannelSelect(
-  interaction: ChannelSelectMenuInteraction,
-  deps: { resources: ResourceService; config: AppConfig },
-): Promise<void> {
-  const { resources, config } = deps;
-  if (!interaction.customId.startsWith(DM_RESOURCE_HUB_PREFIX)) return;
-  const parts = interaction.customId.slice(DM_RESOURCE_HUB_PREFIX.length).split(':');
-  const [step, userId] = parts;
-  if (step !== 'setup' || !hubOwnerOk(interaction, userId!)) {
-    await interaction.reply({
-      content: resources.messages.dmResourceHubNotYours,
-      ephemeral: true,
-    });
-    return;
-  }
-  if (!interaction.guildId) {
-    await interaction.reply({ content: resources.messages.guildOnly, ephemeral: true });
-    return;
-  }
-  if (!config.allowedUserIds.includes(interaction.user.id)) {
-    await interaction.reply({ content: resources.messages.unauthorized, ephemeral: true });
-    return;
-  }
-  const channel = interaction.channels.first();
-  if (!channel) {
-    await interaction.update({
-      content: resources.messages.unknownSubcommand,
-      components: [],
-    });
-    return;
-  }
-  resources.setup(interaction.guildId, channel.id);
-  await interaction.update({
-    content: formatTemplate(resources.messages.resourceSetupSuccess, {
-      target: `<#${channel.id}>`,
-    }),
-    components: [],
-  });
 }
 
 export async function handleResourceHubModal(
