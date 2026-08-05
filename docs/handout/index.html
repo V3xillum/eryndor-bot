@@ -375,6 +375,30 @@
 
     .cmd p { margin: 0.55rem 0 0; color: var(--mist); }
 
+    .menu-opts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.7rem 0 0.15rem;
+      padding: 0;
+      list-style: none;
+    }
+
+    .menu-opts li {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: #e8dcc4;
+      background: rgba(201, 168, 106, 0.1);
+      border: 1px solid rgba(201, 168, 106, 0.28);
+      padding: 0.28rem 0.55rem;
+      border-radius: 8px;
+    }
+
+    .setup-list .menu-opts {
+      margin-top: 0.65rem;
+    }
+
     .when {
       margin-top: 0.35rem;
       font-size: 0.9rem;
@@ -484,11 +508,17 @@
         <ol class="setup-list">
           <li>
             <strong><span class="n">1.</span> Kanalen</strong>
-            <code>/dm setup menu</code> — weer-, kalender- en voorraadkanaal. Kalender: ochtend events én avond volle maan op hetzelfde kanaal. Voorraadberichten zijn stil.
+            <code>/dm setup menu</code> — kies of wis een bestemming. Kalender: ochtend events én avond volle maan op hetzelfde kanaal. Voorraadberichten zijn stil.
+            <ul class="menu-opts" aria-label="Opties in setup-menu">
+              <li>Weerkanaal</li>
+              <li>Kalenderkanaal</li>
+              <li>Voorraadkanaal</li>
+            </ul>
           </li>
           <li>
             <strong><span class="n">2.</span> Economy klaarzetten</strong>
-            Types via <code>/dm resource menu</code>; daarna optioneel limiet/huisbelasting, een bouwproject (<code>/dm building menu</code>) en productie (<code>/dm production menu</code>). Die menus blijf je ook later gebruiken — zie <strong>Commando’s</strong>.
+            Zet daarna grondstoftypes klaar, optioneel limiet of huisbelasting, een eerste bouwproject en productie.
+            Hoe die menus werken staat onder de tab Commando’s.
           </li>
         </ol>
       </div>
@@ -597,8 +627,16 @@
         cmd: "/dm weather-settings menu",
         who: "dm",
         cat: "instellingen",
-        what: "Eén menu: ritme, berichtenvenster, afkoeling, tijdelijke zwaarte-limiet en magie-filter, plus terugzetten naar standaard.",
-        when: "Weer-config aanpassen zonder de host te storen.",
+        what: "Eén menu voor weer-config. Toont wat er nu geldt; daarna kies je wat je wilt wijzigen.",
+        when: "Ritme, venster, afkoeling of tijdelijke limieten aanpassen.",
+        opts: [
+          "Ritme (interval)",
+          "Berichtenvenster",
+          "Afkoeling",
+          "Zwaarte-limiet",
+          "Magie-filter",
+          "Terugzetten naar standaard",
+        ],
       },
       {
         cmd: "/dm weather roll",
@@ -737,8 +775,16 @@
         cmd: "/dm resource menu",
         who: "dm",
         cat: "voorraad",
-        what: "Eén menu: types, guild-voorraad corrigeren, opslaglimiet, huisbelasting. Kanalen: zie Intro (`/dm setup menu`).",
-        when: "Voorraad-config en DM-correcties.",
+        what: "Eén menu voor voorraad-config en correcties. Kanalen: zie Intro (`/dm setup menu`).",
+        when: "Types, limiet, huisbelasting of guild-stand bijsturen.",
+        opts: [
+          "Voorraad corrigeren",
+          "Opslaglimiet",
+          "Huisbelasting",
+          "Type toevoegen",
+          "Type bewerken",
+          "Type verwijderen",
+        ],
       },
       {
         cmd: "/bouw leveren",
@@ -779,8 +825,16 @@
         cmd: "/dm building menu",
         who: "dm",
         cat: "bouwen",
-        what: "Eén menu: nieuw project, annuleren, materiaalkosten, bouwtijd, funding- en uren-correctie.",
-        when: "Projecten opzetten, bijsturen of stoppen.",
+        what: "Eén menu voor bouwprojecten opzetten en bijsturen.",
+        when: "Projecten starten, materialen/uren zetten of corrigeren.",
+        opts: [
+          "Nieuw project",
+          "Annuleren",
+          "Materiaalkosten",
+          "Bouwtijd",
+          "Funding corrigeren",
+          "Uren corrigeren",
+        ],
       },
       {
         cmd: "/productie lijst",
@@ -793,8 +847,9 @@
         cmd: "/dm production menu",
         who: "dm",
         cat: "productie",
-        what: "Eén menu: bron toevoegen, medewerkers, opbrengst per medewerker, verwijderen.",
-        when: "Productiebronnen beheren.",
+        what: "Eén menu voor productiebronnen.",
+        when: "Bronnen toevoegen of bijsturen.",
+        opts: ["Bron toevoegen", "Medewerkers", "Opbrengst", "Verwijderen"],
       },
     ];
 
@@ -815,6 +870,12 @@
 
     function cmdCard(c) {
       const label = c.who === "everyone" ? "Iedereen" : "DM";
+      const opts =
+        Array.isArray(c.opts) && c.opts.length
+          ? `<ul class="menu-opts" aria-label="Opties in dit menu">${c.opts
+              .map((o) => `<li>${o}</li>`)
+              .join("")}</ul>`
+          : "";
       return `
         <article class="cmd" data-who="${c.who}" data-cat="${c.cat}">
           <div class="cmd-top">
@@ -822,6 +883,7 @@
             <span class="badge ${c.who}">${label}</span>
           </div>
           <p>${c.what}</p>
+          ${opts}
           <div class="when">Wanneer: ${c.when}</div>
         </article>`;
     }
@@ -835,7 +897,8 @@
       const matched = COMMANDS.filter((c) => {
         const matchWho = who === "all" || c.who === who;
         const matchCat = cat === "all" || c.cat === cat;
-        const hay = `${c.cmd} ${c.what} ${c.when} ${c.cat}`.toLowerCase();
+        const optHay = Array.isArray(c.opts) ? c.opts.join(" ") : "";
+        const hay = `${c.cmd} ${c.what} ${c.when} ${c.cat} ${optHay}`.toLowerCase();
         const matchQ = !q || hay.includes(q);
         return matchWho && matchCat && matchQ;
       });

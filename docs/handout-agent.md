@@ -100,10 +100,11 @@ Geen aparte Setup-tab — te dun sinds kanalen één hub zijn.
 ### Commando’s
 - Per command: **wat het doet** + **wanneer** — Discord-DM-taal, geen tafel-sessie-framing tenzij pause.
 - **Hubs = één kaart**, niet één kaart per oude subcommand.
+- Hub-kaarten: korte zin + **`opts`**-lijst met **exacte Discord-dropdownlabels** (chips). Geen how-to per optie.
 - Default `cmdWho` = `dm`; documenteer dat in de lead.
 - Option-namen uit Discord altijd met Nederlandse betekenis ernaast.
 - Houd de `COMMANDS`-array in de HTML in sync met de echte bot (`agent.md`).
-- Verwijs kanaal-setup naar Intro.
+- Verwijs kanaal-setup naar Intro (met dezelfde labels: Weerkanaal / Kalenderkanaal / Voorraadkanaal).
 
 ### Layout
 - Tile-grids (`.grid-2`): max **3** kolommen (op smal: 2 / 1) — niet op Intro.
