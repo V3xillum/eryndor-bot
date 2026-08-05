@@ -300,11 +300,9 @@ Groups (Discord nesting: command → group → sub):
 - `/dm weather-settings` — `menu` (hub: ritme, venster, afkoeling, tijdelijke zwaarte-/magie-limieten, clear)
 - `/dm calendar` — `setup`, `clear` (morning events + evening moon posts channel)
 - `/dm announce` — `schedule`, `list`, `cancel` (free-text posts; independent of weather channel)
-- `/dm resource` — `setup`, `clear`, `adjust`, `cap`, `house-tax`
-- `/dm resource-type` — `add`, `edit`, `remove`
-- `/dm building` — `create`, `cancel`
-- `/dm building-cost` — `add`, `buildtime`
-- `/dm production` — `add`, `workers`, `yield`, `remove`
+- `/dm resource` — `menu` (hub: setup/clear, adjust, cap, house-tax, type add/edit/remove)
+- `/dm building` — `menu` (hub: create, cancel, cost add, buildtime, funding adjust, spent adjust)
+- `/dm production` — `menu` (hub: add, workers, yield, remove)
 
 Behaviour of each subcommand is unchanged from the former top-level paths (`/dm weather roll` → `/dm weather roll`, `/announce schedule` → `/dm announce schedule`, `/dm calendar setup` → `/dm calendar setup`, etc.). Daily production summary still posts after `PRODUCTION_POST_TIME` on the resource channel.
 
@@ -393,13 +391,13 @@ Per-guild overrides on `world_state`: `cooldown_enabled` (`null` = inherit / def
 `/dm announce schedule|list|cancel` stores free-text posts in `scheduled_posts` and posts them via the existing 30s scheduler to a chosen channel (not the weather destination). Relative or absolute `when` in `WEATHER_TIMEZONE`. Modal body max 2000 chars. Allowlist only. See [`feature-scheduled-announcements.md`](./feature-scheduled-announcements.md).
 
 ### Guild resources & buildings — implemented
-`/eryndor overzicht` (calendar + guild/personal stock + buildings + production); players: `/voorraad` (types, doneren/kopen/guild/persoonlijk) and `/bouw` (lijst|status|leveren|uit-guild|meewerken). DM: `/dm resource`, `/dm resource-type`, `/dm building`, `/dm building-cost`. Flexible resource types per guild, two-phase building projects (materials → build time, default **100**). `/bouw leveren` source: **outside** or **personal stock** (both + sell GC); `/bouw uit-guild` from guild stock (no GC). Public silent embeds (leveren/uit-guild show full material progress), ledger + status-report backup. No player GC balance in DB. Player handout: `docs/handout/spelers.html`. See [`feature-guild-resources.md`](./feature-guild-resources.md).
+`/eryndor overzicht` (calendar + guild/personal stock + buildings + production); players: `/voorraad` (types, doneren/kopen/guild/persoonlijk) and `/bouw` (lijst|status|leveren|uit-guild|meewerken). DM hubs: `/dm resource menu`, `/dm building menu`, `/dm production menu`. Flexible resource types per guild, two-phase building projects (materials → build time, default **100**). `/bouw leveren` source: **outside** or **personal stock** (both + sell GC); `/bouw uit-guild` from guild stock (no GC). Public silent embeds (leveren/uit-guild show full material progress), ledger + status-report backup. No player GC balance in DB. Player handout: `docs/handout/spelers.html`. See [`feature-guild-resources.md`](./feature-guild-resources.md).
 
 ### Personal house tax — implemented
-`/voorraad persoonlijk toevoegen` modal checkbox “eigen huis?” (default on) when enabled. If owns house and `amount >= threshold` (default **7**): 1 unit → guild stock (+ `sell` GC), rest → personal. Guild full → keep all. DM: `/dm resource house-tax` (`enabled`, `threshold`). Settings on `resource_settings`. See [`feature-personal-house-tax.md`](./feature-personal-house-tax.md).
+`/voorraad persoonlijk toevoegen` modal checkbox “eigen huis?” (default on) when enabled. If owns house and `amount >= threshold` (default **7**): 1 unit → guild stock (+ `sell` GC), rest → personal. Guild full → keep all. DM: `/dm resource menu` → Huisbelasting (`enabled`, `threshold`). Settings on `resource_settings`. See [`feature-personal-house-tax.md`](./feature-personal-house-tax.md).
 
 ### Guild production & storage cap — implemented
-`/productie lijst` (players); DM: `/dm production` (add/workers/yield/remove) and `/dm resource cap`. Per-type `storage_cap` (default 300). Interactive overflow → personal stock; auto production overflow → **lost**, shown clearly on the daily silent post after `PRODUCTION_POST_TIME` (default `17:00`). Same same-day catch-up as calendar posts if the bot starts late. See [`feature-guild-production.md`](./feature-guild-production.md).
+`/productie lijst` (players); DM: `/dm production menu` and `/dm resource menu` → Opslaglimiet. Per-type `storage_cap` (default 300). Interactive overflow → personal stock; auto production overflow → **lost**, shown clearly on the daily silent post after `PRODUCTION_POST_TIME` (default `17:00`). Same same-day catch-up as calendar posts if the bot starts late. See [`feature-guild-production.md`](./feature-guild-production.md).
 
 ### Calendar events channel — implemented
 `/dm calendar setup` stores `calendar_channel_id` on `world_state`. Each morning after `CALENDAR_EVENTS_POST_TIME` (default `08:30`, `WEATHER_TIMEZONE`), the scheduler fetches today and posts `@everyone` + the `/eryndor vandaag` embed **only when** `events.length > 0`. Empty days stay silent. `/dm calendar clear` disables. See [`feature-calendar-events-channel.md`](./feature-calendar-events-channel.md).

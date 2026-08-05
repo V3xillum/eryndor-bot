@@ -18,6 +18,7 @@ import type { ProductionInterval } from '../types.js';
 import { formatTemplate } from '../utils/helpers.js';
 import { addModalIntro } from '../utils/modalIntro.js';
 import { guildNickname } from './resourceEmbeds.js';
+import { hubMessage, type HubStartInteraction } from './dmHubShared.js';
 
 export const PRODUCTION_WIZARD_PREFIX = 'pwiz:';
 
@@ -75,14 +76,13 @@ function sourceOptions(
 
 /** One modal: type + interval + name + workers + yield (max_workers = default). */
 export async function startAddWizard(
-  interaction: ChatInputCommandInteraction,
+  interaction: HubStartInteraction,
   deps: { production: ProductionService; resources: ResourceService },
 ): Promise<void> {
   const types = deps.resources.listTypes(interaction.guildId!);
   if (types.length === 0) {
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: deps.production.messages.productionWizardNoTypes,
-      ephemeral: true,
     });
     return;
   }
@@ -177,15 +177,14 @@ export async function startAddWizard(
 }
 
 export async function startSourcePickWizard(
-  interaction: ChatInputCommandInteraction,
+  interaction: HubStartInteraction,
   deps: { production: ProductionService },
   action: 'workers' | 'yield' | 'remove',
 ): Promise<void> {
   const sources = deps.production.list(interaction.guildId!);
   if (sources.length === 0) {
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: deps.production.messages.productionWizardNoSources,
-      ephemeral: true,
     });
     return;
   }
@@ -193,7 +192,7 @@ export async function startSourcePickWizard(
   const options = sourceOptions(deps.production, interaction.guildId!);
 
   if (action === 'remove') {
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: deps.production.messages.productionWizardPickSource,
       components: [
         selectRow(
@@ -202,7 +201,6 @@ export async function startSourcePickWizard(
           options,
         ),
       ],
-      ephemeral: true,
     });
     return;
   }

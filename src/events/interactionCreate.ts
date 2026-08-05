@@ -9,6 +9,21 @@ import {
   handleBuildingWizardSelect,
 } from '../commands/buildingWizard.js';
 import { handleDmCommand } from '../commands/dm.js';
+import {
+  DM_BUILDING_HUB_PREFIX,
+  handleBuildingHubModal,
+  handleBuildingHubSelect,
+} from '../commands/dmBuildingHub.js';
+import {
+  DM_PRODUCTION_HUB_PREFIX,
+  handleProductionHubSelect,
+} from '../commands/dmProductionHub.js';
+import {
+  DM_RESOURCE_HUB_PREFIX,
+  handleResourceHubChannelSelect,
+  handleResourceHubModal,
+  handleResourceHubSelect,
+} from '../commands/dmResourceHub.js';
 import { handleEryndorCommand } from '../commands/eryndor.js';
 import { handleProductionCommand } from '../commands/production.js';
 import {
@@ -62,6 +77,22 @@ export function registerInteractionHandler(
           deps.activity.ok('command', 'announce modal', actorUserId);
           return;
         }
+        if (interaction.customId.startsWith(DM_BUILDING_HUB_PREFIX)) {
+          await handleBuildingHubModal(interaction, {
+            buildings: deps.buildings,
+            config: deps.config,
+          });
+          deps.activity.ok('command', 'building hub modal', actorUserId);
+          return;
+        }
+        if (interaction.customId.startsWith(DM_RESOURCE_HUB_PREFIX)) {
+          await handleResourceHubModal(interaction, {
+            resources: deps.resources,
+            config: deps.config,
+          });
+          deps.activity.ok('command', 'resource hub modal', actorUserId);
+          return;
+        }
         if (interaction.customId.startsWith(BUILDING_WIZARD_PREFIX)) {
           await handleBuildingWizardModal(interaction, {
             buildings: deps.buildings,
@@ -104,7 +135,44 @@ export function registerInteractionHandler(
         return;
       }
 
+      if (interaction.isChannelSelectMenu()) {
+        if (interaction.customId.startsWith(DM_RESOURCE_HUB_PREFIX)) {
+          await handleResourceHubChannelSelect(interaction, {
+            resources: deps.resources,
+            config: deps.config,
+          });
+          deps.activity.ok('command', 'resource hub channel', actorUserId);
+        }
+        return;
+      }
+
       if (interaction.isStringSelectMenu()) {
+        if (interaction.customId.startsWith(DM_BUILDING_HUB_PREFIX)) {
+          await handleBuildingHubSelect(interaction, {
+            buildings: deps.buildings,
+            resources: deps.resources,
+            config: deps.config,
+          });
+          deps.activity.ok('command', 'building hub select', actorUserId);
+          return;
+        }
+        if (interaction.customId.startsWith(DM_RESOURCE_HUB_PREFIX)) {
+          await handleResourceHubSelect(interaction, {
+            resources: deps.resources,
+            config: deps.config,
+          });
+          deps.activity.ok('command', 'resource hub select', actorUserId);
+          return;
+        }
+        if (interaction.customId.startsWith(DM_PRODUCTION_HUB_PREFIX)) {
+          await handleProductionHubSelect(interaction, {
+            production: deps.production,
+            resources: deps.resources,
+            config: deps.config,
+          });
+          deps.activity.ok('command', 'production hub select', actorUserId);
+          return;
+        }
         if (interaction.customId.startsWith(BUILDING_WIZARD_PREFIX)) {
           await handleBuildingWizardSelect(interaction, {
             buildings: deps.buildings,

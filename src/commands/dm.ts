@@ -13,22 +13,14 @@ import {
   buildAnnounceScheduleSubcommand,
   handleAnnounceCommand,
 } from './announce.js';
-import {
-  buildBuildingAdminSubcommands,
-  buildBuildingCostAdminSubcommands,
-  dispatchBuildingAdmin,
-} from './building.js';
+import { startBuildingHub } from './dmBuildingHub.js';
+import { startProductionHub } from './dmProductionHub.js';
+import { startResourceHub } from './dmResourceHub.js';
 import {
   buildCalendarClearSubcommand,
   buildCalendarSetupSubcommand,
   dispatchEryndorAdmin,
 } from './eryndor.js';
-import { handleProductionCommand } from './production.js';
-import {
-  buildResourceAdminSubcommands,
-  buildResourceTypeAdminSubcommands,
-  dispatchResourceAdmin,
-} from './resource.js';
 import {
   buildWeatherAdminSubcommands,
   buildWeatherSettingsSubcommands,
@@ -68,50 +60,33 @@ export function buildDmCommand() {
         .addSubcommand((sub) => buildAnnounceCancelSubcommand(sub)),
     )
     .addSubcommandGroup((group) =>
-      buildResourceAdminSubcommands(
-        group.setName('resource').setDescription('Guild-voorraad inrichten en corrigeren'),
-      ),
+      group
+        .setName('resource')
+        .setDescription('Voorraad, types, limieten en huisbelasting')
+        .addSubcommand((sub) =>
+          sub
+            .setName('menu')
+            .setDescription('Hub: setup, adjust, cap, house-tax, types'),
+        ),
     )
     .addSubcommandGroup((group) =>
-      buildResourceTypeAdminSubcommands(
-        group
-          .setName('resource-type')
-          .setDescription('Welke grondstoffen bestaan er (en de GC-prijzen)'),
-      ),
-    )
-    .addSubcommandGroup((group) =>
-      buildBuildingAdminSubcommands(
-        group.setName('building').setDescription('Bouwprojecten starten of annuleren'),
-      ),
-    )
-    .addSubcommandGroup((group) =>
-      buildBuildingCostAdminSubcommands(
-        group
-          .setName('building-cost')
-          .setDescription('Materiaalkosten en bouwtijd van een project'),
-      ),
+      group
+        .setName('building')
+        .setDescription('Bouwprojecten, kosten en correcties')
+        .addSubcommand((sub) =>
+          sub
+            .setName('menu')
+            .setDescription('Hub: create, cancel, kosten, funding, bouwtijd'),
+        ),
     )
     .addSubcommandGroup((group) =>
       group
         .setName('production')
-        .setDescription('Bronnen die tussen sessies grondstoffen opleveren')
+        .setDescription('Productiebronnen beheren')
         .addSubcommand((sub) =>
           sub
-            .setName('add')
-            .setDescription('Nieuwe productiebron (bijv. houthakkershut)'),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('workers')
-            .setDescription('Hoeveel medewerkers werken er op een bron?'),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('yield')
-            .setDescription('Hoeveel levert één medewerker per interval op?'),
-        )
-        .addSubcommand((sub) =>
-          sub.setName('remove').setDescription('Productiebron verwijderen'),
+            .setName('menu')
+            .setDescription('Hub: toevoegen, workers, yield, verwijderen'),
         ),
     );
 }
@@ -166,28 +141,32 @@ export async function handleDmCommand(
       });
       return;
     case 'resource':
-      await dispatchResourceAdmin(interaction, deps, { group: null, sub });
-      return;
-    case 'resource-type':
-      await dispatchResourceAdmin(interaction, deps, { group: 'type', sub });
-      return;
+      if (sub === 'menu') {
+        await startResourceHub(interaction, deps.resources);
+        return;
+      }
+      break;
     case 'building':
-      await dispatchBuildingAdmin(interaction, deps, { group: null, sub });
-      return;
-    case 'building-cost':
-      await dispatchBuildingAdmin(interaction, deps, { group: 'cost', sub });
-      return;
+      if (sub === 'menu') {
+        await startBuildingHub(interaction, {
+          buildings: deps.buildings,
+          resources: deps.resources,
+        });
+        return;
+      }
+      break;
     case 'production':
-      await handleProductionCommand(interaction, {
-        production: deps.production,
-        resources: deps.resources,
-        config: deps.config,
-      });
-      return;
+      if (sub === 'menu') {
+        await startProductionHub(interaction, deps.production);
+        return;
+      }
+      break;
     default:
-      await interaction.reply({
-        content: weather.messages.unknownSubcommand,
-        ephemeral: true,
-      });
+      break;
   }
+
+  await interaction.reply({
+    content: weather.messages.unknownSubcommand,
+    ephemeral: true,
+  });
 }

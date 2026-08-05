@@ -19,15 +19,8 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 | `/voorraad persoonlijk toevoegen` | Modal: type + aantal + (als tax aan) checkbox huis. Bij ≥ drempel + huis: 1 → guild (+ sell-GC), rest privé. Stil bericht. | Voorraad | Iedereen |
 | `/voorraad persoonlijk verwijderen` | Tot 5 types tegelijk (aantal per type). Bij >5 in stash: eerst kiezen. Stil bericht. | Voorraad | Iedereen |
 | `/voorraad persoonlijk tonen` | Toon jouw persoonlijke voorraad (alleen voor jou). | Voorraad | Iedereen |
-| `/dm resource setup` | Kies het kanaal voor stille voorraad-/bouw-/productieberichten. | Inrichten | DM |
-| `/dm resource clear` | Wis die kanaal-setup. | Inrichten | DM |
-| `/dm resource-type add` | Nieuw grondstoftype: weergavenaam + sell-GC (+ optioneel buy; default 2× sell). | Voorraad | DM |
-| `/dm resource-type edit` | Pas weergavenaam of GC-prijzen aan (interne id blijft). | Voorraad | DM |
-| `/dm resource-type remove` | Verwijder type (alleen als nergens meer in gebruik). | Voorraad | DM |
 | `/voorraad types` | Lijst van types + sell/buy. | Voorraad | Iedereen |
-| `/dm resource adjust` | Modal: type + gewenste stand (absoluut). Corrigeer guild-voorraad zonder GC-melding; overflow → persoonlijk. | Voorraad | DM |
-| `/dm resource cap` | Toon of zet de opslaglimiet per type (standaard 300). | Voorraad | DM |
-| `/dm resource house-tax` | Toon of zet huisbelasting (`enabled`, `threshold`; standaard aan / 7). | Voorraad | DM |
+| `/dm resource menu` | Hub: kanaal setup/wissen, types, adjust, cap, huisbelasting. | Voorraad | DM |
 
 ### Bouwen (`/bouw`)
 
@@ -38,29 +31,21 @@ Feature is **implemented**. Zie [`agent.md`](./agent.md), [`feature-guild-resour
 | `/bouw meewerken` | Modal: project + tijd. GC = tijd × 1. | Bouwen | Iedereen |
 | `/bouw lijst` | Overzicht bouwprojecten + status. | Bouwen | Iedereen |
 | `/bouw status` | Menu: project → kosten/voortgang. | Bouwen | Iedereen |
-| `/dm building create` | Nieuw project; bouwtijd fase 2 default **100**. | Bouwen | DM |
-| `/dm building-cost add` | Project → tot 5 types → amounts; knop “nog een toevoegen”. | Bouwen | DM |
-| `/dm building-cost buildtime` | Modal: project + bouwtijd. Altijd tot voltooid (niet locked na stortingen). | Bouwen | DM |
-| `/dm building-cost funding` | Modal: zet gestorte stand absoluut (0 t/m kost, geen plus/min, geen GC). | Bouwen | DM |
-| `/dm building-cost spent` | Modal: zet bestede uren absoluut (0 t/m bouwtijd, geen plus/min, geen GC). | Bouwen | DM |
-| `/dm building cancel` | Annuleer project; gestorte materialen terug naar voorraad (overflow → persoonlijk). | Bouwen | DM |
+| `/dm building menu` | Hub: create, cancel, materiaalkosten, bouwtijd, funding/uren corrigeren. | Bouwen | DM |
 
 ### Productie (`/productie`)
 
 | Command | Wat het doet (DM-taal) | Categorie | Wie |
 |---|---|---|---|
 | `/productie lijst` | Overzicht productiebronnen (medewerkers, opbrengst, interval). | Productie | Iedereen |
-| `/dm production add` | Modal: type + interval + naam/medewerkers/opbrengst. | Productie | DM |
-| `/dm production workers` | Modal: bron + medewerkers. | Productie | DM |
-| `/dm production yield` | Modal: bron + opbrengst. | Productie | DM |
-| `/dm production remove` | Verwijder een bron (menu). | Productie | DM |
+| `/dm production menu` | Hub: toevoegen, medewerkers, opbrengst, verwijderen. | Productie | DM |
 
 ---
 
 ## Wat Overzicht kort mag zeggen
 
-- Één tile: guild-voorraad, bouwprojecten en productiebronnen — DMs richten types/gebouwen/productie in.
-- Max één verwijzing naar de tab of `/dm resource setup`.
+- Één tile: guild-voorraad, bouwprojecten en productiebronnen — DMs richten via de drie menu-hubs.
+- Max één verwijzing naar de tab of `/dm resource menu`.
 - Geen how-to op Overzicht.
 
 ---

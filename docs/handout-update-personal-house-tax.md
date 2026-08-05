@@ -11,14 +11,14 @@ Feature is **implemented**. Zie [`feature-personal-house-tax.md`](./feature-pers
 | Command | Wat het doet (DM-taal) | Categorie | Wie |
 |---|---|---|---|
 | `/voorraad persoonlijk toevoegen` | Modal: type + aantal + (als tax aan) checkbox “eigen huis?” (default aan). Bij ≥ drempel + huis: 1 unit naar guild (+ sell-GC), rest privé. Guild vol → alles privé. Stil bericht. | Voorraad | Iedereen |
-| `/dm resource house-tax` | Toon of zet huisbelasting: `enabled` aan/uit, `threshold` (standaard 7). Zonder opties = show. | Voorraad | DM |
+| `/dm resource menu` | Hub o.a. huisbelasting: `enabled` aan/uit, `threshold` (standaard 7). Lege velden = show. | Voorraad | DM |
 
 ---
 
 ## Wat Overzicht / Voorraad-tab kort mag zeggen
 
 - Huisbelasting: spelers met eigen huis die genoeg naar privé zetten, dragen 1 unit af aan de guild (+ GC zoals doneren). Pechdagen onder de drempel blijven onbelast.
-- Aan/uit + drempel via `/dm resource house-tax`. Guild vol = speler houdt alles.
+- Aan/uit + drempel via `/dm resource menu` → Huisbelasting. Guild vol = speler houdt alles.
 
 ---
 

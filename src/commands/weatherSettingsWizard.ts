@@ -188,52 +188,6 @@ export async function handleWeatherSettingsWizardSelect(
     return;
   }
 
-  if (step === 'severity') {
-    const choice = interaction.values[0];
-    if (choice === 'clear') {
-      const hadActive = weather.clearSeverityDial(interaction.guildId);
-      await interaction.update({
-        content: hadActive
-          ? weather.messages.severityClearSuccess
-          : weather.messages.severityClearNone,
-        components: [],
-      });
-      return;
-    }
-    if (choice === 'set') {
-      await interaction.showModal(buildSeverityModal(weather, interaction.user.id));
-      return;
-    }
-    await interaction.update({
-      content: weather.messages.unknownSubcommand,
-      components: [],
-    });
-    return;
-  }
-
-  if (step === 'magical') {
-    const choice = interaction.values[0];
-    if (choice === 'clear') {
-      const hadActive = weather.clearMagicalDial(interaction.guildId);
-      await interaction.update({
-        content: hadActive
-          ? weather.messages.magicalClearSuccess
-          : weather.messages.magicalClearNone,
-        components: [],
-      });
-      return;
-    }
-    if (choice === 'set') {
-      await interaction.showModal(buildMagicalModal(weather, interaction.user.id));
-      return;
-    }
-    await interaction.update({
-      content: weather.messages.unknownSubcommand,
-      components: [],
-    });
-    return;
-  }
-
   if (step !== 'pick') {
     await interaction.update({
       content: weather.messages.unknownSubcommand,
@@ -243,22 +197,6 @@ export async function handleWeatherSettingsWizardSelect(
   }
 
   const action = interaction.values[0] as HubAction;
-
-  if (action === 'severity') {
-    await interaction.update({
-      content: weather.messages.weatherSettingsHubDialActionPromptSeverity,
-      components: [dialActionRow(weather, 'severity', interaction.user.id)],
-    });
-    return;
-  }
-
-  if (action === 'magical') {
-    await interaction.update({
-      content: weather.messages.weatherSettingsHubDialActionPromptMagical,
-      components: [dialActionRow(weather, 'magical', interaction.user.id)],
-    });
-    return;
-  }
 
   if (action === 'clear') {
     const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
@@ -306,39 +244,19 @@ export async function handleWeatherSettingsWizardSelect(
     );
     return;
   }
+  if (action === 'severity') {
+    await interaction.showModal(buildSeverityModal(weather, interaction.user.id));
+    return;
+  }
+  if (action === 'magical') {
+    await interaction.showModal(buildMagicalModal(weather, interaction.user.id));
+    return;
+  }
 
   await interaction.update({
     content: weather.messages.unknownSubcommand,
     components: [],
   });
-}
-
-function dialActionRow(
-  weather: WeatherService,
-  kind: 'severity' | 'magical',
-  userId: string,
-): ActionRowBuilder<StringSelectMenuBuilder> {
-  return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-    new StringSelectMenuBuilder()
-      .setCustomId(`${WEATHER_SETTINGS_WIZARD_PREFIX}${kind}:${userId}`)
-      .setPlaceholder(
-        weather.messages.weatherSettingsHubDialActionPlaceholder.slice(0, 150),
-      )
-      .addOptions(
-        new StringSelectMenuOptionBuilder()
-          .setLabel(weather.messages.weatherSettingsHubDialActionSet)
-          .setValue('set')
-          .setDescription(
-            weather.messages.weatherSettingsHubDialActionSetDesc.slice(0, 100),
-          ),
-        new StringSelectMenuOptionBuilder()
-          .setLabel(weather.messages.weatherSettingsHubDialActionClear)
-          .setValue('clear')
-          .setDescription(
-            weather.messages.weatherSettingsHubDialActionClearDesc.slice(0, 100),
-          ),
-      ),
-  );
 }
 
 export async function handleWeatherSettingsWizardModal(
@@ -544,12 +462,37 @@ function buildSeverityModal(weather: WeatherService, userId: string): ModalBuild
   addModalIntro(modal, weather.messages.weatherSettingsHubModalSeverityIntro);
   modal.addLabelComponents(
     new LabelBuilder()
+      .setLabel(weather.messages.weatherSettingsHubFieldDialAction.slice(0, 45))
+      .setDescription(
+        weather.messages.weatherSettingsHubFieldDialActionHint.slice(0, 100),
+      )
+      .setStringSelectMenuComponent(
+        new StringSelectMenuBuilder()
+          .setCustomId('action')
+          .setRequired(true)
+          .addOptions(
+            new StringSelectMenuOptionBuilder()
+              .setLabel(weather.messages.weatherSettingsHubDialActionSet)
+              .setValue('set')
+              .setDescription(
+                weather.messages.weatherSettingsHubDialActionSetDesc.slice(0, 100),
+              )
+              .setDefault(true),
+            new StringSelectMenuOptionBuilder()
+              .setLabel(weather.messages.weatherSettingsHubDialActionClear)
+              .setValue('clear')
+              .setDescription(
+                weather.messages.weatherSettingsHubDialActionClearDesc.slice(0, 100),
+              ),
+          ),
+      ),
+    new LabelBuilder()
       .setLabel(weather.messages.weatherSettingsHubFieldSeverityMin.slice(0, 45))
       .setTextInputComponent(
         new TextInputBuilder()
           .setCustomId('min')
           .setStyle(TextInputStyle.Short)
-          .setRequired(true)
+          .setRequired(false)
           .setMaxLength(2)
           .setPlaceholder('1'),
       ),
@@ -559,7 +502,7 @@ function buildSeverityModal(weather: WeatherService, userId: string): ModalBuild
         new TextInputBuilder()
           .setCustomId('max')
           .setStyle(TextInputStyle.Short)
-          .setRequired(true)
+          .setRequired(false)
           .setMaxLength(2)
           .setPlaceholder('3'),
       ),
@@ -572,7 +515,7 @@ function buildSeverityModal(weather: WeatherService, userId: string): ModalBuild
         new TextInputBuilder()
           .setCustomId('duration')
           .setStyle(TextInputStyle.Short)
-          .setRequired(true)
+          .setRequired(false)
           .setMaxLength(8)
           .setPlaceholder('2h'),
       ),
@@ -587,11 +530,36 @@ function buildMagicalModal(weather: WeatherService, userId: string): ModalBuilde
   addModalIntro(modal, weather.messages.weatherSettingsHubModalMagicalIntro);
   modal.addLabelComponents(
     new LabelBuilder()
+      .setLabel(weather.messages.weatherSettingsHubFieldDialAction.slice(0, 45))
+      .setDescription(
+        weather.messages.weatherSettingsHubFieldDialActionHint.slice(0, 100),
+      )
+      .setStringSelectMenuComponent(
+        new StringSelectMenuBuilder()
+          .setCustomId('action')
+          .setRequired(true)
+          .addOptions(
+            new StringSelectMenuOptionBuilder()
+              .setLabel(weather.messages.weatherSettingsHubDialActionSet)
+              .setValue('set')
+              .setDescription(
+                weather.messages.weatherSettingsHubDialActionSetDesc.slice(0, 100),
+              )
+              .setDefault(true),
+            new StringSelectMenuOptionBuilder()
+              .setLabel(weather.messages.weatherSettingsHubDialActionClear)
+              .setValue('clear')
+              .setDescription(
+                weather.messages.weatherSettingsHubDialActionClearDesc.slice(0, 100),
+              ),
+          ),
+      ),
+    new LabelBuilder()
       .setLabel(weather.messages.weatherSettingsHubFieldMagicalMode.slice(0, 45))
       .setStringSelectMenuComponent(
         new StringSelectMenuBuilder()
           .setCustomId('mode')
-          .setRequired(true)
+          .setRequired(false)
           .addOptions(
             new StringSelectMenuOptionBuilder()
               .setLabel(weather.messages.weatherSettingsHubMagicalOnly)
@@ -610,7 +578,7 @@ function buildMagicalModal(weather: WeatherService, userId: string): ModalBuilde
         new TextInputBuilder()
           .setCustomId('duration')
           .setStyle(TextInputStyle.Short)
-          .setRequired(true)
+          .setRequired(false)
           .setMaxLength(8)
           .setPlaceholder('2h'),
       ),
@@ -739,6 +707,17 @@ function applySeverity(
   weather: WeatherService,
   interaction: ModalSubmitInteraction,
 ): string {
+  const action = interaction.fields.getStringSelectValues('action')[0];
+  if (action === 'clear') {
+    const hadActive = weather.clearSeverityDial(interaction.guildId!);
+    return hadActive
+      ? weather.messages.severityClearSuccess
+      : weather.messages.severityClearNone;
+  }
+  if (action !== 'set') {
+    return weather.messages.unknownSubcommand;
+  }
+
   const min = Number(interaction.fields.getTextInputValue('min').trim());
   const max = Number(interaction.fields.getTextInputValue('max').trim());
   const durationRaw = interaction.fields.getTextInputValue('duration').trim();
@@ -777,7 +756,23 @@ function applyMagical(
   weather: WeatherService,
   interaction: ModalSubmitInteraction,
 ): string {
-  const modeRaw = interaction.fields.getStringSelectValues('mode')[0] ?? '';
+  const action = interaction.fields.getStringSelectValues('action')[0];
+  if (action === 'clear') {
+    const hadActive = weather.clearMagicalDial(interaction.guildId!);
+    return hadActive
+      ? weather.messages.magicalClearSuccess
+      : weather.messages.magicalClearNone;
+  }
+  if (action !== 'set') {
+    return weather.messages.unknownSubcommand;
+  }
+
+  let modeRaw = '';
+  try {
+    modeRaw = interaction.fields.getStringSelectValues('mode')[0] ?? '';
+  } catch {
+    modeRaw = '';
+  }
   const mode = parseMagicalMode(modeRaw);
   if (!mode) return weather.messages.invalidMagicalMode;
 

@@ -14,7 +14,7 @@ Zie ook: [`feature-guild-resources.md`](./feature-guild-resources.md), [`agent.m
 
 - Eén guild-setting `storage_cap` (default **300**).
 - Geldt als maximum **per resource type** (Hout ≤ 300 **en** Steen ≤ 300, niet som).
-- Gezet via `/dm resource cap` (allowlist); zichtbaar op `/voorraad guild`.
+- Gezet via `/dm resource menu` → Opslaglimiet (allowlist); zichtbaar op `/voorraad guild`.
 
 ### Overflow
 
@@ -55,12 +55,9 @@ Formule: `workers × yield_per_worker`.
 
 | Command | Wie | Effect |
 |---|---|---|
-| `/dm production add` | allowlist | Modal: resource + interval + naam/workers/yield (max_workers = default 5) |
+| `/dm production menu` | allowlist | Hub: add / workers / yield / remove (zelfde wizards als voorheen) |
 | `/productie lijst` | iedereen | Overzicht bronnen |
-| `/dm production workers` | allowlist | Menu + modal |
-| `/dm production yield` | allowlist | Menu + modal |
-| `/dm production remove` | allowlist | Menu |
-| `/dm resource cap [amount]` | allowlist | Zet/toon storage cap |
+| `/dm resource menu` → Opslaglimiet | allowlist | Zet/toon storage cap |
 
 ---
 

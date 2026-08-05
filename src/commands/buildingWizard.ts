@@ -20,6 +20,7 @@ import type { BuildingService } from '../services/BuildingService.js';
 import type { ResourceService } from '../services/ResourceService.js';
 import { formatTemplate } from '../utils/helpers.js';
 import { addModalIntro } from '../utils/modalIntro.js';
+import { hubMessage, type HubStartInteraction } from './dmHubShared.js';
 import {
   buildBuildingDonateEmbed,
   buildBuildingDonateMultiEmbed,
@@ -803,31 +804,33 @@ export async function startContributeWizard(
 }
 
 export async function startCostAddWizard(
-  interaction: ChatInputCommandInteraction,
+  interaction: HubStartInteraction,
   deps: { buildings: BuildingService; resources: ResourceService },
 ): Promise<void> {
   const { buildings, resources } = deps;
 
   const buildingsList = buildings.listCostEditableBuildings(interaction.guildId!);
   if (buildingsList.length === 0) {
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: buildings.messages.buildingWizardNoCostEditable,
-      ephemeral: true,
     });
     return;
   }
 
   const types = resources.listTypes(interaction.guildId!);
   if (types.length === 0) {
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: resources.messages.resourceTypeListEmpty,
-      ephemeral: true,
     });
     return;
   }
 
   if (buildingsList.length === 1) {
-    await replyCostTypePick(interaction, deps, buildingsList[0]!.id);
+    if (interaction.isStringSelectMenu()) {
+      await showCostTypePick(interaction, deps, buildingsList[0]!.id);
+    } else {
+      await replyCostTypePick(interaction, deps, buildingsList[0]!.id);
+    }
     return;
   }
 
@@ -838,7 +841,7 @@ export async function startCostAddWizard(
       .setDescription(buildings.messages.buildingStatusFunding.slice(0, 100)),
   );
 
-  await interaction.reply({
+  await hubMessage(interaction, {
     content: buildings.messages.buildingWizardPickBuildingCost,
     components: [
       buildingSelectRow(
@@ -847,12 +850,11 @@ export async function startCostAddWizard(
         options,
       ),
     ],
-    ephemeral: true,
   });
 }
 
 export async function startCostTimeWizard(
-  interaction: ChatInputCommandInteraction,
+  interaction: HubStartInteraction,
   deps: { buildings: BuildingService; resources: ResourceService },
 ): Promise<void> {
   const { buildings } = deps;
@@ -861,9 +863,8 @@ export async function startCostTimeWizard(
     interaction.guildId!,
   );
   if (buildingsList.length === 0) {
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: buildings.messages.buildingWizardNoBuildtimeEditable,
-      ephemeral: true,
     });
     return;
   }
@@ -916,7 +917,7 @@ export async function startCostTimeWizard(
 
 /** DM: correct deposited materials (funding phase). */
 export async function startFundingAdjustWizard(
-  interaction: ChatInputCommandInteraction,
+  interaction: HubStartInteraction,
   deps: { buildings: BuildingService; resources: ResourceService },
 ): Promise<void> {
   const { buildings } = deps;
@@ -927,9 +928,8 @@ export async function startFundingAdjustWizard(
     return d.ok && d.materials.length > 0;
   });
   if (choices.length === 0) {
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: buildings.messages.buildingWizardNoFundingAdjust,
-      ephemeral: true,
     });
     return;
   }
@@ -942,17 +942,16 @@ export async function startFundingAdjustWizard(
       choices[0]!.id,
     );
     if (!payload.ok) {
-      await interaction.reply({ content: payload.message, ephemeral: true });
+      await hubMessage(interaction, { content: payload.message });
       return;
     }
     if (payload.kind === 'modal') {
       await interaction.showModal(payload.modal);
       return;
     }
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: payload.content,
       components: [payload.row],
-      ephemeral: true,
     });
     return;
   }
@@ -972,7 +971,7 @@ export async function startFundingAdjustWizard(
       .setDescription(summary.slice(0, 100));
   });
 
-  await interaction.reply({
+  await hubMessage(interaction, {
     content: buildings.messages.buildingWizardFundingAdjustPickBuilding,
     components: [
       buildingSelectRow(
@@ -981,7 +980,6 @@ export async function startFundingAdjustWizard(
         options,
       ),
     ],
-    ephemeral: true,
   });
 }
 
@@ -1312,15 +1310,14 @@ async function finishFundingAdjustMulti(
 
 /** DM: correct time_spent (building phase) — absolute set. */
 export async function startSpentAdjustWizard(
-  interaction: ChatInputCommandInteraction,
+  interaction: HubStartInteraction,
   deps: { buildings: BuildingService; resources: ResourceService },
 ): Promise<void> {
   const { buildings } = deps;
   const choices = buildings.listSpentAdjustBuildings(interaction.guildId!);
   if (choices.length === 0) {
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: buildings.messages.buildingWizardNoSpentAdjust,
-      ephemeral: true,
     });
     return;
   }

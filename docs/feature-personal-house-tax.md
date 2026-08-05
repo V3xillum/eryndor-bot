@@ -46,13 +46,13 @@ Feature uit (`enabled: false`): modal zonder checkbox; gedrag = oude `personal_a
 | Command | Wie | Effect |
 |---|---|---|
 | `/voorraad persoonlijk toevoegen` | iedereen | Modal: type + aantal + (indien tax aan) checkbox huis. Silent embed + ephemeral |
-| `/dm resource house-tax` | allowlist | Toon of zet `enabled` / `threshold`. Zonder opties = show |
+| `/dm resource menu` → Huisbelasting | allowlist | Toon of zet `enabled` / `threshold`. Lege modal = show |
 
 `threshold`: geheel getal **1–9999**. Minstens één van `enabled` / `threshold` bij set; anders show.
 
 ### Publieke silent post
 
-Zelfde kanaal als overige voorraadposts (`/dm resource setup`), `SuppressNotifications`.
+Zelfde kanaal als overige voorraadposts (`/dm resource menu` → Kanaal setup), `SuppressNotifications`.
 
 - Geen tax: bestaande tekst (alles privé).
 - Tax betaald: persoonlijk aantal + regel huisbelasting (1 naar guild + GC) + stock-regels.

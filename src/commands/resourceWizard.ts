@@ -17,6 +17,7 @@ import type { ResourceService } from '../services/ResourceService.js';
 import type { ResourceType } from '../types.js';
 import { formatTemplate } from '../utils/helpers.js';
 import { addModalIntro } from '../utils/modalIntro.js';
+import { hubMessage, type HubStartInteraction } from './dmHubShared.js';
 import {
   buildBuyEmbed,
   buildDonateEmbed,
@@ -297,14 +298,13 @@ async function startPersonalRemoveWizard(
 
 /** Player stockpile flows: één modal met type-dropdown + aantal. */
 export async function startResourceAmountWizard(
-  interaction: ChatInputCommandInteraction,
+  interaction: HubStartInteraction,
   resources: ResourceService,
   action: ResourceAmountAction,
 ): Promise<void> {
   if (!interaction.guildId) {
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: resources.messages.guildOnly,
-      ephemeral: true,
     });
     return;
   }
@@ -312,15 +312,20 @@ export async function startResourceAmountWizard(
   if (action !== 'adjust') {
     const settings = resources.getSettings(interaction.guildId);
     if (!settings) {
-      await interaction.reply({
+      await hubMessage(interaction, {
         content: resources.messages.resourceNotConfigured,
-        ephemeral: true,
       });
       return;
     }
   }
 
   if (action === 'personal_remove') {
+    if (!interaction.isChatInputCommand()) {
+      await hubMessage(interaction, {
+        content: resources.messages.unknownSubcommand,
+      });
+      return;
+    }
     await startPersonalRemoveWizard(interaction, resources);
     return;
   }
@@ -332,9 +337,8 @@ export async function startResourceAmountWizard(
     action,
   );
   if (!options || options.length === 0) {
-    await interaction.reply({
+    await hubMessage(interaction, {
       content: resources.messages.resourceTypeListEmpty,
-      ephemeral: true,
     });
     return;
   }

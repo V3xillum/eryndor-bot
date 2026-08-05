@@ -125,14 +125,14 @@ Eerst op **wie**, daarna op **categorie**:
 | Categorie | Voorbeelden |
 |---|---|
 | Bekijken | `/eryndor overzicht`, `/eryndor weer`, `/eryndor vandaag`, `/eryndor vollemaan` |
-| Inrichten | `/dm weather setup`, `/dm calendar setup` / `clear`, `/dm resource setup` |
-| Instellingen | `/dm weather-settings …` |
+| Inrichten | `/dm weather setup`, `/dm calendar setup` / `clear`, `/dm resource menu` → Kanaal setup |
+| Instellingen | `/dm weather-settings menu` |
 | Acties | `/dm weather` → `roll`, `set`, `schedule`, `pause`, `resume` |
 | Limieten / config | `/dm weather-settings menu` |
 | Berichten | `/dm announce schedule` / `list` / `cancel` |
-| Voorraad | spelers: `/voorraad …`; DM: `/dm resource`, `/dm resource-type` |
-| Bouwen | spelers: `/bouw …`; DM: `/dm building`, `/dm building-cost` |
-| Productie | spelers: `/productie lijst`; DM: `/dm production …` |
+| Voorraad | spelers: `/voorraad …`; DM: `/dm resource menu` |
+| Bouwen | spelers: `/bouw …`; DM: `/dm building menu` |
+| Productie | spelers: `/productie lijst`; DM: `/dm production menu` |
 | Info | `/eryndor hulp`; DM: `/dm weather status` / `next` |
 
 Alle DM-commands staan onder `/dm` (Discord verbergt die standaard voor gewone leden). Zichtbaarheid in de `/`-picker ≠ `ALLOWED_USER_IDS`: server-admins zien `/dm` altijd; andere DMs moeten hem via **Integraties → bot → `/dm`** krijgen. Runtime blijft allowlist.
@@ -153,10 +153,10 @@ Gebruik deze termen consistent:
 - **Tijdelijke magie-filter** — alleen magisch of juist geen magisch weer, voor een duur (settings-menu)
 - **Gepland bericht** — vrije tekst die de bot later post in een gekozen kanaal (los van het weerkanaal); via `/dm announce`
 - **Kalender-events kanaal** — ochtendpost (`@everyone` + today-embed) alleen bij events; avondpost bij Full Moon (Rising) (stil) en exacte volle maan (`@everyone`); via `/dm calendar setup` (los van het weerkanaal)
-- **Guild-voorraad** — gedeelde grondstoffen per server; stille berichten in het voorraadkanaal (`/dm resource setup`)
+- **Guild-voorraad** — gedeelde grondstoffen per server; stille berichten in het voorraadkanaal (`/dm resource menu` → Kanaal setup)
 - **Persoonlijke voorraad** — per speler, los van de guild (niet “bak”); huisbelasting mogelijk bij toevoegen
 - **Opslaglimiet** — max per grondstoftype (standaard 300); overflow bij spelers → persoonlijke voorraad; bij dagelijkse productie → verloren
-- **Huisbelasting** — met eigen huis + genoeg stuks (≥ drempel): 1 unit naar guild (+ sell-GC); guild vol → speler houdt alles; DM: `/dm resource house-tax`
+- **Huisbelasting** — met eigen huis + genoeg stuks (≥ drempel): 1 unit naar guild (+ sell-GC); guild vol → speler houdt alles; DM: `/dm resource menu` → Huisbelasting
 - **Bouwproject** — materialen verzamelen → bouwen (tijd) → voltooid; via `/bouw`
 - **Donate (bouw)** — materiaal naar een project: bron *van buiten* of *mijn voorraad* (beide + sell-GC)
 - **Fund (bouw)** — materiaal uit de guild-voorraad naar een project (geen extra GC)
