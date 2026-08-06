@@ -1,6 +1,9 @@
 import { REST, Routes } from 'discord.js';
 import { loadConfig } from './config.js';
 import { buildBuildingCommand } from './commands/building.js';
+// Proof of concept: D&D Beyond character skillchecks via /dev character.
+// Uncomment buildDevCommand (+ handler wiring) to re-enable.
+// import { buildDevCommand } from './commands/dev.js';
 import { buildDmCommand } from './commands/dm.js';
 import { buildEryndorCommand } from './commands/eryndor.js';
 import { buildProductionCommand } from './commands/production.js';
@@ -11,6 +14,7 @@ async function main(): Promise<void> {
   const body = [
     buildEryndorCommand().toJSON(),
     buildDmCommand().toJSON(),
+    // buildDevCommand().toJSON(), // PoC — D&D Beyond character import
     buildResourceCommand().toJSON(),
     buildBuildingCommand().toJSON(),
     buildProductionCommand().toJSON(),

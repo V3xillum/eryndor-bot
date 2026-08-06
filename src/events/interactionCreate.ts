@@ -2,6 +2,8 @@ import type { Client, Interaction } from 'discord.js';
 import type { AppConfig } from '../config.js';
 import { handleAnnounceModal } from '../commands/announce.js';
 import { handleBuildingCommand } from '../commands/building.js';
+// Proof of concept: /dev character (D&D Beyond skillchecks). Re-enable with register-commands.
+// import { handleDevCommand } from '../commands/dev.js';
 import {
   BUILDING_WIZARD_PREFIX,
   handleBuildingWizardButton,
@@ -49,6 +51,7 @@ import {
 import type { ActivityLogService } from '../services/ActivityLogService.js';
 import type { AnnounceService } from '../services/AnnounceService.js';
 import type { BuildingService } from '../services/BuildingService.js';
+// import type { DdbCharacterService } from '../services/DdbCharacterService.js'; // PoC /dev character
 import type { EryndorCalendarService } from '../services/EryndorCalendarService.js';
 import type { ProductionService } from '../services/ProductionService.js';
 import type { ResourceService } from '../services/ResourceService.js';
@@ -65,6 +68,7 @@ export function registerInteractionHandler(
     resources: ResourceService;
     buildings: BuildingService;
     production: ProductionService;
+    // ddb: DdbCharacterService; // PoC /dev character
     activity: ActivityLogService;
     config: AppConfig;
   },
@@ -259,6 +263,15 @@ export function registerInteractionHandler(
           });
           deps.activity.ok('command', '/productie', actorUserId);
           return;
+        // Proof of concept: D&D Beyond character skillchecks.
+        // case 'dev':
+        //   await handleDevCommand(interaction, {
+        //     ddb: deps.ddb,
+        //     messages: deps.weather.messages,
+        //     config: deps.config,
+        //   });
+        //   deps.activity.ok('command', '/dev', actorUserId);
+        //   return;
         default:
           return;
       }

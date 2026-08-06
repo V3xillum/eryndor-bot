@@ -6,6 +6,8 @@ import { registerReadyHandler } from './events/ready.js';
 import { ActivityLogService } from './services/ActivityLogService.js';
 import { AnnounceService } from './services/AnnounceService.js';
 import { BuildingService } from './services/BuildingService.js';
+// Proof of concept: D&D Beyond character via /dev — see commands/dev.ts
+// import { DdbCharacterService } from './services/DdbCharacterService.js';
 import { EryndorCalendarService } from './services/EryndorCalendarService.js';
 import { ProductionService } from './services/ProductionService.js';
 import { ResourceService } from './services/ResourceService.js';
@@ -32,6 +34,7 @@ async function main(): Promise<void> {
     config.eryndorCalendar.timeZone,
   );
   const calendar = new EryndorCalendarService(config.eryndorCalendar, weather.messages);
+  // const ddb = new DdbCharacterService(); // PoC /dev character
   const activity = new ActivityLogService(db);
 
   console.log(
@@ -107,6 +110,7 @@ async function main(): Promise<void> {
     resources,
     buildings,
     production,
+    // ddb, // PoC /dev character
     activity,
     config,
   });

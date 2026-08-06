@@ -598,5 +598,20 @@
   "dmSetupHubWeatherClearNone": "Er stond geen weerkanaal geconfigureerd.",
   "dmSetupHubWeatherThreadNoParent": "Deze thread heeft geen ouderkanaal — kies een andere thread of een tekstkanaal.",
   "dmSetupHubCalendarNoThread": "Kalenderposts gaan naar een tekstkanaal, geen thread.",
-  "dmSetupHubResourceNoThread": "Voorraadposts gaan naar een tekstkanaal, geen thread."
+  "dmSetupHubResourceNoThread": "Voorraadposts gaan naar een tekstkanaal, geen thread.",
+  "ddbCharacterInvalidId": "Ongeldig character ID. Gebruik alleen cijfers (het nummer uit de D&D Beyond URL).",
+  "ddbCharacterNotFound": "Character `{id}` niet gevonden op D&D Beyond.",
+  "ddbCharacterPrivate": "Character `{id}` is niet public. Zet Character Privacy op Public en probeer opnieuw.",
+  "ddbCharacterInvalidPayload": "D&D Beyond gaf een onverwacht antwoord. Probeer het later opnieuw.",
+  "ddbCharacterFetchError": "Kon het character niet ophalen bij D&D Beyond. Probeer het later opnieuw.",
+  "ddbCharacterLevelLine": "Level **{level}**",
+  "ddbCharacterClassLine": "**{name}** {level}",
+  "ddbCharacterClassWithSubclass": "**{name}** {level} — *{subclass}*",
+  "ddbCharacterClassJoin": " · ",
+  "ddbCharacterSkillsField": "Skillchecks",
+  "ddbCharacterSkillsFooter": "D&D Beyond #{id} · public sheet · /dev smoke-test",
+  "ddbCharacterSkillLine": "`{bonus}` **{name}** · {ability}{flag}",
+  "ddbCharacterFlagProficient": " · ✦",
+  "ddbCharacterFlagExpertise": " · ✦✦",
+  "ddbCharacterFlagNone": ""
 }
